@@ -1,0 +1,26 @@
+# Claude Project Configuration
+
+## Project: TaskFlow - Task Management Application
+
+### Commit Message Policy (CRITICAL)
+- NO AI attribution or branding in commit messages
+- NO emojis in commit messages
+- Use conventional commit format: `<type>: <description>`
+- Examples: `feat: add feature`, `fix: resolve bug`, `refactor: improve code`
+- Git hook enforces this policy at `.git/hooks/commit-msg`
+
+### Code Style
+- TypeScript strict mode
+- Default exports for UI components
+- Service layer pattern for business logic
+- Custom hooks for state management
+
+### Testing Before Commits
+1. Run `npm run lint` - must pass with 0 errors/warnings
+2. Run `npm run dev` - verify pages compile successfully
+3. Test affected pages in browser
+
+### Reference Files
+- Project memory: `.claude/memory.md`
+- Git policy: `.ai/git-commit-policy.md`
+- Development roadmap: `.ai/development.md`
