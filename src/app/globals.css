@@ -5,12 +5,15 @@
 }
 
 body {
-  background-color: rgb(249 250 251);
+  background: linear-gradient(135deg, rgb(240 249 255) 0%, rgb(249 250 251) 50%, rgb(254 243 245) 100%);
+  background-attachment: fixed;
   color: rgb(17 24 39);
+  min-height: 100vh;
 }
 
 .dark body {
-  background-color: rgb(17 24 39);
+  background: linear-gradient(135deg, rgb(15 23 42) 0%, rgb(17 24 39) 50%, rgb(30 27 38) 100%);
+  background-attachment: fixed;
   color: rgb(243 244 246);
 }
 
@@ -21,4 +24,41 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, rgb(14 165 233) 0%, rgb(99 102 241) 50%, rgb(168 85 247) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Animated gradient border */
+@keyframes gradient-border {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.gradient-border {
+  background: linear-gradient(90deg, rgb(14 165 233), rgb(99 102 241), rgb(168 85 247), rgb(14 165 233));
+  background-size: 200% 200%;
+  animation: gradient-border 3s ease infinite;
 }
