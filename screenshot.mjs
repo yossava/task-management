@@ -28,6 +28,17 @@ async function captureScreenshots() {
   });
   const page = await context.newPage();
 
+  // Capture console errors
+  page.on('console', msg => {
+    if (msg.type() === 'error') {
+      console.error('Browser console error:', msg.text());
+    }
+  });
+
+  page.on('pageerror', error => {
+    console.error('Page error:', error.message);
+  });
+
   console.log('📸 Starting screenshot capture...\n');
 
   for (const route of pages) {
@@ -35,7 +46,10 @@ async function captureScreenshots() {
     console.log(`Capturing: ${url}`);
 
     try {
-      await page.goto(url, { waitUntil: 'networkidle' });
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 10000 });
+
+      // Wait a bit more for animations and lazy loading
+      await page.waitForTimeout(1000);
 
       // Take full page screenshot
       const screenshotPath = join(TEMP_DIR, `${route.name}.png`);
