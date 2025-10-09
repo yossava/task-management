@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import { Column as ColumnType, Task } from '@/lib/types';
 import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
 import { TaskCard } from '@/components/task/TaskCard';
-import { CreateTaskModal } from '@/components/task/CreateTaskModal';
+import { InlineTaskForm } from '@/components/task/InlineTaskForm';
 import { useTasks } from '@/hooks/useTasks';
 
 interface ColumnProps {
@@ -13,15 +14,17 @@ interface ColumnProps {
   boardId: string;
   onUpdateColumn: (id: string, data: Partial<ColumnType>) => void;
   onDeleteColumn: (id: string) => void;
-  onTaskClick: (task: Task) => void;
 }
 
-export function Column({ column, boardId, onUpdateColumn, onDeleteColumn, onTaskClick }: ColumnProps) {
+export function Column({ column, boardId, onUpdateColumn, onDeleteColumn }: ColumnProps) {
   const { tasks, createTask, updateTask, deleteTask } = useTasks(column.id);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(column.title);
+
+  const { setNodeRef } = useDroppable({
+    id: column.id,
+  });
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -32,13 +35,8 @@ export function Column({ column, boardId, onUpdateColumn, onDeleteColumn, onTask
     }
   };
 
-  const handleTaskClick = (task: Task) => {
-    onTaskClick(task);
-  };
-
-  const handleCloseModal = () => {
-    setIsTaskModalOpen(false);
-    setEditingTask(null);
+  const handleCreateTask = (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'comments' | 'tags' | 'assigneeIds'>) => {
+    createTask(data);
   };
 
   return (
@@ -91,48 +89,53 @@ export function Column({ column, boardId, onUpdateColumn, onDeleteColumn, onTask
         </div>
 
         {/* Tasks List */}
-        <div className="flex-1 p-4 space-y-3 overflow-y-auto">
-          {tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onClick={() => handleTaskClick(task)}
-              onDelete={deleteTask}
-            />
-          ))}
+        <div ref={setNodeRef} className="flex-1 p-4 space-y-3 overflow-y-auto">
+          <SortableContext
+            items={tasks.map(t => t.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {tasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onUpdate={updateTask}
+                onDelete={deleteTask}
+              />
+            ))}
+          </SortableContext>
 
-          {tasks.length === 0 && (
+          {tasks.length === 0 && !isCreatingTask && (
             <div className="text-center text-gray-400 dark:text-gray-500 py-8">
-              No tasks yet
+              No cards yet
             </div>
+          )}
+
+          {/* Inline Create Task Form */}
+          {isCreatingTask && (
+            <InlineTaskForm
+              onSubmit={handleCreateTask}
+              onCancel={() => setIsCreatingTask(false)}
+              columnId={column.id}
+              boardId={boardId}
+            />
           )}
         </div>
 
         {/* Add Task Button */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <Button
-            variant="ghost"
-            className="w-full"
-            onClick={() => setIsTaskModalOpen(true)}
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Task
-          </Button>
-        </div>
+        {!isCreatingTask && (
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setIsCreatingTask(true)}
+              className="w-full text-left px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add a card
+            </button>
+          </div>
+        )}
       </Card>
-
-      {/* Create/Edit Task Modal */}
-      <CreateTaskModal
-        isOpen={isTaskModalOpen}
-        onClose={handleCloseModal}
-        onCreate={createTask}
-        onUpdate={updateTask}
-        editingTask={editingTask}
-        columnId={column.id}
-        boardId={boardId}
-      />
     </div>
   );
 }

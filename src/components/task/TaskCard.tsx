@@ -1,11 +1,14 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Task } from '@/lib/types';
 import Card from '@/components/ui/Card';
 
 interface TaskCardProps {
   task: Task;
-  onClick: () => void;
+  onUpdate: (id: string, data: Partial<Task>) => void;
   onDelete: (id: string) => void;
 }
 
@@ -16,14 +19,99 @@ const PRIORITY_COLORS = {
   urgent: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 };
 
-export function TaskCard({ task, onClick, onDelete }: TaskCardProps) {
+export function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description || '');
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  useEffect(() => {
+    if (isEditingTitle) {
+      titleRef.current?.focus();
+      titleRef.current?.select();
+    }
+  }, [isEditingTitle]);
+
+  useEffect(() => {
+    if (isEditingDescription) {
+      descriptionRef.current?.focus();
+      descriptionRef.current?.select();
+    }
+  }, [isEditingDescription]);
+
+  const handleTitleSave = () => {
+    setIsEditingTitle(false);
+    if (title.trim() && title !== task.title) {
+      onUpdate(task.id, { title: title.trim() });
+    } else {
+      setTitle(task.title);
+    }
+  };
+
+  const handleDescriptionSave = () => {
+    setIsEditingDescription(false);
+    if (description.trim() !== task.description) {
+      onUpdate(task.id, { description: description.trim() });
+    } else {
+      setDescription(task.description || '');
+    }
+  };
+
+  const handlePriorityChange = () => {
+    const priorities: Array<'low' | 'medium' | 'high' | 'urgent'> = ['low', 'medium', 'high', 'urgent'];
+    const currentIndex = priorities.indexOf(task.priority);
+    const nextPriority = priorities[(currentIndex + 1) % priorities.length];
+    onUpdate(task.id, { priority: nextPriority });
+  };
+
   return (
-    <Card className="group cursor-pointer hover:shadow-lg transition-all" onClick={onClick}>
-      <div className="p-4">
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <Card className="group hover:shadow-lg transition-all cursor-grab active:cursor-grabbing">
+        <div className="p-4" {...listeners}>
         <div className="flex items-start justify-between mb-2">
-          <h4 className="font-semibold text-gray-900 dark:text-white flex-1 pr-2">
-            {task.title}
-          </h4>
+          {isEditingTitle ? (
+            <textarea
+              ref={titleRef}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={handleTitleSave}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleTitleSave();
+                } else if (e.key === 'Escape') {
+                  setTitle(task.title);
+                  setIsEditingTitle(false);
+                }
+              }}
+              rows={2}
+              className="flex-1 pr-2 font-semibold text-gray-900 dark:text-white bg-transparent border-b-2 border-blue-500 focus:outline-none resize-none"
+            />
+          ) : (
+            <h4
+              className="font-semibold text-gray-900 dark:text-white flex-1 pr-2 cursor-text hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-1 -mx-1 py-0.5"
+              onClick={() => setIsEditingTitle(true)}
+            >
+              {task.title}
+            </h4>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -40,16 +128,47 @@ export function TaskCard({ task, onClick, onDelete }: TaskCardProps) {
           </button>
         </div>
 
-        {task.description && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-            {task.description}
-          </p>
+        {isEditingDescription ? (
+          <textarea
+            ref={descriptionRef}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onBlur={handleDescriptionSave}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setDescription(task.description || '');
+                setIsEditingDescription(false);
+              }
+            }}
+            placeholder="Add a description..."
+            rows={3}
+            className="w-full mb-3 text-sm text-gray-600 dark:text-gray-400 bg-transparent border-b-2 border-blue-500 focus:outline-none resize-none"
+          />
+        ) : (
+          task.description || isEditingDescription ? (
+            <p
+              className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 cursor-text hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-1 -mx-1 py-0.5"
+              onClick={() => setIsEditingDescription(true)}
+            >
+              {task.description || 'Add a description...'}
+            </p>
+          ) : (
+            <button
+              onClick={() => setIsEditingDescription(true)}
+              className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mb-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-1 -mx-1 py-0.5"
+            >
+              Add a description...
+            </button>
+          )
         )}
 
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${PRIORITY_COLORS[task.priority]}`}>
+          <button
+            onClick={handlePriorityChange}
+            className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium transition-all hover:scale-105 ${PRIORITY_COLORS[task.priority]}`}
+          >
             {task.priority}
-          </span>
+          </button>
 
           {task.tags && task.tags.length > 0 && (
             <div className="flex gap-1 flex-wrap">
@@ -69,7 +188,8 @@ export function TaskCard({ task, onClick, onDelete }: TaskCardProps) {
             </div>
           )}
         </div>
-      </div>
-    </Card>
+        </div>
+      </Card>
+    </div>
   );
 }

@@ -1,11 +1,23 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCorners,
+} from '@dnd-kit/core';
+import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { Board, Task } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import { Column } from '@/components/board/Column';
 import Input from '@/components/ui/Input';
 import { useColumns } from '@/hooks/useColumns';
+import { TaskService } from '@/lib/services/taskService';
 
 interface BoardViewProps {
   board: Board;
@@ -15,7 +27,15 @@ export function BoardView({ board }: BoardViewProps) {
   const { columns, createColumn, updateColumn, deleteColumn } = useColumns(board.id);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
-  const [_selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [_activeTask, setActiveTask] = useState<Task | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px movement required before drag starts
+      },
+    })
+  );
 
   const handleAddColumn = () => {
     if (newColumnTitle.trim()) {
@@ -30,13 +50,58 @@ export function BoardView({ board }: BoardViewProps) {
     }
   };
 
-  const handleTaskClick = (task: Task) => {
-    setSelectedTask(task);
-    // TODO: Open task detail modal
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const task = TaskService.getById(active.id as string);
+    if (task) {
+      setActiveTask(task);
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    if (activeId === overId) return;
+
+    // Check if we're dragging over a column (not another task)
+    const overColumn = columns.find(col => col.id === overId);
+    if (overColumn) {
+      // Move task to the new column
+      TaskService.moveTask(activeId, overId);
+      window.location.reload(); // Trigger re-render
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveTask(null);
+
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    // If dropped on a task, move to that task's column
+    const overTask = TaskService.getById(overId);
+    if (overTask) {
+      TaskService.moveTask(activeId, overTask.columnId);
+      window.location.reload(); // Trigger re-render
+    }
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="h-full flex flex-col">
       {/* Board Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
@@ -60,17 +125,21 @@ export function BoardView({ board }: BoardViewProps) {
       {/* Columns Container */}
       <div className="flex-1 overflow-x-auto">
         <div className="flex gap-6 pb-6">
-          {/* Existing Columns */}
-          {columns.map((column) => (
-            <Column
-              key={column.id}
-              column={column}
-              boardId={board.id}
-              onUpdateColumn={updateColumn}
-              onDeleteColumn={deleteColumn}
-              onTaskClick={handleTaskClick}
-            />
-          ))}
+          <SortableContext
+            items={columns.map(c => c.id)}
+            strategy={horizontalListSortingStrategy}
+          >
+            {/* Existing Columns */}
+            {columns.map((column) => (
+              <Column
+                key={column.id}
+                column={column}
+                boardId={board.id}
+                onUpdateColumn={updateColumn}
+                onDeleteColumn={deleteColumn}
+              />
+            ))}
+          </SortableContext>
 
           {/* Add Column */}
           <div className="flex-shrink-0 w-80">
@@ -123,6 +192,7 @@ export function BoardView({ board }: BoardViewProps) {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </DndContext>
   );
 }
