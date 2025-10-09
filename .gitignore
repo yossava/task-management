@@ -38,3 +38,7 @@ next-env.d.ts
 # ai and claude directories
 .ai/
 .claude/
+
+# temporary files (screenshots for visual testing)
+temp/
+screenshots/
