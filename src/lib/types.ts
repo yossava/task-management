@@ -1,8 +1,16 @@
+export interface BoardTask {
+  id: string;
+  text: string;
+  completed: boolean;
+  createdAt: number;
+}
+
 export interface Board {
   id: string;
   title: string;
   description?: string;
   columns: Column[];
+  tasks: BoardTask[];
   createdAt: number;
   updatedAt: number;
   color?: string;

@@ -44,12 +44,18 @@ export function useBoards() {
     return success;
   };
 
+  const reorderBoards = (newBoards: Board[]) => {
+    BoardService.reorder(newBoards.map(b => b.id));
+    setBoards(newBoards);
+  };
+
   return {
     boards,
     loading,
     createBoard,
     updateBoard,
     deleteBoard,
+    reorderBoards,
     refresh: loadBoards,
   };
 }

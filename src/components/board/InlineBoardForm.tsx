@@ -5,7 +5,7 @@ import { Board } from '@/lib/types';
 import Card from '@/components/ui/Card';
 
 interface InlineBoardFormProps {
-  onSubmit: (data: Omit<Board, 'id' | 'createdAt' | 'updatedAt' | 'columns'>) => void;
+  onSubmit: (data: Omit<Board, 'id' | 'createdAt' | 'updatedAt' | 'columns' | 'tasks'>) => void;
   onCancel: () => void;
 }
 

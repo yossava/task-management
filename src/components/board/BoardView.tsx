@@ -28,6 +28,7 @@ export function BoardView({ board }: BoardViewProps) {
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
   const [_activeTask, setActiveTask] = useState<Task | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -72,7 +73,7 @@ export function BoardView({ board }: BoardViewProps) {
     if (overColumn) {
       // Move task to the new column
       TaskService.moveTask(activeId, overId);
-      window.location.reload(); // Trigger re-render
+      setRefreshKey(prev => prev + 1);
     }
   };
 
@@ -89,7 +90,7 @@ export function BoardView({ board }: BoardViewProps) {
     const overTask = TaskService.getById(overId);
     if (overTask) {
       TaskService.moveTask(activeId, overTask.columnId);
-      window.location.reload(); // Trigger re-render
+      setRefreshKey(prev => prev + 1);
     }
   };
 
@@ -132,7 +133,7 @@ export function BoardView({ board }: BoardViewProps) {
             {/* Existing Columns */}
             {columns.map((column) => (
               <Column
-                key={column.id}
+                key={`${column.id}-${refreshKey}`}
                 column={column}
                 boardId={board.id}
                 onUpdateColumn={updateColumn}
