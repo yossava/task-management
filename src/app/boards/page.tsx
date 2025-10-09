@@ -4,31 +4,41 @@ import { useState } from 'react';
 import {
   DndContext,
   DragEndEvent,
+  DragStartEvent,
+  DragOverEvent,
   PointerSensor,
   useSensor,
   useSensors,
   closestCenter,
+  closestCorners,
+  DragOverlay,
+  pointerWithin,
+  rectIntersection,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
 import { BoardCard } from '@/components/board/BoardCard';
 import { InlineBoardForm } from '@/components/board/InlineBoardForm';
 import { useBoards } from '@/hooks/useBoards';
-import { Board } from '@/lib/types';
+import { Board, BoardTask } from '@/lib/types';
+import { BoardService } from '@/lib/services/boardService';
+import Card from '@/components/ui/Card';
 
 export default function BoardsPage() {
   const { boards, loading, createBoard, updateBoard, deleteBoard, reorderBoards } = useBoards();
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
+  const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
+  const [activeBoard, setActiveBoard] = useState<Board | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 3,
       },
     })
   );
 
   const handleCreate = (data: Omit<Board, 'id' | 'createdAt' | 'updatedAt' | 'columns' | 'tasks'>) => {
-    createBoard(data);
+    createBoard({ ...data, tasks: [] });
     setIsCreatingBoard(false);
   };
 
@@ -40,16 +50,128 @@ export default function BoardsPage() {
     deleteBoard(id);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const taskInfo = findTaskInBoards(active.id as string);
+    if (taskInfo) {
+      setActiveTask(taskInfo.task);
+    } else {
+      // It's a board being dragged
+      const board = boards.find(b => b.id === active.id);
+      if (board) {
+        setActiveBoard(board);
+      }
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
 
-    if (over && active.id !== over.id) {
+    if (!over) return;
+
+    // Only handle board reordering in onDragOver for smoother visual feedback
+    const activeTaskInfo = findTaskInBoards(active.id as string);
+
+    if (!activeTaskInfo && active.id !== over.id) {
+      // It's a board being dragged over another board
       const oldIndex = boards.findIndex(b => b.id === active.id);
       const newIndex = boards.findIndex(b => b.id === over.id);
 
-      const newBoards = arrayMove(boards, oldIndex, newIndex);
-      reorderBoards(newBoards);
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        const newBoards = arrayMove(boards, oldIndex, newIndex);
+        reorderBoards(newBoards);
+      }
     }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveTask(null);
+    setActiveBoard(null);
+    const { active, over } = event;
+
+    if (!over) return;
+
+    // Check if we're dragging a task
+    const activeTaskInfo = findTaskInBoards(active.id as string);
+    const overTaskInfo = findTaskInBoards(over.id as string);
+
+    if (activeTaskInfo) {
+      // Dragging a task
+      const { sourceBoardId, task } = activeTaskInfo;
+
+      if (overTaskInfo) {
+        // Dropping on another task - reorder within same board or move to target board
+        const { sourceBoardId: targetBoardId } = overTaskInfo;
+
+        if (sourceBoardId === targetBoardId) {
+          // Reorder within the same board
+          const sourceBoard = boards.find(b => b.id === sourceBoardId);
+          if (!sourceBoard) return;
+
+          const tasks = sourceBoard.tasks || [];
+          const oldIndex = tasks.findIndex((t) => t.id === active.id);
+          const newIndex = tasks.findIndex((t) => t.id === over.id);
+
+          if (oldIndex !== newIndex) {
+            const reorderedTasks = arrayMove(tasks, oldIndex, newIndex);
+            BoardService.update(sourceBoardId, { tasks: reorderedTasks });
+            updateBoard(sourceBoardId, { tasks: reorderedTasks });
+          }
+        } else {
+          // Move to a different board (insert at the position of the target task)
+          moveTaskBetweenBoards(sourceBoardId, targetBoardId, task, over.id as string);
+        }
+      } else {
+        // Check if we're dropping on a board card itself
+        const targetBoard = boards.find(b => b.id === over.id);
+
+        if (targetBoard && sourceBoardId !== targetBoard.id) {
+          // Move task to different board (append to end)
+          moveTaskBetweenBoards(sourceBoardId, targetBoard.id, task);
+        }
+      }
+    }
+    // Board reordering is now handled in onDragOver for smoother animation
+  };
+
+  const findTaskInBoards = (taskId: string): { sourceBoardId: string; task: BoardTask } | null => {
+    for (const board of boards) {
+      const task = board.tasks?.find(t => t.id === taskId);
+      if (task) {
+        return { sourceBoardId: board.id, task };
+      }
+    }
+    return null;
+  };
+
+  const moveTaskBetweenBoards = (sourceBoardId: string, targetBoardId: string, task: BoardTask, targetTaskId?: string) => {
+    const sourceBoard = boards.find(b => b.id === sourceBoardId);
+    const targetBoard = boards.find(b => b.id === targetBoardId);
+
+    if (!sourceBoard || !targetBoard) return;
+
+    // Remove task from source board
+    const updatedSourceTasks = sourceBoard.tasks.filter(t => t.id !== task.id);
+
+    // Add task to target board
+    let updatedTargetTasks: BoardTask[];
+    if (targetTaskId) {
+      // Insert at specific position
+      const targetIndex = targetBoard.tasks.findIndex(t => t.id === targetTaskId);
+      updatedTargetTasks = [...targetBoard.tasks];
+      updatedTargetTasks.splice(targetIndex, 0, task);
+    } else {
+      // Append to end
+      updatedTargetTasks = [...(targetBoard.tasks || []), task];
+    }
+
+    // Update storage
+    BoardService.update(sourceBoardId, { tasks: updatedSourceTasks });
+    BoardService.update(targetBoardId, { tasks: updatedTargetTasks });
+
+    // Update state
+    updateBoard(sourceBoardId, { tasks: updatedSourceTasks });
+    updateBoard(targetBoardId, { tasks: updatedTargetTasks });
   };
 
   if (loading) {
@@ -65,7 +187,9 @@ export default function BoardsPage() {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={pointerWithin}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="max-w-7xl mx-auto">
@@ -122,6 +246,92 @@ export default function BoardsPage() {
           )}
         </div>
       </div>
+
+      {/* Drag Overlay - shows the task or board being dragged */}
+      <DragOverlay>
+        {activeTask ? (
+          <div className="flex items-center gap-2.5 bg-white dark:bg-gray-800 rounded-lg px-3 py-2.5 shadow-2xl border border-gray-300 dark:border-gray-600 opacity-90 relative">
+            {/* Drag Handle */}
+            <div className="flex-shrink-0 p-1 text-gray-400">
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+              </svg>
+            </div>
+
+            {/* Checkbox */}
+            <div
+              className={`flex-shrink-0 w-4 h-4 rounded-full border-2 transition-all duration-150 flex items-center justify-center`}
+              style={{
+                backgroundColor: activeTask.completed ? '#10b981' : 'transparent',
+                borderColor: activeTask.completed ? '#10b981' : '#d1d5db',
+              }}
+            >
+              {activeTask.completed && (
+                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+
+            {/* Text content */}
+            <div className="flex-1 min-w-0">
+              <span
+                className={`text-sm ${
+                  activeTask.completed
+                    ? 'text-gray-500 dark:text-gray-400'
+                    : 'text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                {activeTask.text}
+              </span>
+            </div>
+
+            {/* Color Gradient Background */}
+            {activeTask.color && (
+              <>
+                {activeTask.showGradient !== false && (
+                  <div
+                    className="absolute inset-0 rounded-lg opacity-20"
+                    style={{
+                      background: `linear-gradient(to right, ${activeTask.color}, white)`
+                    }}
+                  />
+                )}
+                <div
+                  className="absolute left-0 top-0 bottom-0 w-1 rounded-l-lg"
+                  style={{ backgroundColor: activeTask.color }}
+                />
+              </>
+            )}
+          </div>
+        ) : activeBoard ? (
+          <Card className="opacity-90 shadow-2xl w-[400px] rotate-3">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                {activeBoard.color && (
+                  <div
+                    className="w-8 h-8 rounded-lg flex-shrink-0"
+                    style={{ backgroundColor: activeBoard.color }}
+                  />
+                )}
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {activeBoard.title}
+                </h3>
+              </div>
+              {activeBoard.description && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                  {activeBoard.description}
+                </p>
+              )}
+              {activeBoard.tasks && activeBoard.tasks.length > 0 && (
+                <div className="mt-4 text-sm text-gray-400">
+                  {activeBoard.tasks.length} {activeBoard.tasks.length === 1 ? 'item' : 'items'}
+                </div>
+              )}
+            </div>
+          </Card>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }

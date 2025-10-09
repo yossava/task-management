@@ -7,17 +7,18 @@ import {
   DragOverEvent,
   DragStartEvent,
   PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   closestCorners,
 } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { Board, Task } from '@/lib/types';
+import { Board } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import { Column } from '@/components/board/Column';
 import Input from '@/components/ui/Input';
 import { useColumns } from '@/hooks/useColumns';
-import { TaskService } from '@/lib/services/taskService';
 
 interface BoardViewProps {
   board: Board;
@@ -27,13 +28,22 @@ export function BoardView({ board }: BoardViewProps) {
   const { columns, createColumn, updateColumn, deleteColumn } = useColumns(board.id);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
-  const [_activeTask, setActiveTask] = useState<Task | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // 8px movement required before drag starts
+        distance: 5,
       },
     })
   );
@@ -51,47 +61,16 @@ export function BoardView({ board }: BoardViewProps) {
     }
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const task = TaskService.getById(active.id as string);
-    if (task) {
-      setActiveTask(task);
-    }
+  const handleDragStart = (_event: DragStartEvent) => {
+    // No task dragging in columns
   };
 
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = active.id as string;
-    const overId = over.id as string;
-
-    if (activeId === overId) return;
-
-    // Check if we're dragging over a column (not another task)
-    const overColumn = columns.find(col => col.id === overId);
-    if (overColumn) {
-      // Move task to the new column
-      TaskService.moveTask(activeId, overId);
-      setRefreshKey(prev => prev + 1);
-    }
+  const handleDragOver = (_event: DragOverEvent) => {
+    // No task dragging in columns
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveTask(null);
-
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const activeId = active.id as string;
-    const overId = over.id as string;
-
-    // If dropped on a task, move to that task's column
-    const overTask = TaskService.getById(overId);
-    if (overTask) {
-      TaskService.moveTask(activeId, overTask.columnId);
-      setRefreshKey(prev => prev + 1);
-    }
+  const handleDragEnd = (_event: DragEndEvent) => {
+    // No task dragging in columns
   };
 
   return (
@@ -133,7 +112,7 @@ export function BoardView({ board }: BoardViewProps) {
             {/* Existing Columns */}
             {columns.map((column) => (
               <Column
-                key={`${column.id}-${refreshKey}`}
+                key={column.id}
                 column={column}
                 boardId={board.id}
                 onUpdateColumn={updateColumn}

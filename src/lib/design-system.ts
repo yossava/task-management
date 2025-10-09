@@ -114,15 +114,17 @@ export function getIconBoxClasses(variant: 'primary' | 'secondary' | 'accent') {
 
 // Helper function to build button classes
 export function getButtonClasses(variant: 'primary' | 'secondary' | 'danger') {
-  const styles = designSystem.button[variant];
   const base = 'inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200';
   const disabled = 'disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
 
   if (variant === 'primary') {
+    const styles = designSystem.button.primary;
     return `${base} ${styles.base} ${styles.shadow} ${styles.ring} ${styles.shimmer} ${designSystem.animations.scaleHover} ${disabled}`;
   } else if (variant === 'secondary') {
+    const styles = designSystem.button.secondary;
     return `${base} ${styles.base} ${styles.border} ${styles.shadow} ${designSystem.animations.scaleHover} ${disabled}`;
   } else {
+    const styles = designSystem.button.danger;
     return `${base} ${styles.base} ${styles.shadow} ${styles.ring} ${designSystem.animations.scaleHover} ${disabled}`;
   }
 }

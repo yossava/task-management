@@ -79,6 +79,7 @@ export function CreateBoardModal({
         title: sanitizedTitle,
         description: sanitizedDescription,
         color,
+        tasks: [],
       });
     }
 

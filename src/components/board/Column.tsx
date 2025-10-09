@@ -1,13 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useDroppable } from '@dnd-kit/core';
-import { Column as ColumnType, Task } from '@/lib/types';
+import { Column as ColumnType } from '@/lib/types';
 import Card from '@/components/ui/Card';
-import { TaskCard } from '@/components/task/TaskCard';
-import { InlineTaskForm } from '@/components/task/InlineTaskForm';
-import { useTasks } from '@/hooks/useTasks';
 
 interface ColumnProps {
   column: ColumnType;
@@ -16,15 +11,9 @@ interface ColumnProps {
   onDeleteColumn: (id: string) => void;
 }
 
-export function Column({ column, boardId, onUpdateColumn, onDeleteColumn }: ColumnProps) {
-  const { tasks, createTask, updateTask, deleteTask } = useTasks(column.id);
-  const [isCreatingTask, setIsCreatingTask] = useState(false);
+export function Column({ column, onUpdateColumn, onDeleteColumn }: ColumnProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(column.title);
-
-  const { setNodeRef } = useDroppable({
-    id: column.id,
-  });
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -33,10 +22,6 @@ export function Column({ column, boardId, onUpdateColumn, onDeleteColumn }: Colu
     } else {
       setTitle(column.title);
     }
-  };
-
-  const handleCreateTask = (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'comments' | 'tags' | 'assigneeIds'>) => {
-    createTask(data);
   };
 
   return (
@@ -71,7 +56,7 @@ export function Column({ column, boardId, onUpdateColumn, onDeleteColumn }: Colu
             )}
             <button
               onClick={() => {
-                if (confirm(`Are you sure you want to delete "${column.title}"? This will also delete all tasks in this column.`)) {
+                if (confirm(`Are you sure you want to delete "${column.title}"?`)) {
                   onDeleteColumn(column.id);
                 }
               }}
@@ -83,58 +68,15 @@ export function Column({ column, boardId, onUpdateColumn, onDeleteColumn }: Colu
               </svg>
             </button>
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
-          </div>
         </div>
 
-        {/* Tasks List */}
-        <div ref={setNodeRef} className="flex-1 p-4 space-y-3 overflow-y-auto">
-          <SortableContext
-            items={tasks.map(t => t.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {tasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onUpdate={updateTask}
-                onDelete={deleteTask}
-              />
-            ))}
-          </SortableContext>
-
-          {tasks.length === 0 && !isCreatingTask && (
-            <div className="text-center text-gray-400 dark:text-gray-500 py-8">
-              No cards yet
-            </div>
-          )}
-
-          {/* Inline Create Task Form */}
-          {isCreatingTask && (
-            <InlineTaskForm
-              onSubmit={handleCreateTask}
-              onCancel={() => setIsCreatingTask(false)}
-              columnId={column.id}
-              boardId={boardId}
-            />
-          )}
-        </div>
-
-        {/* Add Task Button */}
-        {!isCreatingTask && (
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => setIsCreatingTask(true)}
-              className="w-full text-left px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add a card
-            </button>
+        {/* Empty state */}
+        <div className="flex-1 p-4 flex items-center justify-center">
+          <div className="text-center text-gray-400 dark:text-gray-500">
+            <p className="text-sm">Column created</p>
+            <p className="text-xs mt-1">Manage tasks on the board page</p>
           </div>
-        )}
+        </div>
       </Card>
     </div>
   );
