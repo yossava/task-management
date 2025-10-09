@@ -1,8 +1,11 @@
 'use client';
 
+import { useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { BoardTask } from '@/lib/types';
+import DatePicker from '@/components/ui/DatePicker';
+import ColorPicker from '@/components/ui/ColorPicker';
 
 interface SortableTaskItemProps {
   task: BoardTask;
@@ -18,14 +21,13 @@ interface SortableTaskItemProps {
   onDatePickerToggle: () => void;
   colorPickerOpen: boolean;
   onColorPickerToggle: () => void;
-  onSetDueDate: (date: string) => void;
+  onSetDueDate: (timestamp: number) => void;
   onSetColor: (color: string) => void;
   onToggleGradient: () => void;
   isOverdue: (dueDate: number) => boolean;
   formatDueDate: (timestamp: number) => string;
   menuRef: React.RefObject<HTMLDivElement | null>;
   editTaskRef: React.RefObject<HTMLInputElement | null>;
-  datePickerRef: React.RefObject<HTMLInputElement | null>;
   presetColors: string[];
 }
 
@@ -50,9 +52,10 @@ export function SortableTaskItem({
   formatDueDate,
   menuRef,
   editTaskRef,
-  datePickerRef,
   presetColors,
 }: SortableTaskItemProps) {
+  const pickerTriggerRef = useRef<HTMLDivElement>(null);
+
   const {
     attributes,
     listeners,
@@ -73,6 +76,7 @@ export function SortableTaskItem({
       ref={setNodeRef}
       style={style}
       {...attributes}
+      data-task-id={task.id}
       className="flex items-center gap-2.5 group/task bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg px-3 py-2.5 transition-all relative border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md"
       onClick={(e) => e.stopPropagation()}
     >
@@ -149,7 +153,7 @@ export function SortableTaskItem({
       </div>
 
       {/* Action buttons */}
-      <div className="flex items-center gap-1 relative z-10">
+      <div ref={pickerTriggerRef} className="flex items-center gap-1 relative z-10">
         {/* Drag Handle */}
         <button
           type="button"
@@ -179,7 +183,8 @@ export function SortableTaskItem({
         {taskMenuOpen && (
           <div
             ref={menuRef}
-            className="absolute right-0 top-8 w-56 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 py-2"
+            className="absolute right-0 top-8 w-56 bg-white rounded-lg shadow-2xl border border-gray-200 py-2"
+            style={{ zIndex: 99999 }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -223,61 +228,25 @@ export function SortableTaskItem({
 
         {/* Date Picker */}
         {datePickerOpen && (
-          <input
-            ref={datePickerRef}
-            type="date"
-            onChange={(e) => onSetDueDate(e.target.value)}
-            onBlur={onDatePickerToggle}
-            className="absolute right-0 top-8 opacity-0 w-0 h-0 pointer-events-none"
-            defaultValue={task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''}
+          <DatePicker
+            value={task.dueDate}
+            onChange={onSetDueDate}
+            onClose={onDatePickerToggle}
+            triggerRef={pickerTriggerRef}
           />
         )}
 
         {/* Color Picker */}
         {colorPickerOpen && (
-          <div
-            className="absolute right-0 top-8 w-72 bg-white rounded-lg shadow-2xl border border-gray-200 p-4"
-            style={{ zIndex: 10000 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Select color</h3>
-            <div className="grid grid-cols-4 gap-2 mb-4">
-              {presetColors.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => onSetColor(color)}
-                  className={`w-full h-12 rounded-lg transition-all hover:scale-105 focus:outline-none ${
-                    task.color === color
-                      ? 'ring-2 ring-offset-2 ring-blue-500'
-                      : ''
-                  }`}
-                  style={{ backgroundColor: color }}
-                  aria-label={`Select color ${color}`}
-                />
-              ))}
-            </div>
-            {task.color && (
-              <div className="border-t border-gray-200 pt-3">
-                <label className="flex items-center justify-between cursor-pointer">
-                  <span className="text-sm text-gray-700">Show gradient background</span>
-                  <button
-                    type="button"
-                    onClick={onToggleGradient}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                      task.showGradient !== false ? 'bg-blue-600' : 'bg-gray-300'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        task.showGradient !== false ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </label>
-              </div>
-            )}
-          </div>
+          <ColorPicker
+            value={task.color}
+            showGradient={task.showGradient}
+            onChange={onSetColor}
+            onToggleGradient={onToggleGradient}
+            onClose={onColorPickerToggle}
+            triggerRef={pickerTriggerRef}
+            presetColors={presetColors}
+          />
         )}
       </div>
 

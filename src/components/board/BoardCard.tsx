@@ -53,7 +53,6 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
   const newTaskRef = useRef<HTMLInputElement>(null);
   const editTaskRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const datePickerRef = useRef<HTMLInputElement>(null);
   const boardColorPickerRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -125,12 +124,6 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
     }
   }, [boardColorPickerOpen]);
 
-  useEffect(() => {
-    if (datePickerOpen && datePickerRef.current) {
-      const input = datePickerRef.current as HTMLInputElement;
-      input.showPicker?.();
-    }
-  }, [datePickerOpen]);
 
   const handleTitleSave = () => {
     setIsEditingTitle(false);
@@ -187,8 +180,8 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
   };
 
 
-  const handleSetDueDate = (task: BoardTask, date: string) => {
-    const dueDate = new Date(date).getTime();
+  const handleSetDueDate = (task: BoardTask, timestamp: number) => {
+    const dueDate = timestamp || undefined; // 0 means clear date
     BoardService.updateTask(board.id, task.id, { dueDate });
     const updatedTasks = board.tasks.map(t =>
       t.id === task.id ? { ...t, dueDate } : t
@@ -241,6 +234,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
         zIndex: (taskMenuOpen || colorPickerOpen || datePickerOpen) ? 9999 : 'auto'
       }}
       {...attributes}
+      data-board-id={board.id}
     >
       <Card className="group hover:shadow-lg transition-shadow">
         <div className="p-6">
@@ -384,14 +378,13 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
                     onDatePickerToggle={() => setDatePickerOpen(datePickerOpen === task.id ? null : task.id)}
                     colorPickerOpen={colorPickerOpen === task.id}
                     onColorPickerToggle={() => setColorPickerOpen(colorPickerOpen === task.id ? null : task.id)}
-                    onSetDueDate={(date) => handleSetDueDate(task, date)}
+                    onSetDueDate={(timestamp) => handleSetDueDate(task, timestamp)}
                     onSetColor={(color) => handleSetTaskColor(task, color)}
                     onToggleGradient={() => handleToggleGradient(task)}
                     isOverdue={isOverdue}
                     formatDueDate={formatDueDate}
                     menuRef={menuRef}
                     editTaskRef={editTaskRef}
-                    datePickerRef={datePickerRef}
                     presetColors={PRESET_COLORS}
                   />
                 ))}
@@ -460,7 +453,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
             </svg>
           </button>
         </div>
-        </div>
+      </div>
       </Card>
     </div>
   );

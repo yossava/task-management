@@ -30,5 +30,5 @@ export const DEFAULT_COLUMNS = [
   { title: 'Done', order: 3 },
 ];
 
-export const APP_NAME = 'TaskFlow';
+export const APP_NAME = 'PodoTask';
 export const APP_DESCRIPTION = 'Enterprise Project Management';
