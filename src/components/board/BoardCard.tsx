@@ -236,6 +236,20 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
     onUpdate(board.id, { tasks: updatedTasks });
   };
 
+  const handleDeleteTask = (taskId: string) => {
+    const updatedTasks = board.tasks.filter(t => t.id !== taskId);
+    BoardService.deleteTask(board.id, taskId);
+    onUpdate(board.id, { tasks: updatedTasks });
+  };
+
+  const calculateBoardProgress = () => {
+    if (!board.tasks || board.tasks.length === 0) return 0;
+    const completedTasks = board.tasks.filter(t => t.completed).length;
+    return Math.round((completedTasks / board.tasks.length) * 100);
+  };
+
+  const boardProgress = calculateBoardProgress();
+
   return (
     <div
       ref={setNodeRef}
@@ -317,15 +331,54 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
             )}
           </div>
           <div className="relative ml-4 flex-shrink-0 flex items-center gap-2">
-            {/* Drag Handle Icon */}
-            <div
-              className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-              {...listeners}
-            >
-              <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-              </svg>
-            </div>
+            {/* Circular Progress Indicator */}
+            {board.tasks && board.tasks.length > 0 && (
+              <div className="relative w-7 h-7 flex-shrink-0">
+                <svg className="w-7 h-7 transform -rotate-90">
+                  {/* Background circle */}
+                  <circle
+                    cx="14"
+                    cy="14"
+                    r="11"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    fill="none"
+                    className="text-gray-200 dark:text-gray-700"
+                  />
+                  {/* Progress circle */}
+                  <circle
+                    cx="14"
+                    cy="14"
+                    r="11"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    fill="none"
+                    strokeDasharray={`${2 * Math.PI * 11}`}
+                    strokeDashoffset={`${2 * Math.PI * 11 * (1 - boardProgress / 100)}`}
+                    className={`transition-all duration-300 ${
+                      boardProgress === 100
+                        ? 'text-green-500'
+                        : boardProgress >= 50
+                        ? 'text-blue-500'
+                        : 'text-gray-400'
+                    }`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {boardProgress === 100 ? (
+                    <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <span className="text-[9px] font-semibold text-gray-700 dark:text-gray-300 tabular-nums">
+                      {boardProgress}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -335,6 +388,16 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
               style={{ backgroundColor: board.color || '#3b82f6' }}
               aria-label="Change board color"
             />
+
+            {/* Drag Handle Icon */}
+            <div
+              className="flex-shrink-0 cursor-grab active:cursor-grabbing"
+              {...listeners}
+            >
+              <svg className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+              </svg>
+            </div>
 
             {/* Board Color Picker */}
             {boardColorPickerOpen && (
@@ -379,6 +442,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
                     onToggle={() => handleToggleTask(task)}
                     onEdit={() => handleEditTask(task)}
                     onSaveEdit={() => handleSaveTaskEdit(task)}
+                    onDelete={() => handleDeleteTask(task.id)}
                     isEditing={editingTaskId === task.id}
                     editingText={editingTaskText}
                     onEditingTextChange={setEditingTaskText}

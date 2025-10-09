@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -23,11 +23,76 @@ import { Board, BoardTask } from '@/lib/types';
 import { BoardService } from '@/lib/services/boardService';
 import Card from '@/components/ui/Card';
 
+const HEADER_STORAGE_KEY = 'boards_page_header';
+
 export default function BoardsPage() {
   const { boards, loading, createBoard, updateBoard, deleteBoard, reorderBoards } = useBoards();
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
   const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
   const [activeBoard, setActiveBoard] = useState<Board | null>(null);
+  const [pageTitle, setPageTitle] = useState('Your Boards');
+  const [pageSubtitle, setPageSubtitle] = useState('Organize and manage all your projects in one place');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingSubtitle, setIsEditingSubtitle] = useState(false);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const subtitleRef = useRef<HTMLInputElement>(null);
+
+  // Load header from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(HEADER_STORAGE_KEY);
+    if (saved) {
+      try {
+        const { title, subtitle } = JSON.parse(saved);
+        if (title) setPageTitle(title);
+        if (subtitle) setPageSubtitle(subtitle);
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+  }, []);
+
+  // Save header to localStorage
+  const saveHeader = (title: string, subtitle: string) => {
+    localStorage.setItem(HEADER_STORAGE_KEY, JSON.stringify({ title, subtitle }));
+  };
+
+  useEffect(() => {
+    if (isEditingTitle) {
+      titleRef.current?.focus();
+      titleRef.current?.select();
+    }
+  }, [isEditingTitle]);
+
+  useEffect(() => {
+    if (isEditingSubtitle) {
+      subtitleRef.current?.focus();
+      subtitleRef.current?.select();
+    }
+  }, [isEditingSubtitle]);
+
+  const handleTitleSave = () => {
+    setIsEditingTitle(false);
+    const trimmed = pageTitle.trim();
+    if (trimmed) {
+      setPageTitle(trimmed);
+      saveHeader(trimmed, pageSubtitle);
+    } else {
+      setPageTitle('Your Boards');
+      saveHeader('Your Boards', pageSubtitle);
+    }
+  };
+
+  const handleSubtitleSave = () => {
+    setIsEditingSubtitle(false);
+    const trimmed = pageSubtitle.trim();
+    if (trimmed) {
+      setPageSubtitle(trimmed);
+      saveHeader(pageTitle, trimmed);
+    } else {
+      setPageSubtitle('Organize and manage all your projects in one place');
+      saveHeader(pageTitle, 'Organize and manage all your projects in one place');
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -195,13 +260,57 @@ export default function BoardsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
-          <div>
-            <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2">
-              Your Boards
-            </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
-              Organize and manage all your projects in one place
-            </p>
+          <div className="flex-1">
+            {isEditingTitle ? (
+              <input
+                ref={titleRef}
+                type="text"
+                value={pageTitle}
+                onChange={(e) => setPageTitle(e.target.value)}
+                onBlur={handleTitleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleTitleSave();
+                  } else if (e.key === 'Escape') {
+                    setPageTitle(pageTitle);
+                    setIsEditingTitle(false);
+                  }
+                }}
+                className="text-4xl font-black text-gray-900 dark:text-white bg-transparent border-b-2 border-gray-300 dark:border-gray-600 focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none focus:ring-0 w-full max-w-2xl mb-2"
+              />
+            ) : (
+              <h1
+                onClick={() => setIsEditingTitle(true)}
+                className="text-4xl font-black text-gray-900 dark:text-white mb-2 cursor-text hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline-block"
+              >
+                {pageTitle}
+              </h1>
+            )}
+            {isEditingSubtitle ? (
+              <input
+                ref={subtitleRef}
+                type="text"
+                value={pageSubtitle}
+                onChange={(e) => setPageSubtitle(e.target.value)}
+                onBlur={handleSubtitleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSubtitleSave();
+                  } else if (e.key === 'Escape') {
+                    setPageSubtitle(pageSubtitle);
+                    setIsEditingSubtitle(false);
+                  }
+                }}
+                className="text-lg text-gray-600 dark:text-gray-400 bg-transparent border-b-2 border-gray-300 dark:border-gray-600 focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none focus:ring-0 w-full max-w-2xl block"
+              />
+            ) : (
+              <p
+                onClick={() => setIsEditingSubtitle(true)}
+                className="text-lg text-gray-600 dark:text-gray-400 cursor-text hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+              >
+                {pageSubtitle}
+              </p>
+            )}
           </div>
         </div>
 
