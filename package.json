@@ -11,6 +11,9 @@
   },
   "description": "Enterprise Project Management MVP - Trello/ClickUp/Jira Clone",
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@tailwindcss/forms": "^0.5.10",
     "@types/node": "^24.7.0",
     "@types/react": "^19.2.2",
