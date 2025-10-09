@@ -61,9 +61,9 @@ export default function HomePage() {
       {/* Features */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
         <Card className="p-8 relative overflow-hidden group" hover>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary-400/20 to-transparent rounded-bl-[100px] transform translate-x-8 -translate-y-8 group-hover:scale-150 transition-transform duration-500" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary-100 dark:bg-primary-900/20 rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:scale-150 transition-transform duration-500" />
           <div className="relative">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-primary-500/30 transform group-hover:scale-110 group-hover:rotate-3 transition-all">
+            <div className="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-all">
               <svg
                 className="w-8 h-8 text-white"
                 fill="none"
@@ -89,9 +89,9 @@ export default function HomePage() {
         </Card>
 
         <Card className="p-8 relative overflow-hidden group" hover>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-transparent rounded-bl-[100px] transform translate-x-8 -translate-y-8 group-hover:scale-150 transition-transform duration-500" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100 dark:bg-indigo-900/20 rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:scale-150 transition-transform duration-500" />
           <div className="relative">
-            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-indigo-500/30 transform group-hover:scale-110 group-hover:rotate-3 transition-all">
+            <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-all">
               <svg
                 className="w-8 h-8 text-white"
                 fill="none"
@@ -117,9 +117,9 @@ export default function HomePage() {
         </Card>
 
         <Card className="p-8 relative overflow-hidden group" hover>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-transparent rounded-bl-[100px] transform translate-x-8 -translate-y-8 group-hover:scale-150 transition-transform duration-500" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-100 dark:bg-purple-900/20 rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:scale-150 transition-transform duration-500" />
           <div className="relative">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-purple-500/30 transform group-hover:scale-110 group-hover:rotate-3 transition-all">
+            <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-all">
               <svg
                 className="w-8 h-8 text-white"
                 fill="none"

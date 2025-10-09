@@ -10,8 +10,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', ...props }, ref) => {
     const variants = {
       primary:
-        'bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 ' +
-        'shadow-lg shadow-primary-500/50 hover:shadow-xl hover:shadow-primary-600/50 ' +
+        'bg-primary-600 hover:bg-primary-700 text-white ' +
+        'shadow-lg hover:shadow-xl ' +
         'focus:ring-primary-500 transform hover:scale-[1.02] active:scale-[0.98]',
       secondary:
         'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ' +
@@ -19,12 +19,12 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         'hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 ' +
         'shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]',
       danger:
-        'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 ' +
-        'shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-600/50 ' +
+        'bg-red-600 hover:bg-red-700 text-white ' +
+        'shadow-lg hover:shadow-xl ' +
         'focus:ring-red-500 transform hover:scale-[1.02] active:scale-[0.98]',
       ghost:
-        'bg-transparent hover:bg-gray-100/80 dark:hover:bg-gray-800/80 ' +
-        'text-gray-700 dark:text-gray-300 hover:backdrop-blur-sm',
+        'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 ' +
+        'text-gray-700 dark:text-gray-300',
     };
 
     const sizes = {

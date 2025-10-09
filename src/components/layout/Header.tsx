@@ -13,10 +13,9 @@ export default function Header() {
           href="/"
           className="flex items-center space-x-3 group"
         >
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-indigo-600 rounded-xl blur-md opacity-75 group-hover:opacity-100 transition-opacity" />
+          <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
             <svg
-              className="relative w-10 h-10 text-white bg-gradient-to-r from-primary-600 to-indigo-600 p-2 rounded-xl shadow-lg transform group-hover:scale-110 transition-transform"
+              className="w-6 h-6 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -29,7 +28,7 @@ export default function Header() {
               />
             </svg>
           </div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+          <span className="text-2xl font-bold text-gray-900 dark:text-white">
             {APP_NAME}
           </span>
         </Link>

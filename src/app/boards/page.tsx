@@ -7,7 +7,7 @@ export default function BoardsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-4xl font-black bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2">
             Your Boards
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
@@ -35,12 +35,12 @@ export default function BoardsPage() {
       {/* Empty State */}
       <Card className="p-16 relative overflow-hidden">
         {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-200/30 to-transparent dark:from-primary-800/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-indigo-200/30 to-transparent dark:from-indigo-800/20 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-100 dark:bg-primary-900/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-100 dark:bg-indigo-900/20 rounded-full blur-3xl" />
 
         <div className="text-center relative z-10">
           <div className="inline-block mb-6">
-            <div className="w-24 h-24 bg-gradient-to-br from-primary-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-2xl shadow-primary-500/30 transform hover:scale-110 transition-transform">
+            <div className="w-24 h-24 bg-primary-600 rounded-3xl flex items-center justify-center mx-auto shadow-2xl transform hover:scale-110 transition-transform">
               <svg
                 className="w-12 h-12 text-white"
                 fill="none"
