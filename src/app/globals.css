@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+
+:root {
+  --font-inter: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+  background-color: rgb(249 250 251);
+  color: rgb(17 24 39);
+}
+
+.dark body {
+  background-color: rgb(17 24 39);
+  color: rgb(243 244 246);
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
