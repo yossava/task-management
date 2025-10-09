@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { BoardTask } from '@/lib/types';
@@ -24,6 +25,7 @@ interface SortableTaskItemProps {
   onSetDueDate: (timestamp: number) => void;
   onSetColor: (color: string) => void;
   onToggleGradient: () => void;
+  onOpenDetail: () => void;
   isOverdue: (dueDate: number) => boolean;
   formatDueDate: (timestamp: number) => string;
   menuRef: React.RefObject<HTMLDivElement | null>;
@@ -48,6 +50,7 @@ export function SortableTaskItem({
   onSetDueDate,
   onSetColor,
   onToggleGradient,
+  onOpenDetail,
   isOverdue,
   formatDueDate,
   menuRef,
@@ -55,6 +58,8 @@ export function SortableTaskItem({
   presetColors,
 }: SortableTaskItemProps) {
   const pickerTriggerRef = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [mounted, setMounted] = useState(false);
 
   const {
     attributes,
@@ -70,6 +75,20 @@ export function SortableTaskItem({
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (taskMenuOpen && pickerTriggerRef.current) {
+      const rect = pickerTriggerRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 4,
+        left: rect.right - 224, // 224px is the menu width (w-56 = 14rem = 224px)
+      });
+    }
+  }, [taskMenuOpen]);
 
   return (
     <div
@@ -132,22 +151,50 @@ export function SortableTaskItem({
             >
               {task.text}
             </span>
-            {task.dueDate && (
-              <div className="flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span
-                  className={`text-xs px-2 py-0.5 rounded ${
-                    isOverdue(task.dueDate) && !task.completed
-                      ? 'bg-red-500 text-white'
-                      : 'bg-gray-200 text-gray-700'
-                  }`}
-                >
-                  {formatDueDate(task.dueDate)}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              {task.dueDate && (
+                <div className="flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded ${
+                      isOverdue(task.dueDate) && !task.completed
+                        ? 'bg-red-500 text-white'
+                        : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {formatDueDate(task.dueDate)}
+                  </span>
+                </div>
+              )}
+              {task.progress !== undefined && task.progress > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <svg className="w-3 h-3 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  <div className="flex items-center gap-1">
+                    <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          task.progress === 100
+                            ? 'bg-green-500'
+                            : task.progress >= 50
+                            ? 'bg-blue-500'
+                            : task.progress >= 25
+                            ? 'bg-yellow-500'
+                            : 'bg-red-500'
+                        }`}
+                        style={{ width: `${task.progress}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                      {task.progress}%
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -179,20 +226,21 @@ export function SortableTaskItem({
           </svg>
         </button>
 
-        {/* Dropdown Menu */}
-        {taskMenuOpen && (
+        {/* Dropdown Menu - rendered in portal */}
+        {mounted && taskMenuOpen && createPortal(
           <div
             ref={menuRef}
-            className="absolute right-0 top-8 w-56 bg-white rounded-lg shadow-2xl border border-gray-200 py-2"
-            style={{ zIndex: 99999 }}
+            className="fixed w-56 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 py-2"
+            style={{
+              top: `${menuPosition.top}px`,
+              left: `${menuPosition.left}px`,
+              zIndex: 99999,
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              onClick={() => {
-                // TODO: Implement open card functionality
-                onTaskMenuToggle();
-              }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors focus:outline-none"
+              onClick={onOpenDetail}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -204,7 +252,7 @@ export function SortableTaskItem({
                 onColorPickerToggle();
                 onTaskMenuToggle();
               }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors focus:outline-none"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
@@ -216,14 +264,15 @@ export function SortableTaskItem({
                 onDatePickerToggle();
                 onTaskMenuToggle();
               }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors focus:outline-none"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <span>Edit dates</span>
             </button>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Date Picker */}

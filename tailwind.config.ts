@@ -74,6 +74,7 @@ const config: Config = {
   },
   plugins: [
     require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
   ],
 };
 

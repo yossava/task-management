@@ -1,3 +1,9 @@
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface BoardTask {
   id: string;
   text: string;
@@ -6,6 +12,9 @@ export interface BoardTask {
   dueDate?: number;
   color?: string;
   showGradient?: boolean;
+  description?: string; // Markdown content
+  progress?: number; // 0-100
+  checklist?: ChecklistItem[];
 }
 
 export interface Board {

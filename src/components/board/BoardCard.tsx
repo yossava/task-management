@@ -9,6 +9,7 @@ import { Board, BoardTask } from '@/lib/types';
 import Card from '@/components/ui/Card';
 import { BoardService } from '@/lib/services/boardService';
 import { SortableTaskItem } from './SortableTaskItem';
+import TaskDetailModal from '@/components/task/TaskDetailModal';
 
 interface BoardCardProps {
   board: Board;
@@ -48,6 +49,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
   const [datePickerOpen, setDatePickerOpen] = useState<string | null>(null);
   const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
   const [boardColorPickerOpen, setBoardColorPickerOpen] = useState(false);
+  const [taskDetailOpen, setTaskDetailOpen] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const newTaskRef = useRef<HTMLInputElement>(null);
@@ -226,6 +228,14 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
     setBoardColorPickerOpen(false);
   };
 
+  const handleUpdateTaskDetails = (task: BoardTask, updates: Partial<BoardTask>) => {
+    BoardService.updateTask(board.id, task.id, updates);
+    const updatedTasks = board.tasks.map(t =>
+      t.id === task.id ? { ...t, ...updates } : t
+    );
+    onUpdate(board.id, { tasks: updatedTasks });
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -381,6 +391,10 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
                     onSetDueDate={(timestamp) => handleSetDueDate(task, timestamp)}
                     onSetColor={(color) => handleSetTaskColor(task, color)}
                     onToggleGradient={() => handleToggleGradient(task)}
+                    onOpenDetail={() => {
+                      setTaskDetailOpen(task.id);
+                      setTaskMenuOpen(null);
+                    }}
                     isOverdue={isOverdue}
                     formatDueDate={formatDueDate}
                     menuRef={menuRef}
@@ -455,6 +469,16 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
         </div>
       </div>
       </Card>
+
+      {/* Task Detail Modal */}
+      {taskDetailOpen && board.tasks?.find(t => t.id === taskDetailOpen) && (
+        <TaskDetailModal
+          task={board.tasks.find(t => t.id === taskDetailOpen)!}
+          isOpen={!!taskDetailOpen}
+          onClose={() => setTaskDetailOpen(null)}
+          onUpdate={(updates) => handleUpdateTaskDetails(board.tasks.find(t => t.id === taskDetailOpen)!, updates)}
+        />
+      )}
     </div>
   );
 }
