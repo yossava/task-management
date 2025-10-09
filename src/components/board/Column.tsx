@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Column as ColumnType, Task } from '@/lib/types';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 import { TaskCard } from '@/components/task/TaskCard';
 import { CreateTaskModal } from '@/components/task/CreateTaskModal';
 import { useTasks } from '@/hooks/useTasks';

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Task } from '@/lib/types';
-import { Modal } from '@/components/ui/Modal';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
+import Input from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
 
 interface CreateTaskModalProps {
   isOpen: boolean;

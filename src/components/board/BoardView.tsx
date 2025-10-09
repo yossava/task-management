@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { Board, Task } from '@/lib/types';
-import { Button } from '@/components/ui/Button';
+import Button from '@/components/ui/Button';
 import { Column } from '@/components/board/Column';
-import { Input } from '@/components/ui/Input';
+import Input from '@/components/ui/Input';
 import { useColumns } from '@/hooks/useColumns';
 
 interface BoardViewProps {

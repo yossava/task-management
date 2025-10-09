@@ -1,7 +1,7 @@
 'use client';
 
 import { Task } from '@/lib/types';
-import { Card } from '@/components/ui/Card';
+import Card from '@/components/ui/Card';
 
 interface TaskCardProps {
   task: Task;

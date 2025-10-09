@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { Board } from '@/lib/types';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 import { formatDate } from '@/lib/utils';
 
 interface BoardCardProps {
