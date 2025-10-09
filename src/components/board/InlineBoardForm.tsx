@@ -61,7 +61,7 @@ export function InlineBoardForm({ onSubmit, onCancel }: InlineBoardFormProps) {
         onKeyDown={handleKeyDown}
         onBlur={handleSubmit}
         placeholder="Enter board title..."
-        className="w-full px-3 py-2 mb-3 text-lg font-semibold bg-transparent border-b-2 border-blue-500 focus:outline-none text-gray-900 dark:text-white placeholder:text-gray-400"
+        className="w-full px-3 py-2 mb-3 text-lg font-semibold bg-transparent border-b-2 border-gray-300 dark:border-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 text-gray-900 dark:text-white placeholder:text-gray-400 transition-colors"
       />
 
       <div className="flex gap-2">
@@ -71,7 +71,7 @@ export function InlineBoardForm({ onSubmit, onCancel }: InlineBoardFormProps) {
             type="button"
             onClick={() => setColor(presetColor)}
             onMouseDown={(e) => e.preventDefault()} // Prevent blur on click
-            className={`w-8 h-8 rounded-lg transition-all ${
+            className={`w-8 h-8 rounded-lg transition-all focus:outline-none ${
               color === presetColor
                 ? 'ring-2 ring-offset-2 ring-blue-500 scale-110'
                 : 'hover:scale-105'

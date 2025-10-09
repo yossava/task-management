@@ -3,6 +3,9 @@ export interface BoardTask {
   text: string;
   completed: boolean;
   createdAt: number;
+  dueDate?: number;
+  color?: string;
+  showGradient?: boolean;
 }
 
 export interface Board {

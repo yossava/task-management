@@ -19,6 +19,20 @@
     background-attachment: fixed;
     color: rgb(243 244 246);
   }
+
+  /* Remove default focus outlines and rings */
+  *:focus,
+  *:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  input:focus,
+  textarea:focus,
+  button:focus,
+  select:focus {
+    outline: none !important;
+  }
 }
 
 @layer utilities {
