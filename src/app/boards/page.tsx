@@ -476,19 +476,6 @@ export default function BoardsPage() {
               isOpen={showNotifications}
             />
             <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                showFilters
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-              title="Filters & Sort"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-            </button>
-            <button
               onClick={() => setShowKeyboardHelp(true)}
               className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="Keyboard shortcuts (?)"
@@ -555,31 +542,27 @@ export default function BoardsPage() {
               </svg>
               <span>Calendar</span>
             </button>
+            {viewMode !== 'calendar' && (
+              <>
+                <div className="w-px bg-gray-300 dark:bg-gray-600 my-2" />
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                    showFilters
+                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                  title="Filters & Sort"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  <span>Filters</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
-
-        {/* Filters Panel - Collapsible */}
-        {showFilters && viewMode !== 'calendar' && (
-          <div className="mb-6 space-y-4 animate-in slide-in-from-top duration-200">
-            <QuickFilters
-              onApplyPreset={(newFilters, newSort) => {
-                setFilters(newFilters);
-                setSort(newSort);
-              }}
-              currentFilters={filters}
-              currentSort={sort}
-            />
-            <FilterPanel
-              filters={filters}
-              sort={sort}
-              availableTags={allTags}
-              onFiltersChange={setFilters}
-              onSortChange={setSort}
-              taskCount={totalTaskCount}
-              filteredCount={filteredTaskCount}
-            />
-          </div>
-        )}
 
         {/* Calendar View */}
         {viewMode === 'calendar' && (
@@ -720,6 +703,68 @@ export default function BoardsPage() {
         onSearch={() => setShowSearch(true)}
         onViewMode={setViewMode}
       />
+
+      {/* Filters Modal */}
+      {showFilters && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity"
+              onClick={() => setShowFilters(false)}
+            />
+
+            {/* Modal */}
+            <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-800">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Filters & Sort</h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {filteredTaskCount} of {totalTaskCount} tasks
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] space-y-6">
+                <QuickFilters
+                  onApplyPreset={(newFilters, newSort) => {
+                    setFilters(newFilters);
+                    setSort(newSort);
+                  }}
+                  currentFilters={filters}
+                  currentSort={sort}
+                />
+                <FilterPanel
+                  filters={filters}
+                  sort={sort}
+                  availableTags={allTags}
+                  onFiltersChange={setFilters}
+                  onSortChange={setSort}
+                  taskCount={totalTaskCount}
+                  filteredCount={filteredTaskCount}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Drag Overlay - shows the task or board being dragged */}
       <DragOverlay>
