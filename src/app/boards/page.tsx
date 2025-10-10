@@ -34,6 +34,8 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import NotificationsPanel from '@/components/notifications/NotificationsPanel';
 import { NotificationService } from '@/lib/services/notificationService';
+import CalendarView from '@/components/calendar/CalendarView';
+import type { ViewMode } from '@/lib/types';
 
 const HEADER_STORAGE_KEY = 'boards_page_header';
 
@@ -45,6 +47,7 @@ export default function BoardsPage() {
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
   const [activeBoard, setActiveBoard] = useState<Board | null>(null);
   const [pageTitle, setPageTitle] = useState('Your Boards');
@@ -168,6 +171,9 @@ export default function BoardsPage() {
     onNewBoard: () => setIsCreatingBoard(true),
     onTemplate: () => setShowTemplateGallery(true),
     onExport: () => setShowExportImport(true),
+    onBoardView: () => setViewMode('board'),
+    onListView: () => setViewMode('list'),
+    onCalendarView: () => setViewMode('calendar'),
   });
 
   const handleUpdate = (id: string, data: Partial<Board>) => {
@@ -438,79 +444,153 @@ export default function BoardsPage() {
           </div>
         </div>
 
-        {/* Filter Panel */}
-        <div className="mb-6">
-          <FilterPanel
-            filters={filters}
-            sort={sort}
-            availableTags={allTags}
-            onFiltersChange={setFilters}
-            onSortChange={setSort}
-            taskCount={totalTaskCount}
-            filteredCount={filteredTaskCount}
-          />
+        {/* View Mode Switcher */}
+        <div className="mb-6 flex justify-center">
+          <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1">
+            <button
+              onClick={() => setViewMode('board')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                viewMode === 'board'
+                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+              title="Board view (1)"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+              </svg>
+              <span>Board</span>
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                viewMode === 'list'
+                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+              title="List view (2)"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <span>List</span>
+            </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                viewMode === 'calendar'
+                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+              title="Calendar view (3)"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>Calendar</span>
+            </button>
+          </div>
         </div>
 
-        {/* Activity Feed */}
-        <div className="mb-6">
-          <ActivityFeed limit={20} />
-        </div>
-
-        {/* Boards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <SortableContext
-            items={boards.map(b => b.id)}
-            strategy={rectSortingStrategy}
-          >
-            {boardsWithFilteredTasks.map((board) => (
-              <BoardCard
-                key={board.id}
-                board={board}
-                onUpdate={handleUpdate}
-                onDelete={handleDelete}
-              />
-            ))}
-          </SortableContext>
-
-          {/* Inline Create Board Card */}
-          {isCreatingBoard ? (
-            <InlineBoardForm
-              onSubmit={handleCreate}
-              onCancel={() => setIsCreatingBoard(false)}
+        {/* Filter Panel - Only show in board/list view */}
+        {viewMode !== 'calendar' && (
+          <div className="mb-6">
+            <FilterPanel
+              filters={filters}
+              sort={sort}
+              availableTags={allTags}
+              onFiltersChange={setFilters}
+              onSortChange={setSort}
+              taskCount={totalTaskCount}
+              filteredCount={filteredTaskCount}
             />
-          ) : (
-            <div className="min-h-[200px] flex flex-col gap-3">
-              <button
-                onClick={() => setIsCreatingBoard(true)}
-                className="flex-1 bg-white/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-all flex flex-col items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium group focus:outline-none"
-              >
-                <div className="mb-2 relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl blur-md opacity-0 group-hover:opacity-75 transition-opacity" />
-                  <div className="relative w-12 h-12 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </div>
-                </div>
-                <span className="text-base">Create Blank Board</span>
-              </button>
-              <button
-                onClick={() => setShowTemplateGallery(true)}
-                className="flex-1 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 hover:from-purple-100 hover:to-blue-100 dark:hover:from-purple-900 dark:hover:to-blue-900 rounded-2xl border-2 border-dashed border-purple-300 dark:border-purple-700 hover:border-purple-500 dark:hover:border-purple-500 transition-all flex flex-col items-center justify-center text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium group focus:outline-none"
-              >
-                <div className="mb-2 relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl blur-md opacity-0 group-hover:opacity-75 transition-opacity" />
-                  <div className="relative w-12 h-12 bg-gradient-to-br from-purple-600 via-purple-700 to-blue-700 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                    </svg>
-                  </div>
-                </div>
-                <span className="text-base">Use Template</span>
-              </button>
+          </div>
+        )}
+
+        {/* Activity Feed - Only show in board view */}
+        {viewMode === 'board' && (
+          <div className="mb-6">
+            <ActivityFeed limit={20} />
+          </div>
+        )}
+
+        {/* Calendar View */}
+        {viewMode === 'calendar' && (
+          <div className="mb-6">
+            <CalendarView boards={boards} />
+          </div>
+        )}
+
+        {/* List View - TODO: Implement list view */}
+        {viewMode === 'list' && (
+          <div className="mb-6 p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg text-center">
+            <div className="text-gray-500 dark:text-gray-400">
+              <svg className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <p className="text-lg font-medium">List view coming soon!</p>
+              <p className="text-sm mt-2">Switch to Board or Calendar view for now</p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Boards Grid - Only show in board view */}
+        {viewMode === 'board' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <SortableContext
+              items={boards.map(b => b.id)}
+              strategy={rectSortingStrategy}
+            >
+              {boardsWithFilteredTasks.map((board) => (
+                <BoardCard
+                  key={board.id}
+                  board={board}
+                  onUpdate={handleUpdate}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </SortableContext>
+
+            {/* Inline Create Board Card */}
+            {isCreatingBoard ? (
+              <InlineBoardForm
+                onSubmit={handleCreate}
+                onCancel={() => setIsCreatingBoard(false)}
+              />
+            ) : (
+              <div className="min-h-[200px] flex flex-col gap-3">
+                <button
+                  onClick={() => setIsCreatingBoard(true)}
+                  className="flex-1 bg-white/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-all flex flex-col items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium group focus:outline-none"
+                >
+                  <div className="mb-2 relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl blur-md opacity-0 group-hover:opacity-75 transition-opacity" />
+                    <div className="relative w-12 h-12 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </div>
+                  </div>
+                  <span className="text-base">Create Blank Board</span>
+                </button>
+                <button
+                  onClick={() => setShowTemplateGallery(true)}
+                  className="flex-1 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 hover:from-purple-100 hover:to-blue-100 dark:hover:from-purple-900 dark:hover:to-blue-900 rounded-2xl border-2 border-dashed border-purple-300 dark:border-purple-700 hover:border-purple-500 dark:hover:border-purple-500 transition-all flex flex-col items-center justify-center text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium group focus:outline-none"
+                >
+                  <div className="mb-2 relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl blur-md opacity-0 group-hover:opacity-75 transition-opacity" />
+                    <div className="relative w-12 h-12 bg-gradient-to-br from-purple-600 via-purple-700 to-blue-700 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <span className="text-base">Use Template</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Template Gallery Modal */}
