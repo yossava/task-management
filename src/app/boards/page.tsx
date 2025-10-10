@@ -23,7 +23,6 @@ import { Board, BoardTask, TaskFilters, TaskSort, Tag, BoardTemplate } from '@/l
 import { BoardService } from '@/lib/services/boardService';
 import { filterAndSortTasks } from '@/lib/utils/taskFilters';
 import Card from '@/components/ui/Card';
-import FilterPanel from '@/components/ui/FilterPanel';
 import GlobalSearch from '@/components/search/GlobalSearch';
 import TemplateGallery from '@/components/board/TemplateGallery';
 import { TemplateService } from '@/lib/services/templateService';
@@ -36,7 +35,6 @@ import { NotificationService } from '@/lib/services/notificationService';
 import { RecurringTaskService } from '@/lib/services/recurringTaskService';
 import CalendarView from '@/components/calendar/CalendarView';
 import ListView from '@/components/list/ListView';
-import QuickFilters from '@/components/ui/QuickFilters';
 import CommandPalette from '@/components/command/CommandPalette';
 import type { ViewMode } from '@/lib/types';
 
@@ -543,35 +541,6 @@ export default function BoardsPage() {
             </button>
           </div>
         </div>
-
-        {/* Quick Filters - Only show in board/list view */}
-        {viewMode !== 'calendar' && (
-          <div className="mb-6">
-            <QuickFilters
-              onApplyPreset={(newFilters, newSort) => {
-                setFilters(newFilters);
-                setSort(newSort);
-              }}
-              currentFilters={filters}
-              currentSort={sort}
-            />
-          </div>
-        )}
-
-        {/* Filter Panel - Only show in board/list view */}
-        {viewMode !== 'calendar' && (
-          <div className="mb-6">
-            <FilterPanel
-              filters={filters}
-              sort={sort}
-              availableTags={allTags}
-              onFiltersChange={setFilters}
-              onSortChange={setSort}
-              taskCount={totalTaskCount}
-              filteredCount={filteredTaskCount}
-            />
-          </div>
-        )}
 
         {/* Calendar View */}
         {viewMode === 'calendar' && (
