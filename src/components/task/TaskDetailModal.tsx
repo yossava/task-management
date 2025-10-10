@@ -9,6 +9,8 @@ import PriorityBadge from '@/components/ui/PriorityBadge';
 import TagPicker from '@/components/ui/TagPicker';
 import TagBadge from '@/components/ui/TagBadge';
 import TaskComments from '@/components/task/TaskComments';
+import TaskDependencies from '@/components/task/TaskDependencies';
+import RecurringTaskModal from '@/components/task/RecurringTaskModal';
 
 interface TaskDetailModalProps {
   task: BoardTask;
@@ -26,11 +28,22 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
   const [priorityPickerOpen, setPriorityPickerOpen] = useState(false);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [commentsKey, setCommentsKey] = useState(0);
+  const [dependenciesKey, setDependenciesKey] = useState(0);
+  const [recurringModalOpen, setRecurringModalOpen] = useState(false);
   const priorityButtonRef = useRef<HTMLButtonElement>(null);
   const tagButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleCommentsUpdate = () => {
     setCommentsKey(prev => prev + 1);
+  };
+
+  const handleDependenciesUpdate = () => {
+    setDependenciesKey(prev => prev + 1);
+  };
+
+  const handleRecurringUpdate = () => {
+    // Trigger a full refresh by closing and reopening
+    onClose();
   };
 
   const editor = useEditor({
@@ -175,6 +188,14 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
                       Due: {new Date(task.dueDate).toLocaleDateString()}
                     </div>
                   )}
+                  {task.recurringTaskId && (
+                    <div className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Recurring
+                    </div>
+                  )}
                   <div className="flex items-center gap-2">
                     {task.priority ? (
                       <button
@@ -225,6 +246,15 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                     Add Tag
+                  </button>
+                  <button
+                    onClick={() => setRecurringModalOpen(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 border border-purple-300 dark:border-purple-600 rounded-md hover:border-purple-400 dark:hover:border-purple-500 transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {task.recurringTaskId ? 'Edit Recurring' : 'Make Recurring'}
                   </button>
                 </div>
               </div>
@@ -512,6 +542,16 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
               />
             </div>
 
+            {/* Dependencies Section */}
+            <div key={dependenciesKey} className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <TaskDependencies
+                boardId={boardId}
+                taskId={task.id}
+                currentTask={task}
+                onUpdate={handleDependenciesUpdate}
+              />
+            </div>
+
             {/* Comments Section */}
             <div key={commentsKey} className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <TaskComments
@@ -522,6 +562,16 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
               />
             </div>
           </div>
+
+          {/* Recurring Task Modal */}
+          <RecurringTaskModal
+            isOpen={recurringModalOpen}
+            onClose={() => setRecurringModalOpen(false)}
+            boardId={boardId}
+            taskId={task.id}
+            currentTask={task}
+            onUpdate={handleRecurringUpdate}
+          />
 
           {/* Footer */}
           <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">

@@ -34,6 +34,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import NotificationsPanel from '@/components/notifications/NotificationsPanel';
 import { NotificationService } from '@/lib/services/notificationService';
+import { RecurringTaskService } from '@/lib/services/recurringTaskService';
 import CalendarView from '@/components/calendar/CalendarView';
 import ListView from '@/components/list/ListView';
 import QuickFilters from '@/components/ui/QuickFilters';
@@ -107,6 +108,26 @@ export default function BoardsPage() {
 
     return () => clearInterval(interval);
   }, [boards]);
+
+  // Generate recurring tasks periodically
+  useEffect(() => {
+    const generateRecurringTasks = () => {
+      const generatedCount = RecurringTaskService.generateDueTasks();
+      if (generatedCount > 0) {
+        console.log(`Generated ${generatedCount} recurring task${generatedCount > 1 ? 's' : ''}`);
+        // Force reload to show new tasks
+        window.location.reload();
+      }
+    };
+
+    // Check immediately on mount
+    generateRecurringTasks();
+
+    // Then check every hour
+    const interval = setInterval(generateRecurringTasks, 60 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (isEditingTitle) {
