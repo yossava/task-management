@@ -27,6 +27,7 @@ import FilterPanel from '@/components/ui/FilterPanel';
 import GlobalSearch from '@/components/search/GlobalSearch';
 import TemplateGallery from '@/components/board/TemplateGallery';
 import { TemplateService } from '@/lib/services/templateService';
+import ActivityFeed from '@/components/activity/ActivityFeed';
 
 const HEADER_STORAGE_KEY = 'boards_page_header';
 
@@ -390,6 +391,11 @@ export default function BoardsPage() {
             taskCount={totalTaskCount}
             filteredCount={filteredTaskCount}
           />
+        </div>
+
+        {/* Activity Feed */}
+        <div className="mb-6">
+          <ActivityFeed limit={20} />
         </div>
 
         {/* Boards Grid */}

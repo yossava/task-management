@@ -1,5 +1,6 @@
 import { Board, BoardTask, Tag } from '@/lib/types';
 import { StorageService, STORAGE_KEYS } from '@/lib/storage';
+import { ActivityService } from './activityService';
 
 export class BoardService {
   static getAll(): Board[] {
@@ -23,6 +24,10 @@ export class BoardService {
     };
     boards.push(newBoard);
     StorageService.set(STORAGE_KEYS.BOARDS, boards);
+
+    // Log activity
+    ActivityService.log('board_created', newBoard.id, newBoard.title);
+
     return newBoard;
   }
 
@@ -31,6 +36,7 @@ export class BoardService {
     const index = boards.findIndex(b => b.id === id);
     if (index === -1) return null;
 
+    const oldBoard = boards[index];
     boards[index] = {
       ...boards[index],
       ...updates,
@@ -39,15 +45,36 @@ export class BoardService {
       updatedAt: Date.now(),
     };
     StorageService.set(STORAGE_KEYS.BOARDS, boards);
+
+    // Log activity if title or description changed
+    const changes: { field: string; oldValue: any; newValue: any }[] = [];
+    if (updates.title && updates.title !== oldBoard.title) {
+      changes.push({ field: 'title', oldValue: oldBoard.title, newValue: updates.title });
+    }
+    if (updates.description !== undefined && updates.description !== oldBoard.description) {
+      changes.push({ field: 'description', oldValue: oldBoard.description, newValue: updates.description });
+    }
+    if (changes.length > 0) {
+      ActivityService.log('board_updated', boards[index].id, boards[index].title, { changes });
+    }
+
     return boards[index];
   }
 
   static delete(id: string): boolean {
     const boards = this.getAll();
+    const board = boards.find(b => b.id === id);
     const filtered = boards.filter(b => b.id !== id);
     if (filtered.length === boards.length) return false;
 
     StorageService.set(STORAGE_KEYS.BOARDS, filtered);
+
+    // Log activity
+    if (board) {
+      ActivityService.log('board_deleted', id, board.title);
+      ActivityService.clearBoard(id); // Clean up board's activity logs
+    }
+
     return true;
   }
 
@@ -75,6 +102,13 @@ export class BoardService {
 
     board.tasks = [...(board.tasks || []), newTask];
     this.update(boardId, { tasks: board.tasks });
+
+    // Log activity
+    ActivityService.log('task_created', boardId, board.title, {
+      taskId: newTask.id,
+      taskText: newTask.text,
+    });
+
     return newTask;
   }
 
@@ -85,12 +119,37 @@ export class BoardService {
     const taskIndex = board.tasks.findIndex(t => t.id === taskId);
     if (taskIndex === -1) return null;
 
+    const oldTask = board.tasks[taskIndex];
     board.tasks[taskIndex] = {
       ...board.tasks[taskIndex],
       ...updates,
     };
 
     this.update(boardId, { tasks: board.tasks });
+
+    // Log activity
+    if (updates.completed !== undefined && updates.completed !== oldTask.completed && updates.completed) {
+      ActivityService.log('task_completed', boardId, board.title, {
+        taskId,
+        taskText: board.tasks[taskIndex].text,
+      });
+    } else {
+      const changes: { field: string; oldValue: any; newValue: any }[] = [];
+      if (updates.text && updates.text !== oldTask.text) {
+        changes.push({ field: 'text', oldValue: oldTask.text, newValue: updates.text });
+      }
+      if (updates.priority && updates.priority !== oldTask.priority) {
+        changes.push({ field: 'priority', oldValue: oldTask.priority, newValue: updates.priority });
+      }
+      if (changes.length > 0) {
+        ActivityService.log('task_updated', boardId, board.title, {
+          taskId,
+          taskText: board.tasks[taskIndex].text,
+          changes,
+        });
+      }
+    }
+
     return board.tasks[taskIndex];
   }
 
@@ -98,8 +157,18 @@ export class BoardService {
     const board = this.getById(boardId);
     if (!board) return false;
 
+    const task = board.tasks.find(t => t.id === taskId);
     board.tasks = board.tasks.filter(t => t.id !== taskId);
     this.update(boardId, { tasks: board.tasks });
+
+    // Log activity
+    if (task) {
+      ActivityService.log('task_deleted', boardId, board.title, {
+        taskId,
+        taskText: task.text,
+      });
+    }
+
     return true;
   }
 

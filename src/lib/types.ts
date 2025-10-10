@@ -122,3 +122,33 @@ export interface BoardTemplate {
   isCustom: boolean;
   createdAt: number;
 }
+
+export type ActivityType =
+  | 'board_created'
+  | 'board_updated'
+  | 'board_deleted'
+  | 'task_created'
+  | 'task_updated'
+  | 'task_completed'
+  | 'task_deleted'
+  | 'task_moved'
+  | 'tag_created'
+  | 'tag_updated'
+  | 'tag_deleted';
+
+export interface ActivityLog {
+  id: string;
+  type: ActivityType;
+  boardId: string;
+  boardTitle: string;
+  taskId?: string;
+  taskText?: string;
+  tagId?: string;
+  tagName?: string;
+  changes?: {
+    field: string;
+    oldValue: any;
+    newValue: any;
+  }[];
+  timestamp: number;
+}

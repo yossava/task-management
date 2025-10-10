@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   USERS: 'pm_app_users',
   SETTINGS: 'pm_app_settings',
   TEMPLATES: 'pm_app_templates',
+  ACTIVITY: 'pm_app_activity',
   VERSION: 'pm_app_version',
 } as const;
 
