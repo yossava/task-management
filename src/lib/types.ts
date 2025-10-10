@@ -83,6 +83,25 @@ export interface User {
 }
 
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
+
+export type SortOption = 'priority' | 'dueDate' | 'createdAt' | 'progress' | 'alphabetical';
+export type SortDirection = 'asc' | 'desc';
+
+export type DateFilterOption = 'all' | 'overdue' | 'today' | 'week' | 'month' | 'noDate';
+
+export interface TaskFilters {
+  priorities: Priority[];
+  tags: string[];
+  dateFilter: DateFilterOption;
+  customDateRange?: { start: number; end: number };
+  showCompleted: boolean;
+  searchQuery: string;
+}
+
+export interface TaskSort {
+  option: SortOption;
+  direction: SortDirection;
+}
 export type ViewMode = 'board' | 'list' | 'calendar';
 
 export interface AppSettings {

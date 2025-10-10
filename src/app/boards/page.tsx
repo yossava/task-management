@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -19,9 +19,11 @@ import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortab
 import { BoardCard } from '@/components/board/BoardCard';
 import { InlineBoardForm } from '@/components/board/InlineBoardForm';
 import { useBoards } from '@/hooks/useBoards';
-import { Board, BoardTask } from '@/lib/types';
+import { Board, BoardTask, TaskFilters, TaskSort, Tag } from '@/lib/types';
 import { BoardService } from '@/lib/services/boardService';
+import { filterAndSortTasks } from '@/lib/utils/taskFilters';
 import Card from '@/components/ui/Card';
+import FilterPanel from '@/components/ui/FilterPanel';
 
 const HEADER_STORAGE_KEY = 'boards_page_header';
 
@@ -36,6 +38,19 @@ export default function BoardsPage() {
   const [isEditingSubtitle, setIsEditingSubtitle] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const subtitleRef = useRef<HTMLInputElement>(null);
+
+  // Filter and sort state
+  const [filters, setFilters] = useState<TaskFilters>({
+    priorities: [],
+    tags: [],
+    dateFilter: 'all',
+    showCompleted: true,
+    searchQuery: '',
+  });
+  const [sort, setSort] = useState<TaskSort>({
+    option: 'priority',
+    direction: 'desc',
+  });
 
   // Load header from localStorage
   useEffect(() => {
@@ -239,6 +254,42 @@ export default function BoardsPage() {
     updateBoard(targetBoardId, { tasks: updatedTargetTasks });
   };
 
+  // Collect all unique tags from all boards
+  const allTags = useMemo(() => {
+    const tagMap = new Map<string, Tag>();
+    boards.forEach(board => {
+      board.tags?.forEach(tag => {
+        if (!tagMap.has(tag.id)) {
+          tagMap.set(tag.id, tag);
+        }
+      });
+    });
+    return Array.from(tagMap.values());
+  }, [boards]);
+
+  // Calculate total task count across all boards
+  const totalTaskCount = useMemo(() => {
+    return boards.reduce((count, board) => count + (board.tasks?.length || 0), 0);
+  }, [boards]);
+
+  // Calculate filtered task count
+  const filteredTaskCount = useMemo(() => {
+    let count = 0;
+    boards.forEach(board => {
+      const filteredTasks = filterAndSortTasks(board.tasks || [], filters, sort);
+      count += filteredTasks.length;
+    });
+    return count;
+  }, [boards, filters, sort]);
+
+  // Create boards with filtered tasks
+  const boardsWithFilteredTasks = useMemo(() => {
+    return boards.map(board => ({
+      ...board,
+      tasks: filterAndSortTasks(board.tasks || [], filters, sort),
+    }));
+  }, [boards, filters, sort]);
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto">
@@ -314,13 +365,26 @@ export default function BoardsPage() {
           </div>
         </div>
 
+        {/* Filter Panel */}
+        <div className="mb-6">
+          <FilterPanel
+            filters={filters}
+            sort={sort}
+            availableTags={allTags}
+            onFiltersChange={setFilters}
+            onSortChange={setSort}
+            taskCount={totalTaskCount}
+            filteredCount={filteredTaskCount}
+          />
+        </div>
+
         {/* Boards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <SortableContext
             items={boards.map(b => b.id)}
             strategy={rectSortingStrategy}
           >
-            {boards.map((board) => (
+            {boardsWithFilteredTasks.map((board) => (
               <BoardCard
                 key={board.id}
                 board={board}
