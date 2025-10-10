@@ -4,6 +4,13 @@ export interface ChecklistItem {
   completed: boolean;
 }
 
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: number;
+}
+
 export interface BoardTask {
   id: string;
   text: string;
@@ -16,6 +23,7 @@ export interface BoardTask {
   progress?: number; // 0-100
   checklist?: ChecklistItem[];
   priority?: Priority;
+  tags?: string[]; // Array of tag IDs
 }
 
 export interface Board {
@@ -24,6 +32,7 @@ export interface Board {
   description?: string;
   columns: Column[];
   tasks: BoardTask[];
+  tags?: Tag[]; // Board-level tag definitions
   createdAt: number;
   updatedAt: number;
   color?: string;

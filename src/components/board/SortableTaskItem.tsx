@@ -4,11 +4,12 @@ import { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { BoardTask, Priority } from '@/lib/types';
+import { BoardTask, Priority, Tag } from '@/lib/types';
 import DatePicker from '@/components/ui/DatePicker';
 import ColorPicker from '@/components/ui/ColorPicker';
 import PriorityBadge from '@/components/ui/PriorityBadge';
 import PriorityPicker from '@/components/ui/PriorityPicker';
+import TagBadge from '@/components/ui/TagBadge';
 
 interface SortableTaskItemProps {
   task: BoardTask;
@@ -37,6 +38,7 @@ interface SortableTaskItemProps {
   menuRef: React.RefObject<HTMLDivElement | null>;
   editTaskRef: React.RefObject<HTMLInputElement | null>;
   presetColors: string[];
+  availableTags: Tag[];
 }
 
 export function SortableTaskItem({
@@ -66,6 +68,7 @@ export function SortableTaskItem({
   menuRef,
   editTaskRef,
   presetColors,
+  availableTags,
 }: SortableTaskItemProps) {
   const pickerTriggerRef = useRef<HTMLDivElement>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -116,7 +119,7 @@ export function SortableTaskItem({
           task.completed ? 'opacity-100' : 'opacity-0 group-hover/task:opacity-100'
         }`}
         style={{
-          backgroundColor: task.completed ? '#10b981' : 'transparent',
+          backgroundColor: task.completed ? '#10b981' : '#ffffff',
           borderColor: task.completed ? '#10b981' : '#d1d5db',
         }}
       >
@@ -126,6 +129,13 @@ export function SortableTaskItem({
           </svg>
         )}
       </button>
+
+      {/* Priority Badge - positioned absolutely on the top right */}
+      {task.priority && (
+        <div className="absolute top-1.5 right-1.5 z-10">
+          <PriorityBadge priority={task.priority} size="xs" showIcon={true} />
+        </div>
+      )}
 
       {/* Text content - with left margin when checkbox is visible */}
       <div
@@ -150,7 +160,7 @@ export function SortableTaskItem({
             className="w-full text-sm bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 focus:shadow-md text-gray-900 dark:text-white transition-all"
           />
         ) : (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <span
               onClick={onEdit}
               className={`text-sm cursor-text select-none ${
@@ -161,50 +171,69 @@ export function SortableTaskItem({
             >
               {task.text}
             </span>
-            <div className="flex items-center gap-2 flex-wrap">
-              {task.priority && (
-                <PriorityBadge priority={task.priority} size="sm" showIcon={true} />
-              )}
-              {task.dueDate && (
-                <div className="flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded ${
-                      isOverdue(task.dueDate) && !task.completed
-                        ? 'bg-red-500 text-white'
-                        : 'bg-gray-200 text-gray-700'
-                    }`}
-                  >
-                    {formatDueDate(task.dueDate)}
-                  </span>
+
+            {/* Metadata section - separated into rows */}
+            <div className="flex flex-col gap-1.5">
+              {/* Row 1: Due Date and Progress */}
+              {(task.dueDate || (task.progress !== undefined && task.progress > 0)) && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {task.dueDate && (
+                    <div
+                      className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
+                        isOverdue(task.dueDate) && !task.completed
+                          ? 'bg-red-500 text-white'
+                          : 'bg-gray-200 text-gray-700'
+                      }`}
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>{formatDueDate(task.dueDate)}</span>
+                    </div>
+                  )}
+                  {task.progress !== undefined && task.progress > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-3 h-3 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                      <div className="flex items-center gap-1">
+                        <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 ${
+                              task.progress === 100
+                                ? 'bg-green-500'
+                                : task.progress >= 50
+                                ? 'bg-blue-500'
+                                : task.progress >= 25
+                                ? 'bg-yellow-500'
+                                : 'bg-red-500'
+                            }`}
+                            style={{ width: `${task.progress}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                          {task.progress}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-              {task.progress !== undefined && task.progress > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <svg className="w-3 h-3 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                  </svg>
-                  <div className="flex items-center gap-1">
-                    <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          task.progress === 100
-                            ? 'bg-green-500'
-                            : task.progress >= 50
-                            ? 'bg-blue-500'
-                            : task.progress >= 25
-                            ? 'bg-yellow-500'
-                            : 'bg-red-500'
-                        }`}
-                        style={{ width: `${task.progress}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                      {task.progress}%
+
+              {/* Row 2: Tags */}
+              {task.tags && task.tags.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {task.tags.slice(0, 3).map(tagId => {
+                    const tag = availableTags.find(t => t.id === tagId);
+                    return tag ? (
+                      <TagBadge key={tag.id} tag={tag} size="sm" />
+                    ) : null;
+                  })}
+                  {task.tags.length > 3 && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                      +{task.tags.length - 3}
                     </span>
-                  </div>
+                  )}
                 </div>
               )}
             </div>

@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import { BoardService } from '@/lib/services/boardService';
 import { SortableTaskItem } from './SortableTaskItem';
 import TaskDetailModal from '@/components/task/TaskDetailModal';
+import TagManager from '@/components/ui/TagManager';
 
 interface BoardCardProps {
   board: Board;
@@ -50,6 +51,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
   const [priorityPickerOpen, setPriorityPickerOpen] = useState<string | null>(null);
   const [boardColorPickerOpen, setBoardColorPickerOpen] = useState(false);
   const [taskDetailOpen, setTaskDetailOpen] = useState<string | null>(null);
+  const [tagManagerOpen, setTagManagerOpen] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const newTaskRef = useRef<HTMLInputElement>(null);
@@ -250,6 +252,33 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
     const updatedTasks = board.tasks.filter(t => t.id !== taskId);
     BoardService.deleteTask(board.id, taskId);
     onUpdate(board.id, { tasks: updatedTasks });
+  };
+
+  // Tag management handlers
+  const handleCreateTag = (name: string, color: string) => {
+    const newTag = BoardService.createTag(board.id, name, color);
+    if (newTag) {
+      const updatedBoard = BoardService.getById(board.id);
+      if (updatedBoard) {
+        onUpdate(board.id, { tags: updatedBoard.tags });
+      }
+    }
+  };
+
+  const handleUpdateTag = (tagId: string, name: string, color: string) => {
+    BoardService.updateTag(board.id, tagId, name, color);
+    const updatedBoard = BoardService.getById(board.id);
+    if (updatedBoard) {
+      onUpdate(board.id, { tags: updatedBoard.tags });
+    }
+  };
+
+  const handleDeleteTag = (tagId: string) => {
+    BoardService.deleteTag(board.id, tagId);
+    const updatedBoard = BoardService.getById(board.id);
+    if (updatedBoard) {
+      onUpdate(board.id, { tags: updatedBoard.tags, tasks: updatedBoard.tasks });
+    }
   };
 
   const calculateBoardProgress = () => {
@@ -472,6 +501,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
                     menuRef={menuRef}
                     editTaskRef={editTaskRef}
                     presetColors={PRESET_COLORS}
+                    availableTags={board.tags || []}
                   />
                 ))}
             </SortableContext>
@@ -549,8 +579,20 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
           isOpen={!!taskDetailOpen}
           onClose={() => setTaskDetailOpen(null)}
           onUpdate={(updates) => handleUpdateTaskDetails(board.tasks.find(t => t.id === taskDetailOpen)!, updates)}
+          availableTags={board.tags || []}
+          onManageTags={() => setTagManagerOpen(true)}
         />
       )}
+
+      {/* Tag Manager Modal */}
+      <TagManager
+        isOpen={tagManagerOpen}
+        tags={board.tags || []}
+        onClose={() => setTagManagerOpen(false)}
+        onCreateTag={handleCreateTag}
+        onUpdateTag={handleUpdateTag}
+        onDeleteTag={handleDeleteTag}
+      />
     </div>
   );
 }

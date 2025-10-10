@@ -1,4 +1,4 @@
-import { Board, BoardTask } from '@/lib/types';
+import { Board, BoardTask, Tag } from '@/lib/types';
 import { StorageService, STORAGE_KEYS } from '@/lib/storage';
 
 export class BoardService {
@@ -100,6 +100,57 @@ export class BoardService {
 
     board.tasks = board.tasks.filter(t => t.id !== taskId);
     this.update(boardId, { tasks: board.tasks });
+    return true;
+  }
+
+  // Tag Management
+  static createTag(boardId: string, name: string, color: string): Tag | null {
+    const board = this.getById(boardId);
+    if (!board) return null;
+
+    const newTag: Tag = {
+      id: crypto.randomUUID(),
+      name,
+      color,
+      createdAt: Date.now(),
+    };
+
+    board.tags = [...(board.tags || []), newTag];
+    this.update(boardId, { tags: board.tags });
+    return newTag;
+  }
+
+  static updateTag(boardId: string, tagId: string, name: string, color: string): Tag | null {
+    const board = this.getById(boardId);
+    if (!board) return null;
+
+    const tagIndex = board.tags?.findIndex(t => t.id === tagId);
+    if (tagIndex === undefined || tagIndex === -1) return null;
+
+    board.tags![tagIndex] = {
+      ...board.tags![tagIndex],
+      name,
+      color,
+    };
+
+    this.update(boardId, { tags: board.tags });
+    return board.tags![tagIndex];
+  }
+
+  static deleteTag(boardId: string, tagId: string): boolean {
+    const board = this.getById(boardId);
+    if (!board) return false;
+
+    // Remove tag from board
+    board.tags = (board.tags || []).filter(t => t.id !== tagId);
+
+    // Remove tag from all tasks
+    board.tasks = board.tasks.map(task => ({
+      ...task,
+      tags: (task.tags || []).filter(tid => tid !== tagId),
+    }));
+
+    this.update(boardId, { tags: board.tags, tasks: board.tasks });
     return true;
   }
 }

@@ -3,22 +3,28 @@
 import { useState, useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { BoardTask, ChecklistItem, Priority } from '@/lib/types';
+import { BoardTask, ChecklistItem, Priority, Tag } from '@/lib/types';
 import PriorityPicker from '@/components/ui/PriorityPicker';
 import PriorityBadge from '@/components/ui/PriorityBadge';
+import TagPicker from '@/components/ui/TagPicker';
+import TagBadge from '@/components/ui/TagBadge';
 
 interface TaskDetailModalProps {
   task: BoardTask;
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (updates: Partial<BoardTask>) => void;
+  availableTags: Tag[];
+  onManageTags: () => void;
 }
 
-export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailModalProps) {
+export default function TaskDetailModal({ task, isOpen, onClose, onUpdate, availableTags, onManageTags }: TaskDetailModalProps) {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist || []);
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [priorityPickerOpen, setPriorityPickerOpen] = useState(false);
+  const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const priorityButtonRef = useRef<HTMLButtonElement>(null);
+  const tagButtonRef = useRef<HTMLButtonElement>(null);
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -65,6 +71,19 @@ export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: Tas
     });
   };
 
+  const handleSetTags = (tagIds: string[]) => {
+    onUpdate({
+      tags: tagIds,
+    });
+  };
+
+  const handleRemoveTag = (tagId: string) => {
+    const newTags = (task.tags || []).filter(id => id !== tagId);
+    onUpdate({
+      tags: newTags,
+    });
+  };
+
   const handleAddChecklistItem = () => {
     if (newChecklistItem.trim()) {
       const newItem: ChecklistItem = {
@@ -95,18 +114,24 @@ export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: Tas
 
   // Auto-update progress and completion status whenever checklist changes
   useEffect(() => {
+    if (!isOpen) return;
+
     const newProgress = calculateProgress();
     const shouldBeCompleted = checklist.length > 0 && newProgress === 100;
 
-    // Update parent immediately when checklist changes
-    if (isOpen) {
+    // Only update if values actually changed to prevent infinite loops
+    if (
+      task.progress !== newProgress ||
+      task.completed !== shouldBeCompleted ||
+      JSON.stringify(task.checklist) !== JSON.stringify(checklist)
+    ) {
       onUpdate({
         progress: newProgress,
         checklist,
         completed: shouldBeCompleted,
       });
     }
-  }, [checklist]);
+  }, [checklist, isOpen, task.progress, task.completed, task.checklist, onUpdate]);
 
   if (!isOpen) return null;
 
@@ -166,6 +191,35 @@ export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: Tas
                     )}
                   </div>
                 </div>
+
+                {/* Tags Section */}
+                <div className="flex items-center gap-2 flex-wrap mt-2">
+                  {task.tags && task.tags.length > 0 && (
+                    <>
+                      {task.tags.map(tagId => {
+                        const tag = availableTags.find(t => t.id === tagId);
+                        return tag ? (
+                          <TagBadge
+                            key={tag.id}
+                            tag={tag}
+                            size="sm"
+                            onRemove={() => handleRemoveTag(tagId)}
+                          />
+                        ) : null;
+                      })}
+                    </>
+                  )}
+                  <button
+                    ref={tagButtonRef}
+                    onClick={() => setTagPickerOpen(!tagPickerOpen)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border border-dashed border-gray-300 dark:border-gray-600 rounded-md hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Add Tag
+                  </button>
+                </div>
               </div>
               <button
                 onClick={handleSave}
@@ -185,6 +239,18 @@ export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: Tas
               onChange={handleSetPriority}
               onClose={() => setPriorityPickerOpen(false)}
               triggerRef={priorityButtonRef}
+            />
+          )}
+
+          {/* Tag Picker */}
+          {tagPickerOpen && (
+            <TagPicker
+              availableTags={availableTags}
+              selectedTagIds={task.tags || []}
+              onChange={handleSetTags}
+              onClose={() => setTagPickerOpen(false)}
+              onManageTags={onManageTags}
+              triggerRef={tagButtonRef}
             />
           )}
 
