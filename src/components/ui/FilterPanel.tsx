@@ -12,6 +12,7 @@ interface FilterPanelProps {
   onSortChange: (sort: TaskSort) => void;
   taskCount: number;
   filteredCount: number;
+  onClose?: () => void;
 }
 
 const PRIORITY_OPTIONS: Priority[] = ['urgent', 'high', 'medium', 'low'];
@@ -41,6 +42,7 @@ export default function FilterPanel({
   onSortChange,
   taskCount,
   filteredCount,
+  onClose,
 }: FilterPanelProps) {
   const [renderKey, setRenderKey] = useState(0);
 
@@ -269,15 +271,25 @@ export default function FilterPanel({
             </div>
           </div>
 
-          {/* Clear Filters Button */}
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="w-full px-4 py-2.5 text-sm font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-lg transition-colors"
-            >
-              Clear all filters
-            </button>
-          )}
+          {/* Action Buttons */}
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex-1 px-4 py-2.5 text-sm font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-lg transition-colors"
+              >
+                Clear all filters
+              </button>
+            )}
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+              >
+                Done
+              </button>
+            )}
+          </div>
     </div>
   );
 }

@@ -770,6 +770,7 @@ export default function BoardsPage() {
                   onSortChange={setSort}
                   taskCount={totalTaskCount}
                   filteredCount={filteredTaskCount}
+                  onClose={() => setShowFilters(false)}
                 />
               </div>
             </div>
