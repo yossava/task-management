@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useScrum } from '@/lib/hooks/useScrum';
 import VelocityChart from '@/components/scrum/VelocityChart';
 import BurndownChart from '@/components/scrum/BurndownChart';
+import CumulativeFlowChart from '@/components/scrum/CumulativeFlowChart';
 import Link from 'next/link';
 
 export default function MetricsPage() {
@@ -118,7 +119,7 @@ export default function MetricsPage() {
 
         {/* Burndown Chart */}
         {selectedSprint && (
-          <div>
+          <div className="mb-8">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 Sprint Burndown
@@ -141,6 +142,13 @@ export default function MetricsPage() {
               </select>
             </div>
             <BurndownChart sprint={selectedSprint} stories={stories.stories} />
+          </div>
+        )}
+
+        {/* Cumulative Flow Diagram */}
+        {selectedSprint && (
+          <div>
+            <CumulativeFlowChart sprint={selectedSprint} stories={stories.stories.filter(s => s.sprintId === selectedSprint.id)} />
           </div>
         )}
 
