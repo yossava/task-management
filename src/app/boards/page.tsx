@@ -23,6 +23,8 @@ import { Board, BoardTask, TaskFilters, TaskSort, Tag, BoardTemplate } from '@/l
 import { BoardService } from '@/lib/services/boardService';
 import { filterAndSortTasks } from '@/lib/utils/taskFilters';
 import Card from '@/components/ui/Card';
+import FilterPanel from '@/components/ui/FilterPanel';
+import QuickFilters from '@/components/ui/QuickFilters';
 import GlobalSearch from '@/components/search/GlobalSearch';
 import TemplateGallery from '@/components/board/TemplateGallery';
 import { TemplateService } from '@/lib/services/templateService';
@@ -49,6 +51,7 @@ export default function BoardsPage() {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
   const [activeBoard, setActiveBoard] = useState<Board | null>(null);
@@ -473,6 +476,19 @@ export default function BoardsPage() {
               isOpen={showNotifications}
             />
             <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                showFilters
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+              title="Filters & Sort"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </button>
+            <button
               onClick={() => setShowKeyboardHelp(true)}
               className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="Keyboard shortcuts (?)"
@@ -541,6 +557,29 @@ export default function BoardsPage() {
             </button>
           </div>
         </div>
+
+        {/* Filters Panel - Collapsible */}
+        {showFilters && viewMode !== 'calendar' && (
+          <div className="mb-6 space-y-4 animate-in slide-in-from-top duration-200">
+            <QuickFilters
+              onApplyPreset={(newFilters, newSort) => {
+                setFilters(newFilters);
+                setSort(newSort);
+              }}
+              currentFilters={filters}
+              currentSort={sort}
+            />
+            <FilterPanel
+              filters={filters}
+              sort={sort}
+              availableTags={allTags}
+              onFiltersChange={setFilters}
+              onSortChange={setSort}
+              taskCount={totalTaskCount}
+              filteredCount={filteredTaskCount}
+            />
+          </div>
+        )}
 
         {/* Calendar View */}
         {viewMode === 'calendar' && (
