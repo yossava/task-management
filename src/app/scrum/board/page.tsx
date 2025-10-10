@@ -5,6 +5,7 @@ import { useScrum } from '@/lib/hooks/useScrum';
 import ScrumBoardView from '@/components/scrum/ScrumBoardView';
 import StoryList from '@/components/scrum/StoryList';
 import SprintCapacityWidget from '@/components/scrum/SprintCapacityWidget';
+import BlockerTracker from '@/components/scrum/BlockerTracker';
 import Link from 'next/link';
 
 export default function BoardPage() {
@@ -105,6 +106,13 @@ export default function BoardPage() {
             teamMembers={team.members}
           />
         )}
+
+        {/* Blocker Tracker */}
+        <BlockerTracker
+          stories={stories.stories}
+          sprint={selectedSprint}
+          onUpdateStory={stories.updateStory}
+        />
 
         {stories.stories.length > 0 ? (
           <ScrumBoardView

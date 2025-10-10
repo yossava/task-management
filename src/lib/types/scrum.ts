@@ -59,6 +59,7 @@ export interface UserStory {
   labels: string[];
   dependencies: string[]; // IDs of dependent stories
   blockedBy: string[]; // IDs of blocking issues
+  blocker?: StoryBlocker; // Current blocker if story is blocked
   estimation: Estimation;
   customFields: Record<string, any>;
   attachments: Attachment[];
@@ -66,6 +67,18 @@ export interface UserStory {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface StoryBlocker {
+  id: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  status: 'open' | 'in-progress' | 'resolved';
+  reportedBy: string;
+  assignedTo?: string;
+  createdAt: string;
+  resolvedAt?: string;
+  resolution?: string;
 }
 
 // ============================================================================
