@@ -24,7 +24,6 @@ import { BoardService } from '@/lib/services/boardService';
 import { filterAndSortTasks } from '@/lib/utils/taskFilters';
 import Card from '@/components/ui/Card';
 import FilterPanel from '@/components/ui/FilterPanel';
-import QuickFilters from '@/components/ui/QuickFilters';
 import GlobalSearch from '@/components/search/GlobalSearch';
 import TemplateGallery from '@/components/board/TemplateGallery';
 import { TemplateService } from '@/lib/services/templateService';
@@ -762,15 +761,7 @@ export default function BoardsPage() {
               </div>
 
               {/* Content */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] space-y-6">
-                <QuickFilters
-                  onApplyPreset={(newFilters, newSort) => {
-                    setFilters(newFilters);
-                    setSort(newSort);
-                  }}
-                  currentFilters={filters}
-                  currentSort={sort}
-                />
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
                 <FilterPanel
                   filters={filters}
                   sort={sort}
