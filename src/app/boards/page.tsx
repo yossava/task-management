@@ -397,6 +397,17 @@ export default function BoardsPage() {
     }));
   }, [boards, filters, sort]);
 
+  // Count active filters
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (filters.priorities.length > 0) count++;
+    if (filters.tags.length > 0) count++;
+    if (filters.dateFilter !== 'all') count++;
+    if (!filters.showCompleted) count++;
+    if (filters.searchQuery) count++;
+    return count;
+  }, [filters]);
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto">
@@ -549,7 +560,7 @@ export default function BoardsPage() {
           {viewMode !== 'calendar' && (
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 border ${
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 border relative ${
                 showFilters
                   ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/30'
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -560,6 +571,15 @@ export default function BoardsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
               <span>Filters</span>
+              {activeFiltersCount > 0 && (
+                <span className={`ml-1 px-1.5 py-0.5 text-xs font-bold rounded-full ${
+                  showFilters
+                    ? 'bg-white/20 text-white'
+                    : 'bg-blue-600 text-white'
+                }`}>
+                  {activeFiltersCount}
+                </span>
+              )}
             </button>
           )}
         </div>
