@@ -4,9 +4,11 @@ import { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { BoardTask } from '@/lib/types';
+import { BoardTask, Priority } from '@/lib/types';
 import DatePicker from '@/components/ui/DatePicker';
 import ColorPicker from '@/components/ui/ColorPicker';
+import PriorityBadge from '@/components/ui/PriorityBadge';
+import PriorityPicker from '@/components/ui/PriorityPicker';
 
 interface SortableTaskItemProps {
   task: BoardTask;
@@ -23,9 +25,12 @@ interface SortableTaskItemProps {
   onDatePickerToggle: () => void;
   colorPickerOpen: boolean;
   onColorPickerToggle: () => void;
+  priorityPickerOpen: boolean;
+  onPriorityPickerToggle: () => void;
   onSetDueDate: (timestamp: number) => void;
   onSetColor: (color: string) => void;
   onToggleGradient: () => void;
+  onSetPriority: (priority: Priority | undefined) => void;
   onOpenDetail: () => void;
   isOverdue: (dueDate: number) => boolean;
   formatDueDate: (timestamp: number) => string;
@@ -49,9 +54,12 @@ export function SortableTaskItem({
   onDatePickerToggle,
   colorPickerOpen,
   onColorPickerToggle,
+  priorityPickerOpen,
+  onPriorityPickerToggle,
   onSetDueDate,
   onSetColor,
   onToggleGradient,
+  onSetPriority,
   onOpenDetail,
   isOverdue,
   formatDueDate,
@@ -154,6 +162,9 @@ export function SortableTaskItem({
               {task.text}
             </span>
             <div className="flex items-center gap-2 flex-wrap">
+              {task.priority && (
+                <PriorityBadge priority={task.priority} size="sm" showIcon={true} />
+              )}
               {task.dueDate && (
                 <div className="flex items-center gap-1">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -287,6 +298,18 @@ export function SortableTaskItem({
               </svg>
               <span>Edit dates</span>
             </button>
+            <button
+              onClick={() => {
+                onPriorityPickerToggle();
+                onTaskMenuToggle();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              <span>Set priority</span>
+            </button>
           </div>,
           document.body
         )}
@@ -311,6 +334,16 @@ export function SortableTaskItem({
             onClose={onColorPickerToggle}
             triggerRef={pickerTriggerRef}
             presetColors={presetColors}
+          />
+        )}
+
+        {/* Priority Picker */}
+        {priorityPickerOpen && (
+          <PriorityPicker
+            value={task.priority}
+            onChange={onSetPriority}
+            onClose={onPriorityPickerToggle}
+            triggerRef={pickerTriggerRef}
           />
         )}
       </div>

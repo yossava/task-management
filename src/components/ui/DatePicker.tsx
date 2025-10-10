@@ -7,7 +7,7 @@ interface DatePickerProps {
   value?: number; // timestamp
   onChange: (timestamp: number) => void;
   onClose: () => void;
-  triggerRef: React.RefObject<HTMLElement>;
+  triggerRef: React.RefObject<HTMLElement | null>;
 }
 
 export default function DatePicker({ value, onChange, onClose, triggerRef }: DatePickerProps) {

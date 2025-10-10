@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { BoardTask, ChecklistItem } from '@/lib/types';
+import { BoardTask, ChecklistItem, Priority } from '@/lib/types';
+import PriorityPicker from '@/components/ui/PriorityPicker';
+import PriorityBadge from '@/components/ui/PriorityBadge';
 
 interface TaskDetailModalProps {
   task: BoardTask;
@@ -15,6 +17,8 @@ interface TaskDetailModalProps {
 export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailModalProps) {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist || []);
   const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [priorityPickerOpen, setPriorityPickerOpen] = useState(false);
+  const priorityButtonRef = useRef<HTMLButtonElement>(null);
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -53,6 +57,12 @@ export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: Tas
       checklist,
     });
     onClose();
+  };
+
+  const handleSetPriority = (priority: Priority | undefined) => {
+    onUpdate({
+      priority,
+    });
   };
 
   const handleAddChecklistItem = () => {
@@ -124,14 +134,38 @@ export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: Tas
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                   {task.text}
                 </h2>
-                {task.dueDate && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Due: {new Date(task.dueDate).toLocaleDateString()}
+                <div className="flex items-center gap-3 flex-wrap">
+                  {task.dueDate && (
+                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Due: {new Date(task.dueDate).toLocaleDateString()}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    {task.priority ? (
+                      <button
+                        ref={priorityButtonRef}
+                        onClick={() => setPriorityPickerOpen(!priorityPickerOpen)}
+                        className="hover:opacity-80 transition-opacity"
+                      >
+                        <PriorityBadge priority={task.priority} />
+                      </button>
+                    ) : (
+                      <button
+                        ref={priorityButtonRef}
+                        onClick={() => setPriorityPickerOpen(!priorityPickerOpen)}
+                        className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border border-dashed border-gray-300 dark:border-gray-600 rounded-md hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Set Priority
+                      </button>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
               <button
                 onClick={handleSave}
@@ -143,6 +177,16 @@ export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: Tas
               </button>
             </div>
           </div>
+
+          {/* Priority Picker */}
+          {priorityPickerOpen && (
+            <PriorityPicker
+              value={task.priority}
+              onChange={handleSetPriority}
+              onClose={() => setPriorityPickerOpen(false)}
+              triggerRef={priorityButtonRef}
+            />
+          )}
 
           {/* Content */}
           <div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">

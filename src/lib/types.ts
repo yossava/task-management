@@ -15,6 +15,7 @@ export interface BoardTask {
   description?: string; // Markdown content
   progress?: number; // 0-100
   checklist?: ChecklistItem[];
+  priority?: Priority;
 }
 
 export interface Board {

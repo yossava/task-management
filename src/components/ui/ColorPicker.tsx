@@ -9,7 +9,7 @@ interface ColorPickerProps {
   onChange: (color: string) => void;
   onToggleGradient: () => void;
   onClose: () => void;
-  triggerRef: React.RefObject<HTMLElement>;
+  triggerRef: React.RefObject<HTMLElement | null>;
   presetColors: string[];
 }
 

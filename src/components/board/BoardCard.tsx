@@ -4,8 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import Link from 'next/link';
-import { Board, BoardTask } from '@/lib/types';
+import { Board, BoardTask, Priority } from '@/lib/types';
 import Card from '@/components/ui/Card';
 import { BoardService } from '@/lib/services/boardService';
 import { SortableTaskItem } from './SortableTaskItem';
@@ -48,6 +47,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
   const [taskMenuOpen, setTaskMenuOpen] = useState<string | null>(null);
   const [datePickerOpen, setDatePickerOpen] = useState<string | null>(null);
   const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
+  const [priorityPickerOpen, setPriorityPickerOpen] = useState<string | null>(null);
   const [boardColorPickerOpen, setBoardColorPickerOpen] = useState(false);
   const [taskDetailOpen, setTaskDetailOpen] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -228,6 +228,16 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
     setBoardColorPickerOpen(false);
   };
 
+  const handleSetTaskPriority = (task: BoardTask, priority: Priority | undefined) => {
+    BoardService.updateTask(board.id, task.id, { priority });
+    const updatedTasks = board.tasks.map(t =>
+      t.id === task.id ? { ...t, priority } : t
+    );
+    onUpdate(board.id, { tasks: updatedTasks });
+    setPriorityPickerOpen(null);
+    setTaskMenuOpen(null);
+  };
+
   const handleUpdateTaskDetails = (task: BoardTask, updates: Partial<BoardTask>) => {
     BoardService.updateTask(board.id, task.id, updates);
     const updatedTasks = board.tasks.map(t =>
@@ -255,7 +265,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
       ref={setNodeRef}
       style={{
         ...style,
-        zIndex: (taskMenuOpen || colorPickerOpen || datePickerOpen) ? 9999 : 'auto'
+        zIndex: (taskMenuOpen || colorPickerOpen || datePickerOpen || priorityPickerOpen) ? 9999 : 'auto'
       }}
       {...attributes}
       data-board-id={board.id}
@@ -283,17 +293,12 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
                 className="text-xl font-bold text-gray-900 dark:text-white bg-white dark:bg-gray-800 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 focus:shadow-md w-full transition-all"
               />
             ) : (
-              <Link href={`/boards/${board.id}`}>
-                <h3
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsEditingTitle(true);
-                  }}
-                  className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-text hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-1 -mx-1"
-                >
-                  {board.title}
-                </h3>
-              </Link>
+              <h3
+                onClick={() => setIsEditingTitle(true)}
+                className="text-xl font-bold text-gray-900 dark:text-white cursor-text hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-1 -mx-1"
+              >
+                {board.title}
+              </h3>
             )}
 
             {isEditingDescription ? (
@@ -452,9 +457,12 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
                     onDatePickerToggle={() => setDatePickerOpen(datePickerOpen === task.id ? null : task.id)}
                     colorPickerOpen={colorPickerOpen === task.id}
                     onColorPickerToggle={() => setColorPickerOpen(colorPickerOpen === task.id ? null : task.id)}
+                    priorityPickerOpen={priorityPickerOpen === task.id}
+                    onPriorityPickerToggle={() => setPriorityPickerOpen(priorityPickerOpen === task.id ? null : task.id)}
                     onSetDueDate={(timestamp) => handleSetDueDate(task, timestamp)}
                     onSetColor={(color) => handleSetTaskColor(task, color)}
                     onToggleGradient={() => handleToggleGradient(task)}
+                    onSetPriority={(priority) => handleSetTaskPriority(task, priority)}
                     onOpenDetail={() => {
                       setTaskDetailOpen(task.id);
                       setTaskMenuOpen(null);
