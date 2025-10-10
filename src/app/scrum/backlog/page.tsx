@@ -4,11 +4,15 @@ import { useState } from 'react';
 import { useScrum } from '@/lib/hooks/useScrum';
 import EpicList from '@/components/scrum/EpicList';
 import StoryList from '@/components/scrum/StoryList';
+import QuickFilters from '@/components/scrum/QuickFilters';
 import Link from 'next/link';
+import type { UserStory } from '@/lib/types/scrum';
 
 export default function BacklogPage() {
-  const { epics, stories, loading } = useScrum();
+  const { epics, stories, labels, loading } = useScrum();
   const [view, setView] = useState<'epics' | 'stories'>('epics');
+  const [filteredStories, setFilteredStories] = useState<UserStory[]>(stories.stories);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
   if (loading) {
     return (
@@ -71,7 +75,20 @@ export default function BacklogPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Quick Filters - Only show in stories view */}
+        {view === 'stories' && (
+          <QuickFilters
+            stories={stories.stories}
+            epics={epics.epics}
+            labels={labels.labels}
+            onFilterChange={(filtered, filters) => {
+              setFilteredStories(filtered);
+              setActiveFilters(filters);
+            }}
+          />
+        )}
+
         {view === 'epics' ? (
           <EpicList
             epics={epics.epics}
@@ -82,7 +99,7 @@ export default function BacklogPage() {
           />
         ) : (
           <StoryList
-            stories={stories.stories}
+            stories={activeFilters.length > 0 ? filteredStories : stories.stories}
             epics={epics.epics}
             onCreateStory={stories.createStory}
             onUpdateStory={stories.updateStory}
