@@ -27,7 +27,6 @@ import FilterPanel from '@/components/ui/FilterPanel';
 import GlobalSearch from '@/components/search/GlobalSearch';
 import TemplateGallery from '@/components/board/TemplateGallery';
 import { TemplateService } from '@/lib/services/templateService';
-import ActivityFeed from '@/components/activity/ActivityFeed';
 import ExportImportModal from '@/components/export/ExportImportModal';
 import KeyboardShortcutsModal from '@/components/keyboard/KeyboardShortcutsModal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -571,13 +570,6 @@ export default function BoardsPage() {
               taskCount={totalTaskCount}
               filteredCount={filteredTaskCount}
             />
-          </div>
-        )}
-
-        {/* Activity Feed - Only show in board view */}
-        {viewMode === 'board' && (
-          <div className="mb-6">
-            <ActivityFeed limit={20} />
           </div>
         )}
 
