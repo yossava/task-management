@@ -28,6 +28,7 @@ import GlobalSearch from '@/components/search/GlobalSearch';
 import TemplateGallery from '@/components/board/TemplateGallery';
 import { TemplateService } from '@/lib/services/templateService';
 import ActivityFeed from '@/components/activity/ActivityFeed';
+import ExportImportModal from '@/components/export/ExportImportModal';
 
 const HEADER_STORAGE_KEY = 'boards_page_header';
 
@@ -35,6 +36,7 @@ export default function BoardsPage() {
   const { boards, loading, createBoard, updateBoard, deleteBoard, reorderBoards } = useBoards();
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
+  const [showExportImport, setShowExportImport] = useState(false);
   const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
   const [activeBoard, setActiveBoard] = useState<Board | null>(null);
   const [pageTitle, setPageTitle] = useState('Your Boards');
@@ -375,7 +377,16 @@ export default function BoardsPage() {
               </p>
             )}
           </div>
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 flex items-center gap-3">
+            <button
+              onClick={() => setShowExportImport(true)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+              </svg>
+              Export/Import
+            </button>
             <GlobalSearch boards={boards} />
           </div>
         </div>
@@ -461,6 +472,11 @@ export default function BoardsPage() {
           onSelectTemplate={handleTemplateSelect}
           onClose={() => setShowTemplateGallery(false)}
         />
+      )}
+
+      {/* Export/Import Modal */}
+      {showExportImport && (
+        <ExportImportModal onClose={() => setShowExportImport(false)} />
       )}
 
       {/* Drag Overlay - shows the task or board being dragged */}
