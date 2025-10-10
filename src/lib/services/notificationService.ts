@@ -1,4 +1,4 @@
-import { Notification, NotificationType, Board, BoardTask } from '@/lib/types';
+import { Notification, NotificationType, Board } from '@/lib/types';
 import { StorageService, STORAGE_KEYS } from '@/lib/storage';
 
 const MAX_NOTIFICATIONS = 100;

@@ -137,7 +137,7 @@ export default function GlobalSearch({ boards }: GlobalSearchProps) {
     setResults(searchResults.slice(0, 10)); // Limit to 10 results
   }, [query, boards]);
 
-  const handleResultClick = (result: SearchResult) => {
+  const handleResultClick = () => {
     setIsOpen(false);
     setQuery('');
     // Navigate to boards page - tasks will be visible there
@@ -216,7 +216,7 @@ export default function GlobalSearch({ boards }: GlobalSearchProps) {
             {results.map((result, index) => (
               <button
                 key={index}
-                onClick={() => handleResultClick(result)}
+                onClick={handleResultClick}
                 className="w-full px-4 py-3 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0"
               >
                 {/* Icon */}

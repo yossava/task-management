@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import { SearchQuery, Priority, SavedSearch } from '@/lib/types';
 import { AdvancedSearchService } from '@/lib/services/advancedSearchService';
-import { UserService } from '@/lib/services/userService';
 import UserPicker from '@/components/user/UserPicker';
 import PriorityBadge from '@/components/ui/PriorityBadge';
 

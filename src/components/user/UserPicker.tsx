@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { User } from '@/lib/types';
 import { UserService } from '@/lib/services/userService';
 import UserAvatar from './UserAvatar';
 

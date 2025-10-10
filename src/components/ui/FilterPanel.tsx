@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { TaskFilters, TaskSort, Priority, Tag, SortOption, DateFilterOption } from '@/lib/types';
 import PriorityBadge from './PriorityBadge';
 

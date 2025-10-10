@@ -1,4 +1,4 @@
-import { BoardTask, TimeLog, ActiveTimer } from '@/lib/types';
+import { TimeLog, ActiveTimer } from '@/lib/types';
 import { BoardService } from './boardService';
 import { StorageService } from '@/lib/storage';
 import { ActivityService } from './activityService';

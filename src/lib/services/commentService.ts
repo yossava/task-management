@@ -1,4 +1,4 @@
-import { TaskComment, Board, BoardTask } from '@/lib/types';
+import { TaskComment, Board } from '@/lib/types';
 import { StorageService, STORAGE_KEYS } from '@/lib/storage';
 import { ActivityService } from './activityService';
 

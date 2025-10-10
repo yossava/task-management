@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { ExportService, ExportData } from '@/lib/services/exportService';
+import { ExportService } from '@/lib/services/exportService';
 
 interface ExportImportModalProps {
   onClose: () => void;
