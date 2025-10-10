@@ -38,6 +38,7 @@ import { RecurringTaskService } from '@/lib/services/recurringTaskService';
 import CalendarView from '@/components/calendar/CalendarView';
 import ListView from '@/components/list/ListView';
 import QuickFilters from '@/components/ui/QuickFilters';
+import CommandPalette from '@/components/command/CommandPalette';
 import type { ViewMode } from '@/lib/types';
 
 const HEADER_STORAGE_KEY = 'boards_page_header';
@@ -50,6 +51,7 @@ export default function BoardsPage() {
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
   const [activeBoard, setActiveBoard] = useState<Board | null>(null);
@@ -198,6 +200,19 @@ export default function BoardsPage() {
     onListView: () => setViewMode('list'),
     onCalendarView: () => setViewMode('calendar'),
   });
+
+  // Command Palette shortcut (Cmd/Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandPalette(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleUpdate = (id: string, data: Partial<Board>) => {
     updateBoard(id, data);
@@ -696,6 +711,15 @@ export default function BoardsPage() {
       {showNotifications && (
         <NotificationsPanel onClose={() => setShowNotifications(false)} />
       )}
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        onNewBoard={() => setIsCreatingBoard(true)}
+        onSearch={() => setShowSearch(true)}
+        onViewMode={setViewMode}
+      />
 
       {/* Drag Overlay - shows the task or board being dragged */}
       <DragOverlay>

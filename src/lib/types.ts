@@ -66,6 +66,20 @@ export interface BoardTask {
   dependencies?: string[]; // Array of dependency IDs
   recurringTaskId?: string; // Link to recurring task template
   completedAt?: number; // When task was completed
+
+  // Feature 1: Subtasks
+  parentTaskId?: string; // For nested subtasks
+  subtasks?: BoardTask[]; // Nested subtasks
+  isSubtask?: boolean; // Flag to identify subtasks
+
+  // Feature 2: Team Collaboration
+  assigneeIds?: string[]; // Assigned user IDs
+
+  // Feature 4: Time Tracking
+  estimatedTime?: number; // Estimated minutes
+  actualTime?: number; // Tracked minutes
+  timeLogs?: TimeLog[]; // Detailed time entries
+  activeTimer?: ActiveTimer; // Currently running timer
 }
 
 export interface Board {
@@ -207,4 +221,52 @@ export interface Notification {
   read: boolean;
   timestamp: number;
   actionUrl?: string;
+}
+
+// Feature 4: Time Tracking Types
+export interface TimeLog {
+  id: string;
+  taskId: string;
+  boardId: string;
+  startTime: number;
+  endTime: number;
+  duration: number; // Minutes
+  note?: string;
+  userId?: string;
+}
+
+export interface ActiveTimer {
+  taskId: string;
+  boardId: string;
+  startTime: number;
+  userId?: string;
+}
+
+// Feature 3: Advanced Search Types
+export interface SavedSearch {
+  id: string;
+  name: string;
+  query: SearchQuery;
+  createdAt: number;
+  lastUsed?: number;
+}
+
+export interface SearchQuery {
+  text?: string;
+  priorities?: Priority[];
+  tags?: string[];
+  assignees?: string[];
+  dateRange?: { start?: number; end?: number };
+  hasSubtasks?: boolean;
+  hasDependencies?: boolean;
+  isRecurring?: boolean;
+  estimatedTimeRange?: { min?: number; max?: number };
+  boardIds?: string[];
+}
+
+export interface SearchHistory {
+  id: string;
+  query: string;
+  timestamp: number;
+  resultsCount: number;
 }

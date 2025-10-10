@@ -11,6 +11,7 @@ import TagBadge from '@/components/ui/TagBadge';
 import TaskComments from '@/components/task/TaskComments';
 import TaskDependencies from '@/components/task/TaskDependencies';
 import RecurringTaskModal from '@/components/task/RecurringTaskModal';
+import SubtasksSection from '@/components/task/SubtasksSection';
 
 interface TaskDetailModalProps {
   task: BoardTask;
@@ -29,6 +30,7 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [commentsKey, setCommentsKey] = useState(0);
   const [dependenciesKey, setDependenciesKey] = useState(0);
+  const [subtasksKey, setSubtasksKey] = useState(0);
   const [recurringModalOpen, setRecurringModalOpen] = useState(false);
   const priorityButtonRef = useRef<HTMLButtonElement>(null);
   const tagButtonRef = useRef<HTMLButtonElement>(null);
@@ -39,6 +41,10 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
 
   const handleDependenciesUpdate = () => {
     setDependenciesKey(prev => prev + 1);
+  };
+
+  const handleSubtasksUpdate = () => {
+    setSubtasksKey(prev => prev + 1);
   };
 
   const handleRecurringUpdate = () => {
@@ -539,6 +545,16 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
               <EditorContent
                 editor={editor}
                 className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-b-lg overflow-auto"
+              />
+            </div>
+
+            {/* Subtasks Section */}
+            <div key={subtasksKey} className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <SubtasksSection
+                boardId={boardId}
+                taskId={task.id}
+                subtasks={task.subtasks || []}
+                onUpdate={handleSubtasksUpdate}
               />
             </div>
 
