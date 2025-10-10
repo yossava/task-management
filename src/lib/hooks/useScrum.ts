@@ -76,8 +76,8 @@ export function useSprints() {
   );
 
   const completeSprint = useCallback(
-    (id: string) => {
-      const sprint = ScrumService.Sprint.complete(id);
+    (id: string, incompleteStoryActions?: { storyId: string; targetSprintId: string | null }[]) => {
+      const sprint = ScrumService.Sprint.complete(id, incompleteStoryActions);
       loadSprints();
       return sprint;
     },

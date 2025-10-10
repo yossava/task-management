@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Sprint, UserStory } from '@/lib/types/scrum';
 import SprintCard from './SprintCard';
+import SprintCompletionModal from './SprintCompletionModal';
 
 interface SprintListProps {
   sprints: Sprint[];
@@ -11,7 +12,7 @@ interface SprintListProps {
   onUpdateSprint: (id: string, data: Partial<Sprint>) => void;
   onDeleteSprint: (id: string) => void;
   onStartSprint?: (id: string) => void;
-  onCompleteSprint?: (id: string) => void;
+  onCompleteSprint?: (id: string, incompleteStoryActions?: { storyId: string; targetSprintId: string | null }[]) => void;
 }
 
 export default function SprintList({
@@ -26,6 +27,7 @@ export default function SprintList({
   const [showModal, setShowModal] = useState(false);
   const [editingSprint, setEditingSprint] = useState<Sprint | null>(null);
   const [filter, setFilter] = useState<'all' | 'planned' | 'active' | 'completed'>('all');
+  const [completingSprint, setCompletingSprint] = useState<Sprint | null>(null);
 
   const filteredSprints =
     filter === 'all' ? sprints : sprints.filter((s) => s.status === filter);
@@ -38,6 +40,20 @@ export default function SprintList({
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingSprint(null);
+  };
+
+  const handleCompleteSprint = (sprintId: string) => {
+    const sprint = sprints.find(s => s.id === sprintId);
+    if (sprint) {
+      setCompletingSprint(sprint);
+    }
+  };
+
+  const handleConfirmCompletion = (actions: { storyId: string; targetSprintId: string | null }[]) => {
+    if (completingSprint && onCompleteSprint) {
+      onCompleteSprint(completingSprint.id, actions);
+      setCompletingSprint(null);
+    }
   };
 
   const getSprintStats = (sprintId: string) => {
@@ -121,7 +137,7 @@ export default function SprintList({
                 onEdit={handleEdit}
                 onDelete={onDeleteSprint}
                 onStart={onStartSprint}
-                onComplete={onCompleteSprint}
+                onComplete={handleCompleteSprint}
               />
             );
           })}
@@ -163,6 +179,17 @@ export default function SprintList({
             handleCloseModal();
           }}
           onClose={handleCloseModal}
+        />
+      )}
+
+      {/* Sprint Completion Modal */}
+      {completingSprint && (
+        <SprintCompletionModal
+          sprint={completingSprint}
+          stories={stories}
+          availableSprints={sprints}
+          onComplete={handleConfirmCompletion}
+          onCancel={() => setCompletingSprint(null)}
         />
       )}
     </div>

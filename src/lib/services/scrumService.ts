@@ -148,7 +148,7 @@ export const SprintService = {
     return SprintService.update(id, { status: 'active' });
   },
 
-  complete: (id: string): Sprint | undefined => {
+  complete: (id: string, incompleteStoryActions?: { storyId: string; targetSprintId: string | null }[]): Sprint | undefined => {
     const sprint = SprintService.getById(id);
     if (!sprint) return undefined;
 
@@ -157,6 +157,13 @@ export const SprintService = {
     const completedPoints = stories
       .filter((s) => s.status === 'done')
       .reduce((sum, s) => sum + (s.storyPoints || 0), 0);
+
+    // Move incomplete stories if actions provided
+    if (incompleteStoryActions) {
+      incompleteStoryActions.forEach(({ storyId, targetSprintId }) => {
+        StoryService.moveToSprint(storyId, targetSprintId);
+      });
+    }
 
     return SprintService.update(id, {
       status: 'completed',
