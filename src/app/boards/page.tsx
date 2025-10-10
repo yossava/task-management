@@ -234,6 +234,21 @@ export default function BoardsPage() {
       // Dragging a task
       const { sourceBoardId, task } = activeTaskInfo;
 
+      // Check if dropping on a calendar day
+      if (over.data.current?.type === 'calendar-day') {
+        const newDueDate = over.data.current.date as number;
+        const board = boards.find(b => b.id === sourceBoardId);
+        if (!board) return;
+
+        const updatedTasks = board.tasks.map(t =>
+          t.id === task.id ? { ...t, dueDate: newDueDate } : t
+        );
+
+        BoardService.update(sourceBoardId, { tasks: updatedTasks });
+        updateBoard(sourceBoardId, { tasks: updatedTasks });
+        return;
+      }
+
       if (overTaskInfo) {
         // Dropping on another task - reorder within same board or move to target board
         const { sourceBoardId: targetBoardId } = overTaskInfo;
@@ -518,7 +533,20 @@ export default function BoardsPage() {
         {/* Calendar View */}
         {viewMode === 'calendar' && (
           <div className="mb-6">
-            <CalendarView boards={boards} />
+            <CalendarView
+              boards={boards}
+              onTaskUpdate={(boardId, taskId, updates) => {
+                const board = boards.find(b => b.id === boardId);
+                if (!board) return;
+
+                const updatedTasks = board.tasks.map(task =>
+                  task.id === taskId ? { ...task, ...updates } : task
+                );
+
+                BoardService.update(boardId, { tasks: updatedTasks });
+                updateBoard(boardId, { tasks: updatedTasks });
+              }}
+            />
           </div>
         )}
 
