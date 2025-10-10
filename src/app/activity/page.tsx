@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { ActivityService } from '@/lib/services/activityService';
-import { Activity } from '@/lib/types';
+import type { ActivityLog } from '@/lib/types';
 
 export default function ActivityPage() {
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [filter, setFilter] = useState<'all' | 'board_created' | 'board_updated' | 'task_created' | 'task_updated' | 'task_completed'>('all');
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function ActivityPage() {
     }
   };
 
-  const getActivityIcon = (type: Activity['type']) => {
+  const getActivityIcon = (type: ActivityLog['type']) => {
     switch (type) {
       case 'board_created':
         return (
@@ -74,7 +74,7 @@ export default function ActivityPage() {
     }
   };
 
-  const getActivityTitle = (activity: Activity) => {
+  const getActivityTitle = (activity: ActivityLog) => {
     switch (activity.type) {
       case 'board_created':
         return 'Board created';
@@ -91,9 +91,7 @@ export default function ActivityPage() {
     }
   };
 
-  const getActivityDescription = (activity: Activity) => {
-    const metadata = activity.metadata as any;
-
+  const getActivityDescription = (activity: ActivityLog) => {
     switch (activity.type) {
       case 'board_created':
       case 'board_updated':
@@ -103,7 +101,7 @@ export default function ActivityPage() {
       case 'task_completed':
         return (
           <>
-            <span className="font-medium text-gray-900 dark:text-white">{metadata?.taskText || 'Task'}</span>
+            <span className="font-medium text-gray-900 dark:text-white">{activity.taskText || 'Task'}</span>
             {' in '}
             <span className="text-gray-700 dark:text-gray-300">{activity.boardTitle}</span>
           </>
