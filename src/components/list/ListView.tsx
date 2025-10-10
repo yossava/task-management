@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Board, BoardTask } from '@/lib/types';
+import TaskDetailModal from '@/components/task/TaskDetailModal';
 
 interface ListViewProps {
   boards: Board[];
@@ -15,7 +16,7 @@ type SortDirection = 'asc' | 'desc';
 interface TaskWithBoard extends BoardTask {
   boardId: string;
   boardTitle: string;
-  boardColor: string;
+  boardColor?: string;
 }
 
 const PRIORITY_ORDER = { high: 3, medium: 2, low: 1, urgent: 4 };
@@ -27,6 +28,7 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [detailModalOpen, setDetailModalOpen] = useState<{ boardId: string; taskId: string } | null>(null);
 
   // Flatten all tasks with their board info
   const allTasks = useMemo(() => {
@@ -407,6 +409,16 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <button
+                            onClick={() => setDetailModalOpen({ boardId: task.boardId, taskId: task.id })}
+                            className="p-1 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                            title="View Details"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </button>
+                          <button
                             onClick={() => handleEditStart(task)}
                             className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                             title="Edit"
@@ -458,6 +470,25 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
           </span>
         </div>
       </div>
+
+      {/* Task Detail Modal */}
+      {detailModalOpen && (() => {
+        const board = boards.find(b => b.id === detailModalOpen.boardId);
+        const task = board?.tasks?.find(t => t.id === detailModalOpen.taskId);
+
+        if (!board || !task) return null;
+
+        return (
+          <TaskDetailModal
+            task={task}
+            isOpen={true}
+            onClose={() => setDetailModalOpen(null)}
+            onUpdate={(updates) => onTaskUpdate(detailModalOpen.boardId, detailModalOpen.taskId, updates)}
+            availableTags={board.tags || []}
+            onManageTags={() => {}} // Tag management not available in list view
+          />
+        );
+      })()}
     </div>
   );
 }

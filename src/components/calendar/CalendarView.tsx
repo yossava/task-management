@@ -5,6 +5,7 @@ import { Board, BoardTask } from '@/lib/types';
 import { useDroppable } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import TaskDetailModal from '@/components/task/TaskDetailModal';
 
 interface CalendarViewProps {
   boards: Board[];
@@ -24,7 +25,7 @@ interface CalendarDay {
   tasks: CalendarTask[];
 }
 
-function CalendarDayCell({ day, tasks }: { day: CalendarDay; tasks: CalendarTask[] }) {
+function CalendarDayCell({ day, tasks, onTaskClick }: { day: CalendarDay; tasks: CalendarTask[]; onTaskClick: (task: CalendarTask) => void }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `calendar-day-${day.date.toISOString()}`,
     data: {
@@ -65,7 +66,7 @@ function CalendarDayCell({ day, tasks }: { day: CalendarDay; tasks: CalendarTask
 
       <div className="space-y-1 overflow-hidden">
         {tasks.slice(0, 3).map((task) => (
-          <CalendarTaskItem key={task.id} task={task} />
+          <CalendarTaskItem key={task.id} task={task} onClick={() => onTaskClick(task)} />
         ))}
         {tasks.length > 3 && (
           <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-1">
@@ -77,7 +78,7 @@ function CalendarDayCell({ day, tasks }: { day: CalendarDay; tasks: CalendarTask
   );
 }
 
-function CalendarTaskItem({ task }: { task: CalendarTask }) {
+function CalendarTaskItem({ task, onClick }: { task: CalendarTask; onClick: () => void }) {
   const {
     attributes,
     listeners,
@@ -93,21 +94,30 @@ function CalendarTaskItem({ task }: { task: CalendarTask }) {
     },
   });
 
-  const style = {
+  const isOverdue = task.dueDate && task.dueDate < Date.now() && !task.completed;
+
+  const combinedStyle = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    backgroundColor: task.completed ? undefined : task.color ? `${task.color}20` : undefined,
+    borderLeft: task.color && !task.completed ? `3px solid ${task.color}` : undefined,
   };
-
-  const isOverdue = task.dueDate && task.dueDate < Date.now() && !task.completed;
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={combinedStyle}
       {...attributes}
       {...listeners}
-      className={`text-xs p-1.5 rounded cursor-grab active:cursor-grabbing transition-all ${
+      onClick={(e) => {
+        // Only trigger onClick if not dragging
+        if (!isDragging) {
+          e.stopPropagation();
+          onClick();
+        }
+      }}
+      className={`text-xs p-1.5 rounded cursor-pointer hover:opacity-80 transition-all ${
         task.completed
           ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 line-through'
           : isOverdue
@@ -116,11 +126,6 @@ function CalendarTaskItem({ task }: { task: CalendarTask }) {
           ? 'text-gray-800 dark:text-gray-200'
           : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
       }`}
-      style={{
-        ...style,
-        backgroundColor: task.completed ? undefined : task.color ? `${task.color}20` : undefined,
-        borderLeft: task.color && !task.completed ? `3px solid ${task.color}` : undefined,
-      }}
     >
       <div className="flex items-center gap-1 truncate">
         <div
@@ -135,6 +140,7 @@ function CalendarTaskItem({ task }: { task: CalendarTask }) {
 
 export default function CalendarView({ boards, onTaskUpdate }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [detailModalOpen, setDetailModalOpen] = useState<{ boardId: string; taskId: string } | null>(null);
 
   // Get all tasks with due dates from all boards
   const allTasks = useMemo(() => {
@@ -309,7 +315,12 @@ export default function CalendarView({ boards, onTaskUpdate }: CalendarViewProps
           {weeks.map((week, weekIndex) => (
             <div key={weekIndex} className="grid grid-cols-7">
               {week.map((day, dayIndex) => (
-                <CalendarDayCell key={dayIndex} day={day} tasks={day.tasks} />
+                <CalendarDayCell
+                  key={dayIndex}
+                  day={day}
+                  tasks={day.tasks}
+                  onTaskClick={(task) => setDetailModalOpen({ boardId: task.boardId, taskId: task.id })}
+                />
               ))}
             </div>
           ))}
@@ -337,6 +348,29 @@ export default function CalendarView({ boards, onTaskUpdate }: CalendarViewProps
           </div>
         </div>
       </div>
+
+      {/* Task Detail Modal */}
+      {detailModalOpen && (() => {
+        const board = boards.find(b => b.id === detailModalOpen.boardId);
+        const task = board?.tasks?.find(t => t.id === detailModalOpen.taskId);
+
+        if (!board || !task) return null;
+
+        return (
+          <TaskDetailModal
+            task={task}
+            isOpen={true}
+            onClose={() => setDetailModalOpen(null)}
+            onUpdate={(updates) => {
+              if (onTaskUpdate) {
+                onTaskUpdate(detailModalOpen.boardId, detailModalOpen.taskId, updates);
+              }
+            }}
+            availableTags={board.tags || []}
+            onManageTags={() => {}} // Tag management not available in calendar view
+          />
+        );
+      })()}
     </div>
   );
 }
