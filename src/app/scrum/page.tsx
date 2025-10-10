@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useScrum, useSprints, useSprintMetrics } from '@/lib/hooks/useScrum';
 import type { Sprint } from '@/lib/types/scrum';
 import TeamManager from '@/components/scrum/TeamManager';
+import LabelManager from '@/components/scrum/LabelManager';
 import Link from 'next/link';
 
 export default function ScrumDashboard() {
@@ -374,22 +375,53 @@ function OverviewView({ sprints, activeSprint, epics, stories, members, totalCap
 // ============================================================================
 
 function SettingsView() {
+  const [activeTab, setActiveTab] = useState<'labels' | 'general'>('labels');
+
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-          Scrum Settings
-        </h2>
-        <div className="text-center py-12">
-          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-4xl">⚙️</span>
-          </div>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Settings configuration coming soon
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Configure sprint duration, story points, and more
-          </p>
+      {/* Tabs */}
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+        <div className="border-b border-gray-200 dark:border-gray-800">
+          <nav className="flex gap-4 px-6" aria-label="Settings tabs">
+            <button
+              onClick={() => setActiveTab('labels')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'labels'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Labels
+            </button>
+            <button
+              onClick={() => setActiveTab('general')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'general'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              General Settings
+            </button>
+          </nav>
+        </div>
+
+        <div className="p-6">
+          {activeTab === 'labels' ? (
+            <LabelManager />
+          ) : (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl">⚙️</span>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                General settings configuration coming soon
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-500">
+                Configure sprint duration, story points, and more
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
