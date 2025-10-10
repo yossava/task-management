@@ -14,6 +14,7 @@ Welcome to the ProjectHub wiki! This is your comprehensive guide to using and de
 ### For Developers
 - 🏗️ [Architecture Overview](Architecture.md) - System design and structure
 - 🔧 [Developer Guide](Developer-Guide.md) - Setup and development
+- 📝 [Feature Development Workflow](Feature-Development-Workflow.md) - **Required workflow for all features**
 - 📦 [API Reference](API-Reference.md) - Service and component APIs
 - 🎨 [Component Library](Components.md) - UI component documentation
 - 🧪 [Testing Guide](Testing.md) - Writing and running tests
