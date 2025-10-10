@@ -508,7 +508,7 @@ export default function BoardsPage() {
         </div>
 
         {/* View Mode Switcher and Filters */}
-        <div className="mb-6 flex justify-center items-center gap-4">
+        <div className="mb-6 flex items-center gap-4">
           {/* View Mode Tabs */}
           <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1">
             <button
