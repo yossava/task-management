@@ -1,13 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useScrum } from '@/lib/hooks/useScrum';
 import SprintList from '@/components/scrum/SprintList';
+import SprintPlanningTool from '@/components/scrum/SprintPlanningTool';
 import Link from 'next/link';
 
 export default function PlanningPage() {
-  const { sprints, stories, loading } = useScrum();
+  const { sprints, stories, team, loading } = useScrum();
   const [view, setView] = useState<'sprints' | 'planning'>('sprints');
+  const [selectedSprintId, setSelectedSprintId] = useState<string>('');
+
+  // Get sprints available for planning (planned or active)
+  const plannableSprints = useMemo(() => {
+    return sprints.sprints.filter(s => s.status === 'planned' || s.status === 'active');
+  }, [sprints.sprints]);
+
+  // Auto-select first plannable sprint if not selected
+  const currentSprint = useMemo(() => {
+    if (selectedSprintId) {
+      return plannableSprints.find(s => s.id === selectedSprintId);
+    }
+    return plannableSprints[0];
+  }, [plannableSprints, selectedSprintId]);
+
+  // Filter stories into backlog and sprint
+  const backlogStories = useMemo(() => {
+    return stories.stories.filter(s => !s.sprintId);
+  }, [stories.stories]);
+
+  const sprintStories = useMemo(() => {
+    if (!currentSprint) return [];
+    return stories.stories.filter(s => s.sprintId === currentSprint.id);
+  }, [stories.stories, currentSprint]);
 
   if (loading) {
     return (
@@ -82,20 +107,57 @@ export default function PlanningPage() {
             onCompleteSprint={sprints.completeSprint}
           />
         ) : (
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-12 text-center">
-            <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl">📋</span>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Sprint Planning Tool Coming Soon
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Drag-and-drop sprint planning interface will be available in the next update
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
-              For now, manage your sprints from the Sprints view and assign stories from the board
-            </p>
-          </div>
+          <>
+            {/* Sprint Selector */}
+            {plannableSprints.length > 1 && (
+              <div className="mb-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Select Sprint to Plan
+                </label>
+                <select
+                  value={selectedSprintId || (currentSprint?.id || '')}
+                  onChange={(e) => setSelectedSprintId(e.target.value)}
+                  className="w-full md:w-96 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                >
+                  {plannableSprints.map((sprint) => (
+                    <option key={sprint.id} value={sprint.id}>
+                      {sprint.name} ({sprint.status})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Sprint Planning Tool */}
+            {currentSprint ? (
+              <SprintPlanningTool
+                sprint={currentSprint}
+                backlogStories={backlogStories}
+                sprintStories={sprintStories}
+                teamMembers={team.members}
+                onMoveToSprint={stories.moveToSprint}
+                onUpdateSprint={sprints.updateSprint}
+              />
+            ) : (
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-12 text-center">
+                <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-4xl">📋</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  No Sprints Available for Planning
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  Create a sprint to start planning your iteration
+                </p>
+                <button
+                  onClick={() => setView('sprints')}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Go to Sprints
+                </button>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>
