@@ -8,7 +8,7 @@ import SprintCapacityWidget from '@/components/scrum/SprintCapacityWidget';
 import Link from 'next/link';
 
 export default function BoardPage() {
-  const { sprints, stories, epics, loading } = useScrum();
+  const { sprints, stories, epics, team, loading } = useScrum();
   const [selectedSprintId, setSelectedSprintId] = useState<string>('all');
   const [editingStory, setEditingStory] = useState<any>(null);
   const [showStoryModal, setShowStoryModal] = useState(false);
@@ -102,6 +102,7 @@ export default function BoardPage() {
           <SprintCapacityWidget
             sprint={selectedSprint}
             stories={stories.stories}
+            teamMembers={team.members}
           />
         )}
 
