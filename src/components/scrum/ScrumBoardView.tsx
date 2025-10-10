@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { UserStory, Epic, Sprint } from '@/lib/types/scrum';
 import BoardStoryCard from './BoardStoryCard';
+import StoryDetailsModal from './StoryDetailsModal';
 
 interface BoardColumn {
   id: string;
@@ -36,6 +37,7 @@ export default function ScrumBoardView({
   onEditStory,
 }: ScrumBoardViewProps) {
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const [selectedStory, setSelectedStory] = useState<UserStory | null>(null);
   const [filters, setFilters] = useState({
     epic: 'all' as string,
     priority: 'all' as 'all' | UserStory['priority'],
@@ -256,6 +258,7 @@ export default function ScrumBoardView({
                         story={story}
                         epic={epic}
                         onEdit={onEditStory}
+                        onClick={(story) => setSelectedStory(story)}
                       />
                     );
                   })
@@ -269,6 +272,19 @@ export default function ScrumBoardView({
           );
         })}
       </div>
+
+      {/* Story Details Modal */}
+      {selectedStory && (
+        <StoryDetailsModal
+          story={selectedStory}
+          isOpen={!!selectedStory}
+          onClose={() => setSelectedStory(null)}
+          onUpdate={(updatedStory) => {
+            onUpdateStory(updatedStory.id, updatedStory);
+            setSelectedStory(updatedStory);
+          }}
+        />
+      )}
     </div>
   );
 }
