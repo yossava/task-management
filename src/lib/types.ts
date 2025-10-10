@@ -152,3 +152,17 @@ export interface ActivityLog {
   }[];
   timestamp: number;
 }
+
+export type NotificationType = 'due_soon' | 'overdue' | 'task_completed' | 'board_created' | 'task_assigned';
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  boardId?: string;
+  taskId?: string;
+  read: boolean;
+  timestamp: number;
+  actionUrl?: string;
+}

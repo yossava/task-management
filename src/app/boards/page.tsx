@@ -31,6 +31,9 @@ import ActivityFeed from '@/components/activity/ActivityFeed';
 import ExportImportModal from '@/components/export/ExportImportModal';
 import KeyboardShortcutsModal from '@/components/keyboard/KeyboardShortcutsModal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import NotificationBell from '@/components/notifications/NotificationBell';
+import NotificationsPanel from '@/components/notifications/NotificationsPanel';
+import { NotificationService } from '@/lib/services/notificationService';
 
 const HEADER_STORAGE_KEY = 'boards_page_header';
 
@@ -41,6 +44,7 @@ export default function BoardsPage() {
   const [showExportImport, setShowExportImport] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
   const [activeBoard, setActiveBoard] = useState<Board | null>(null);
   const [pageTitle, setPageTitle] = useState('Your Boards');
@@ -81,6 +85,23 @@ export default function BoardsPage() {
   const saveHeader = (title: string, subtitle: string) => {
     localStorage.setItem(HEADER_STORAGE_KEY, JSON.stringify({ title, subtitle }));
   };
+
+  // Check for due date notifications periodically
+  useEffect(() => {
+    const checkNotifications = () => {
+      if (boards.length > 0) {
+        NotificationService.checkDueDates(boards);
+      }
+    };
+
+    // Check immediately on mount and when boards change
+    checkNotifications();
+
+    // Then check every 5 minutes
+    const interval = setInterval(checkNotifications, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [boards]);
 
   useEffect(() => {
     if (isEditingTitle) {
@@ -391,6 +412,10 @@ export default function BoardsPage() {
             )}
           </div>
           <div className="flex-shrink-0 flex items-center gap-3">
+            <NotificationBell
+              onClick={() => setShowNotifications(!showNotifications)}
+              isOpen={showNotifications}
+            />
             <button
               onClick={() => setShowKeyboardHelp(true)}
               className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -504,6 +529,11 @@ export default function BoardsPage() {
       {/* Keyboard Shortcuts Help Modal */}
       {showKeyboardHelp && (
         <KeyboardShortcutsModal onClose={() => setShowKeyboardHelp(false)} />
+      )}
+
+      {/* Notifications Panel */}
+      {showNotifications && (
+        <NotificationsPanel onClose={() => setShowNotifications(false)} />
       )}
 
       {/* Drag Overlay - shows the task or board being dragged */}
