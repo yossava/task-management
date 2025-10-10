@@ -42,7 +42,6 @@ export default function FilterPanel({
   taskCount,
   filteredCount,
 }: FilterPanelProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [renderKey, setRenderKey] = useState(0);
 
   const togglePriority = (priority: Priority) => {
@@ -88,47 +87,7 @@ export default function FilterPanel({
     filters.searchQuery !== '';
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-      {/* Header */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors border-b border-gray-100 dark:border-gray-700"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 flex items-center justify-center shadow-sm">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-            </div>
-            <div className="flex flex-col items-start">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">Filters & Sort</span>
-                {hasActiveFilters && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-blue-500 text-white rounded">
-                    {filters.priorities.length + filters.tags.length}
-                  </span>
-                )}
-              </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {filteredCount} of {taskCount} tasks
-              </span>
-            </div>
-          </div>
-        </div>
-        <svg
-          className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {/* Filter Content */}
-      {isExpanded && (
-        <div className="p-5 space-y-6">
+    <div className="space-y-6">
           {/* Priority Filter */}
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -319,8 +278,6 @@ export default function FilterPanel({
               Clear all filters
             </button>
           )}
-        </div>
-      )}
     </div>
   );
 }
