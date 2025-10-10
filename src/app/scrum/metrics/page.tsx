@@ -6,10 +6,11 @@ import VelocityChart from '@/components/scrum/VelocityChart';
 import BurndownChart from '@/components/scrum/BurndownChart';
 import CumulativeFlowChart from '@/components/scrum/CumulativeFlowChart';
 import CycleTimeAnalytics from '@/components/scrum/CycleTimeAnalytics';
+import TeamPerformanceAnalytics from '@/components/scrum/TeamPerformanceAnalytics';
 import Link from 'next/link';
 
 export default function MetricsPage() {
-  const { sprints, stories, loading } = useScrum();
+  const { sprints, stories, team, loading } = useScrum();
   const [selectedSprintId, setSelectedSprintId] = useState<string>('');
 
   if (loading) {
@@ -111,6 +112,15 @@ export default function MetricsPage() {
               across all sprints
             </div>
           </div>
+        </div>
+
+        {/* Team Performance Analytics */}
+        <div className="mb-8">
+          <TeamPerformanceAnalytics
+            stories={stories.stories}
+            teamMembers={team.members}
+            sprints={sprints.sprints}
+          />
         </div>
 
         {/* Velocity Chart */}
