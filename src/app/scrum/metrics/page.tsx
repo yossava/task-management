@@ -5,6 +5,7 @@ import { useScrum } from '@/lib/hooks/useScrum';
 import VelocityChart from '@/components/scrum/VelocityChart';
 import BurndownChart from '@/components/scrum/BurndownChart';
 import CumulativeFlowChart from '@/components/scrum/CumulativeFlowChart';
+import CycleTimeAnalytics from '@/components/scrum/CycleTimeAnalytics';
 import Link from 'next/link';
 
 export default function MetricsPage() {
@@ -147,10 +148,18 @@ export default function MetricsPage() {
 
         {/* Cumulative Flow Diagram */}
         {selectedSprint && (
-          <div>
+          <div className="mb-8">
             <CumulativeFlowChart sprint={selectedSprint} stories={stories.stories.filter(s => s.sprintId === selectedSprint.id)} />
           </div>
         )}
+
+        {/* Cycle Time & Lead Time Analytics */}
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            Cycle Time & Lead Time Analytics
+          </h2>
+          <CycleTimeAnalytics stories={stories.stories} sprints={sprints.sprints} />
+        </div>
 
         {!selectedSprint && completedSprints.length === 0 && activeSprints.length === 0 && (
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-12 text-center">
