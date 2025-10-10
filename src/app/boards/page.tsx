@@ -35,6 +35,7 @@ import NotificationBell from '@/components/notifications/NotificationBell';
 import NotificationsPanel from '@/components/notifications/NotificationsPanel';
 import { NotificationService } from '@/lib/services/notificationService';
 import CalendarView from '@/components/calendar/CalendarView';
+import ListView from '@/components/list/ListView';
 import type { ViewMode } from '@/lib/types';
 
 const HEADER_STORAGE_KEY = 'boards_page_header';
@@ -521,16 +522,32 @@ export default function BoardsPage() {
           </div>
         )}
 
-        {/* List View - TODO: Implement list view */}
+        {/* List View */}
         {viewMode === 'list' && (
-          <div className="mb-6 p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg text-center">
-            <div className="text-gray-500 dark:text-gray-400">
-              <svg className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-              <p className="text-lg font-medium">List view coming soon!</p>
-              <p className="text-sm mt-2">Switch to Board or Calendar view for now</p>
-            </div>
+          <div className="mb-6">
+            <ListView
+              boards={boardsWithFilteredTasks}
+              onTaskUpdate={(boardId, taskId, updates) => {
+                const board = boards.find(b => b.id === boardId);
+                if (!board) return;
+
+                const updatedTasks = board.tasks.map(task =>
+                  task.id === taskId ? { ...task, ...updates } : task
+                );
+
+                BoardService.update(boardId, { tasks: updatedTasks });
+                updateBoard(boardId, { tasks: updatedTasks });
+              }}
+              onTaskDelete={(boardId, taskId) => {
+                const board = boards.find(b => b.id === boardId);
+                if (!board) return;
+
+                const updatedTasks = board.tasks.filter(task => task.id !== taskId);
+
+                BoardService.update(boardId, { tasks: updatedTasks });
+                updateBoard(boardId, { tasks: updatedTasks });
+              }}
+            />
           </div>
         )}
 
