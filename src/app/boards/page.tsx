@@ -29,6 +29,8 @@ import TemplateGallery from '@/components/board/TemplateGallery';
 import { TemplateService } from '@/lib/services/templateService';
 import ActivityFeed from '@/components/activity/ActivityFeed';
 import ExportImportModal from '@/components/export/ExportImportModal';
+import KeyboardShortcutsModal from '@/components/keyboard/KeyboardShortcutsModal';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 const HEADER_STORAGE_KEY = 'boards_page_header';
 
@@ -37,6 +39,8 @@ export default function BoardsPage() {
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const [showExportImport, setShowExportImport] = useState(false);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
   const [activeBoard, setActiveBoard] = useState<Board | null>(null);
   const [pageTitle, setPageTitle] = useState('Your Boards');
@@ -135,6 +139,15 @@ export default function BoardsPage() {
     // Force reload boards - useBoards hook will pick up the change
     window.location.reload();
   };
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onSearch: () => setShowSearch(true),
+    onHelp: () => setShowKeyboardHelp(true),
+    onNewBoard: () => setIsCreatingBoard(true),
+    onTemplate: () => setShowTemplateGallery(true),
+    onExport: () => setShowExportImport(true),
+  });
 
   const handleUpdate = (id: string, data: Partial<Board>) => {
     updateBoard(id, data);
@@ -379,6 +392,15 @@ export default function BoardsPage() {
           </div>
           <div className="flex-shrink-0 flex items-center gap-3">
             <button
+              onClick={() => setShowKeyboardHelp(true)}
+              className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              title="Keyboard shortcuts (?)"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </button>
+            <button
               onClick={() => setShowExportImport(true)}
               className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors flex items-center gap-2"
             >
@@ -477,6 +499,11 @@ export default function BoardsPage() {
       {/* Export/Import Modal */}
       {showExportImport && (
         <ExportImportModal onClose={() => setShowExportImport(false)} />
+      )}
+
+      {/* Keyboard Shortcuts Help Modal */}
+      {showKeyboardHelp && (
+        <KeyboardShortcutsModal onClose={() => setShowKeyboardHelp(false)} />
       )}
 
       {/* Drag Overlay - shows the task or board being dragged */}
