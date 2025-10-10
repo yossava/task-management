@@ -1,25 +1,25 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Board, Task } from '@/types/board';
+import { Board, BoardTask } from '@/lib/types';
 
 interface ListViewProps {
   boards: Board[];
-  onTaskUpdate: (boardId: string, taskId: string, updates: Partial<Task>) => void;
+  onTaskUpdate: (boardId: string, taskId: string, updates: Partial<BoardTask>) => void;
   onTaskDelete?: (boardId: string, taskId: string) => void;
 }
 
 type SortColumn = 'title' | 'board' | 'status' | 'priority' | 'dueDate' | 'tags';
 type SortDirection = 'asc' | 'desc';
 
-interface TaskWithBoard extends Task {
+interface TaskWithBoard extends BoardTask {
   boardId: string;
   boardTitle: string;
   boardColor: string;
 }
 
-const PRIORITY_ORDER = { high: 3, medium: 2, low: 1 };
-const STATUS_ORDER = { todo: 1, 'in-progress': 2, done: 3 };
+const PRIORITY_ORDER = { high: 3, medium: 2, low: 1, urgent: 4 };
+const STATUS_ORDER = { incomplete: 1, complete: 2 };
 
 export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListViewProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>('dueDate');
@@ -52,13 +52,15 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
 
       switch (sortColumn) {
         case 'title':
-          comparison = a.title.localeCompare(b.title);
+          comparison = a.text.localeCompare(b.text);
           break;
         case 'board':
           comparison = a.boardTitle.localeCompare(b.boardTitle);
           break;
         case 'status':
-          comparison = STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
+          const aStatus = a.completed ? 'complete' : 'incomplete';
+          const bStatus = b.completed ? 'complete' : 'incomplete';
+          comparison = STATUS_ORDER[aStatus] - STATUS_ORDER[bStatus];
           break;
         case 'priority':
           const aPriority = a.priority || 'low';
@@ -66,8 +68,8 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
           comparison = PRIORITY_ORDER[bPriority] - PRIORITY_ORDER[aPriority];
           break;
         case 'dueDate':
-          const aDate = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
-          const bDate = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+          const aDate = a.dueDate || Infinity;
+          const bDate = b.dueDate || Infinity;
           comparison = aDate - bDate;
           break;
         case 'tags':
@@ -110,15 +112,15 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
     setSelectedTasks(newSelected);
   };
 
-  const handleBulkAction = (action: 'delete' | 'complete' | 'todo') => {
+  const handleBulkAction = (action: 'delete' | 'complete' | 'incomplete') => {
     selectedTasks.forEach((key) => {
       const [boardId, taskId] = key.split('-');
       if (action === 'delete' && onTaskDelete) {
         onTaskDelete(boardId, taskId);
       } else if (action === 'complete') {
-        onTaskUpdate(boardId, taskId, { status: 'done' });
-      } else if (action === 'todo') {
-        onTaskUpdate(boardId, taskId, { status: 'todo' });
+        onTaskUpdate(boardId, taskId, { completed: true });
+      } else if (action === 'incomplete') {
+        onTaskUpdate(boardId, taskId, { completed: false });
       }
     });
     setSelectedTasks(new Set());
@@ -126,12 +128,12 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
 
   const handleEditStart = (task: TaskWithBoard) => {
     setEditingTask(`${task.boardId}-${task.id}`);
-    setEditValue(task.title);
+    setEditValue(task.text);
   };
 
   const handleEditSave = (boardId: string, taskId: string) => {
     if (editValue.trim()) {
-      onTaskUpdate(boardId, taskId, { title: editValue.trim() });
+      onTaskUpdate(boardId, taskId, { text: editValue.trim() });
     }
     setEditingTask(null);
     setEditValue('');
@@ -155,20 +157,20 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      todo: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
-      'in-progress': 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
-      done: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
-    };
-    return badges[status as keyof typeof badges] || badges.todo;
+  const getStatusBadge = (completed: boolean) => {
+    return completed
+      ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+      : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
   };
 
-  const formatDate = (date?: string) => {
-    if (!date) return '-';
-    const d = new Date(date);
+  const formatDate = (timestamp?: number) => {
+    if (!timestamp) return '-';
+    const d = new Date(timestamp);
     const today = new Date();
-    const diffTime = d.getTime() - today.getTime();
+    today.setHours(0, 0, 0, 0);
+    const taskDate = new Date(timestamp);
+    taskDate.setHours(0, 0, 0, 0);
+    const diffTime = taskDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) {
@@ -218,10 +220,10 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
                 Mark Complete
               </button>
               <button
-                onClick={() => handleBulkAction('todo')}
+                onClick={() => handleBulkAction('incomplete')}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                Mark Todo
+                Mark Incomplete
               </button>
               <button
                 onClick={() => handleBulkAction('delete')}
@@ -360,7 +362,7 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
                             onDoubleClick={() => handleEditStart(task)}
                             className="text-sm font-medium text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
                           >
-                            {task.title}
+                            {task.text}
                           </div>
                         )}
                       </td>
@@ -374,8 +376,8 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(task.status)}`}>
-                          {task.status === 'in-progress' ? 'In Progress' : task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(task.completed)}`}>
+                          {task.completed ? 'Complete' : 'Incomplete'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -445,19 +447,13 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
           <span>
             Completed:{' '}
             <span className="font-medium text-green-600 dark:text-green-400">
-              {sortedTasks.filter((t) => t.status === 'done').length}
+              {sortedTasks.filter((t) => t.completed).length}
             </span>
           </span>
           <span>
-            In Progress:{' '}
-            <span className="font-medium text-blue-600 dark:text-blue-400">
-              {sortedTasks.filter((t) => t.status === 'in-progress').length}
-            </span>
-          </span>
-          <span>
-            Todo:{' '}
+            Incomplete:{' '}
             <span className="font-medium text-gray-600 dark:text-gray-400">
-              {sortedTasks.filter((t) => t.status === 'todo').length}
+              {sortedTasks.filter((t) => !t.completed).length}
             </span>
           </span>
         </div>
