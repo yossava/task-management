@@ -13,6 +13,7 @@ interface KeyboardShortcutsModalProps {
 const SHORTCUTS: Shortcut[] = [
   // Navigation
   { key: 'Ctrl/⌘ + K', description: 'Open global search', category: 'Navigation' },
+  { key: 'Ctrl/⌘ + B', description: 'Toggle sidebar', category: 'Navigation' },
   { key: '?', description: 'Show keyboard shortcuts', category: 'Navigation' },
   { key: 'Esc', description: 'Close modal/dialog', category: 'Navigation' },
   { key: 'G then B', description: 'Go to Boards page', category: 'Navigation' },
