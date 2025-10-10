@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useScrum } from '@/lib/hooks/useScrum';
 import EpicList from '@/components/scrum/EpicList';
+import StoryList from '@/components/scrum/StoryList';
 import Link from 'next/link';
 
 export default function BacklogPage() {
@@ -80,20 +81,13 @@ export default function BacklogPage() {
             onDeleteEpic={epics.deleteEpic}
           />
         ) : (
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-12 text-center">
-            <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl">📝</span>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Stories View Coming Soon
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              User story management will be available in the next update
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
-              For now, manage your epics and prepare for sprint planning
-            </p>
-          </div>
+          <StoryList
+            stories={stories.stories}
+            epics={epics.epics}
+            onCreateStory={stories.createStory}
+            onUpdateStory={stories.updateStory}
+            onDeleteStory={stories.deleteStory}
+          />
         )}
       </main>
     </div>
