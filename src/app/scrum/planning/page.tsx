@@ -4,12 +4,14 @@ import { useState, useMemo } from 'react';
 import { useScrum } from '@/lib/hooks/useScrum';
 import SprintList from '@/components/scrum/SprintList';
 import SprintPlanningTool from '@/components/scrum/SprintPlanningTool';
+import SmartAssignment from '@/components/scrum/SmartAssignment';
 import Link from 'next/link';
 
 export default function PlanningPage() {
   const { sprints, stories, team, loading } = useScrum();
   const [view, setView] = useState<'sprints' | 'planning'>('sprints');
   const [selectedSprintId, setSelectedSprintId] = useState<string>('');
+  const [showSmartAssignment, setShowSmartAssignment] = useState(false);
 
   // Get sprints available for planning (planned or active)
   const plannableSprints = useMemo(() => {
@@ -83,6 +85,17 @@ export default function PlanningPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              {view === 'planning' && currentSprint && (
+                <button
+                  onClick={() => setShowSmartAssignment(true)}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Smart Assignment
+                </button>
+              )}
               <Link
                 href="/scrum"
                 className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -158,6 +171,17 @@ export default function PlanningPage() {
               </div>
             )}
           </>
+        )}
+
+        {/* Smart Assignment Modal */}
+        {showSmartAssignment && currentSprint && (
+          <SmartAssignment
+            sprint={currentSprint}
+            stories={stories.stories}
+            teamMembers={team.members}
+            onAssign={(storyId, assignees) => stories.updateStory(storyId, { assignees })}
+            onClose={() => setShowSmartAssignment(false)}
+          />
         )}
       </main>
     </div>
