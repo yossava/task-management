@@ -40,9 +40,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className="min-h-screen">
-        <AppLayout>
-          <main className="container mx-auto px-4 py-8">{children}</main>
-        </AppLayout>
+        <AppLayout>{children}</AppLayout>
         <script dangerouslySetInnerHTML={{
           __html: `
             if ('serviceWorker' in navigator) {

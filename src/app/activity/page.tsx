@@ -141,7 +141,7 @@ export default function ActivityPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
