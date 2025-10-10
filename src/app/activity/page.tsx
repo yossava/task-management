@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { ActivityService } from '@/lib/services/activityService';
 import { Activity } from '@/lib/types';
-import Header from '@/components/layout/Header';
 
 export default function ActivityPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -142,10 +141,7 @@ export default function ActivityPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Header />
-
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -245,7 +241,6 @@ export default function ActivityPage() {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 }

@@ -13,7 +13,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
 
   // Determine if sidebar should be shown based on route
-  const showSidebar = pathname?.startsWith('/boards') || pathname?.startsWith('/dashboard');
+  const showSidebar = pathname?.startsWith('/boards') || pathname?.startsWith('/dashboard') || pathname?.startsWith('/activity');
 
   // Load sidebar state from localStorage
   useEffect(() => {
