@@ -13,6 +13,7 @@ import TaskDependencies from '@/components/task/TaskDependencies';
 import RecurringTaskModal from '@/components/task/RecurringTaskModal';
 import SubtasksSection from '@/components/task/SubtasksSection';
 import AssigneeSection from '@/components/user/AssigneeSection';
+import TimeTrackingSection from '@/components/time/TimeTrackingSection';
 
 interface TaskDetailModalProps {
   task: BoardTask;
@@ -33,6 +34,7 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
   const [dependenciesKey, setDependenciesKey] = useState(0);
   const [subtasksKey, setSubtasksKey] = useState(0);
   const [assigneeKey, setAssigneeKey] = useState(0);
+  const [timeTrackingKey, setTimeTrackingKey] = useState(0);
   const [recurringModalOpen, setRecurringModalOpen] = useState(false);
   const priorityButtonRef = useRef<HTMLButtonElement>(null);
   const tagButtonRef = useRef<HTMLButtonElement>(null);
@@ -51,6 +53,10 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
 
   const handleAssigneeUpdate = () => {
     setAssigneeKey(prev => prev + 1);
+  };
+
+  const handleTimeTrackingUpdate = () => {
+    setTimeTrackingKey(prev => prev + 1);
   };
 
   const handleRecurringUpdate = () => {
@@ -570,6 +576,15 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
                 boardId={boardId}
                 task={task}
                 onUpdate={handleAssigneeUpdate}
+              />
+            </div>
+
+            {/* Time Tracking Section */}
+            <div key={timeTrackingKey} className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <TimeTrackingSection
+                boardId={boardId}
+                task={task}
+                onUpdate={handleTimeTrackingUpdate}
               />
             </div>
 
