@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Board, BoardTask } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import AdvancedSearchModal from './AdvancedSearchModal';
 
 interface SearchResult {
   type: 'board' | 'task';
@@ -18,10 +19,24 @@ interface GlobalSearchProps {
 
 export default function GlobalSearch({ boards }: GlobalSearchProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  // Get all unique tags from all boards
+  const allTags = useMemo(() => {
+    const tagMap = new Map();
+    boards.forEach(board => {
+      board.tags?.forEach(tag => {
+        if (!tagMap.has(tag.id)) {
+          tagMap.set(tag.id, tag);
+        }
+      });
+    });
+    return Array.from(tagMap.values());
+  }, [boards]);
 
   // Keyboard shortcut: Cmd/Ctrl + K
   useEffect(() => {
@@ -246,19 +261,42 @@ export default function GlobalSearch({ boards }: GlobalSearchProps) {
           </div>
 
           {/* Footer */}
-          {results.length > 0 && (
-            <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-              <span>{results.length} result{results.length !== 1 ? 's' : ''}</span>
-              <div className="flex items-center gap-2">
-                <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded">↑↓</kbd>
-                <span>to navigate</span>
-                <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded">↵</kbd>
-                <span>to select</span>
-              </div>
-            </div>
-          )}
+          <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+            {results.length > 0 ? (
+              <>
+                <span>{results.length} result{results.length !== 1 ? 's' : ''}</span>
+                <div className="flex items-center gap-2">
+                  <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded">↑↓</kbd>
+                  <span>to navigate</span>
+                  <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded">↵</kbd>
+                  <span>to select</span>
+                </div>
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  setShowAdvanced(true);
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                Advanced Search
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Advanced Search Modal */}
+      <AdvancedSearchModal
+        isOpen={showAdvanced}
+        onClose={() => setShowAdvanced(false)}
+        availableTags={allTags}
+        availableBoards={boards.map(b => ({ id: b.id, title: b.title }))}
+      />
     </>
   );
 }
