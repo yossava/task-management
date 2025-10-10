@@ -7,6 +7,7 @@ import BurndownChart from '@/components/scrum/BurndownChart';
 import CumulativeFlowChart from '@/components/scrum/CumulativeFlowChart';
 import CycleTimeAnalytics from '@/components/scrum/CycleTimeAnalytics';
 import TeamPerformanceAnalytics from '@/components/scrum/TeamPerformanceAnalytics';
+import CustomReportBuilder from '@/components/scrum/CustomReportBuilder';
 import Link from 'next/link';
 
 export default function MetricsPage() {
@@ -112,6 +113,15 @@ export default function MetricsPage() {
               across all sprints
             </div>
           </div>
+        </div>
+
+        {/* Custom Report Builder */}
+        <div className="mb-8">
+          <CustomReportBuilder
+            sprints={sprints.sprints}
+            stories={stories.stories}
+            teamMembers={team.members}
+          />
         </div>
 
         {/* Team Performance Analytics */}
