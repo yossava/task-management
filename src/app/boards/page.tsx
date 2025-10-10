@@ -24,6 +24,7 @@ import { BoardService } from '@/lib/services/boardService';
 import { filterAndSortTasks } from '@/lib/utils/taskFilters';
 import Card from '@/components/ui/Card';
 import FilterPanel from '@/components/ui/FilterPanel';
+import GlobalSearch from '@/components/search/GlobalSearch';
 
 const HEADER_STORAGE_KEY = 'boards_page_header';
 
@@ -310,7 +311,7 @@ export default function BoardsPage() {
     >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-10">
+        <div className="flex items-center justify-between mb-10 gap-6">
           <div className="flex-1">
             {isEditingTitle ? (
               <input
@@ -362,6 +363,9 @@ export default function BoardsPage() {
                 {pageSubtitle}
               </p>
             )}
+          </div>
+          <div className="flex-shrink-0">
+            <GlobalSearch boards={boards} />
           </div>
         </div>
 
