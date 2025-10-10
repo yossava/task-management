@@ -5,6 +5,7 @@ import { useScrum, useSprints, useSprintMetrics } from '@/lib/hooks/useScrum';
 import type { Sprint } from '@/lib/types/scrum';
 import TeamManager from '@/components/scrum/TeamManager';
 import LabelManager from '@/components/scrum/LabelManager';
+import SettingsConfig from '@/components/scrum/SettingsConfig';
 import Link from 'next/link';
 
 export default function ScrumDashboard() {
@@ -410,17 +411,7 @@ function SettingsView() {
           {activeTab === 'labels' ? (
             <LabelManager />
           ) : (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-4xl">⚙️</span>
-              </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                General settings configuration coming soon
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500">
-                Configure sprint duration, story points, and more
-              </p>
-            </div>
+            <SettingsConfig />
           )}
         </div>
       </div>
