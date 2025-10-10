@@ -159,6 +159,30 @@ function OverviewView({ sprints, activeSprint, epics, stories, members, totalCap
           >
             Sprint Planning
           </Link>
+          <Link
+            href="/scrum/standup"
+            className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
+          >
+            Daily Standup
+          </Link>
+          <Link
+            href="/scrum/review"
+            className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
+          >
+            Sprint Review
+          </Link>
+          <Link
+            href="/scrum/retrospective"
+            className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
+          >
+            Retrospective
+          </Link>
+          <Link
+            href="/scrum/metrics"
+            className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
+          >
+            Metrics
+          </Link>
         </div>
       </div>
 

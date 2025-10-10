@@ -666,6 +666,175 @@ export const MetricsService = {
 };
 
 // ============================================================================
+// Retrospective Service
+// ============================================================================
+
+export const RetrospectiveService = {
+  getAll: (): Retrospective[] => {
+    return getFromStorage<Retrospective>(STORAGE_KEYS.RETROSPECTIVES);
+  },
+
+  getBySprintId: (sprintId: string): Retrospective | undefined => {
+    const retrospectives = getFromStorage<Retrospective>(STORAGE_KEYS.RETROSPECTIVES);
+    return retrospectives.find((r) => r.sprintId === sprintId);
+  },
+
+  create: (data: Omit<Retrospective, 'id' | 'createdAt'>): Retrospective => {
+    const retrospective: Retrospective = {
+      ...data,
+      id: generateId(),
+      createdAt: getCurrentTimestamp(),
+    };
+
+    const retrospectives = getFromStorage<Retrospective>(STORAGE_KEYS.RETROSPECTIVES);
+    retrospectives.push(retrospective);
+    saveToStorage(STORAGE_KEYS.RETROSPECTIVES, retrospectives);
+
+    return retrospective;
+  },
+
+  update: (id: string, data: Partial<Retrospective>): Retrospective | undefined => {
+    const retrospectives = getFromStorage<Retrospective>(STORAGE_KEYS.RETROSPECTIVES);
+    const index = retrospectives.findIndex((r) => r.id === id);
+
+    if (index === -1) return undefined;
+
+    retrospectives[index] = {
+      ...retrospectives[index],
+      ...data,
+    };
+
+    saveToStorage(STORAGE_KEYS.RETROSPECTIVES, retrospectives);
+    return retrospectives[index];
+  },
+
+  delete: (id: string): boolean => {
+    const retrospectives = getFromStorage<Retrospective>(STORAGE_KEYS.RETROSPECTIVES);
+    const filtered = retrospectives.filter((r) => r.id !== id);
+
+    if (filtered.length === retrospectives.length) return false;
+
+    saveToStorage(STORAGE_KEYS.RETROSPECTIVES, filtered);
+    return true;
+  },
+};
+
+// ============================================================================
+// Sprint Review Service
+// ============================================================================
+
+export const SprintReviewService = {
+  getAll: (): SprintReview[] => {
+    return getFromStorage<SprintReview>(STORAGE_KEYS.SPRINT_REVIEWS);
+  },
+
+  getBySprintId: (sprintId: string): SprintReview | undefined => {
+    const reviews = getFromStorage<SprintReview>(STORAGE_KEYS.SPRINT_REVIEWS);
+    return reviews.find((r) => r.sprintId === sprintId);
+  },
+
+  create: (data: Omit<SprintReview, 'id' | 'createdAt'>): SprintReview => {
+    const review: SprintReview = {
+      ...data,
+      id: generateId(),
+      createdAt: getCurrentTimestamp(),
+    };
+
+    const reviews = getFromStorage<SprintReview>(STORAGE_KEYS.SPRINT_REVIEWS);
+    reviews.push(review);
+    saveToStorage(STORAGE_KEYS.SPRINT_REVIEWS, reviews);
+
+    return review;
+  },
+
+  update: (id: string, data: Partial<SprintReview>): SprintReview | undefined => {
+    const reviews = getFromStorage<SprintReview>(STORAGE_KEYS.SPRINT_REVIEWS);
+    const index = reviews.findIndex((r) => r.id === id);
+
+    if (index === -1) return undefined;
+
+    reviews[index] = {
+      ...reviews[index],
+      ...data,
+    };
+
+    saveToStorage(STORAGE_KEYS.SPRINT_REVIEWS, reviews);
+    return reviews[index];
+  },
+
+  delete: (id: string): boolean => {
+    const reviews = getFromStorage<SprintReview>(STORAGE_KEYS.SPRINT_REVIEWS);
+    const filtered = reviews.filter((r) => r.id !== id);
+
+    if (filtered.length === reviews.length) return false;
+
+    saveToStorage(STORAGE_KEYS.SPRINT_REVIEWS, filtered);
+    return true;
+  },
+};
+
+// ============================================================================
+// Daily Standup Service
+// ============================================================================
+
+export const DailyStandupService = {
+  getAll: (): DailyStandup[] => {
+    return getFromStorage<DailyStandup>(STORAGE_KEYS.DAILY_STANDUPS);
+  },
+
+  getBySprintId: (sprintId: string): DailyStandup[] => {
+    const standups = getFromStorage<DailyStandup>(STORAGE_KEYS.DAILY_STANDUPS);
+    return standups.filter((s) => s.sprintId === sprintId).sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  },
+
+  getByDate: (sprintId: string, date: string): DailyStandup | undefined => {
+    const standups = getFromStorage<DailyStandup>(STORAGE_KEYS.DAILY_STANDUPS);
+    return standups.find((s) => s.sprintId === sprintId && s.date === date);
+  },
+
+  create: (data: Omit<DailyStandup, 'id' | 'createdAt'>): DailyStandup => {
+    const standup: DailyStandup = {
+      ...data,
+      id: generateId(),
+      createdAt: getCurrentTimestamp(),
+    };
+
+    const standups = getFromStorage<DailyStandup>(STORAGE_KEYS.DAILY_STANDUPS);
+    standups.push(standup);
+    saveToStorage(STORAGE_KEYS.DAILY_STANDUPS, standups);
+
+    return standup;
+  },
+
+  update: (id: string, data: Partial<DailyStandup>): DailyStandup | undefined => {
+    const standups = getFromStorage<DailyStandup>(STORAGE_KEYS.DAILY_STANDUPS);
+    const index = standups.findIndex((s) => s.id === id);
+
+    if (index === -1) return undefined;
+
+    standups[index] = {
+      ...standups[index],
+      ...data,
+    };
+
+    saveToStorage(STORAGE_KEYS.DAILY_STANDUPS, standups);
+    return standups[index];
+  },
+
+  delete: (id: string): boolean => {
+    const standups = getFromStorage<DailyStandup>(STORAGE_KEYS.DAILY_STANDUPS);
+    const filtered = standups.filter((s) => s.id !== id);
+
+    if (filtered.length === standups.length) return false;
+
+    saveToStorage(STORAGE_KEYS.DAILY_STANDUPS, filtered);
+    return true;
+  },
+};
+
+// ============================================================================
 // Export all services
 // ============================================================================
 
@@ -678,6 +847,9 @@ export const ScrumService = {
   Label: LabelService,
   Settings: SettingsService,
   Metrics: MetricsService,
+  Retrospective: RetrospectiveService,
+  SprintReview: SprintReviewService,
+  DailyStandup: DailyStandupService,
 };
 
 export default ScrumService;

@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useScrum } from '@/lib/hooks/useScrum';
-import RetrospectiveBoard from '@/components/scrum/RetrospectiveBoard';
+import DailyStandupBoard from '@/components/scrum/DailyStandupBoard';
 import Link from 'next/link';
 
-export default function RetrospectivePage() {
+export default function DailyStandupPage() {
   const { sprints, loading } = useScrum();
   const [selectedSprintId, setSelectedSprintId] = useState<string>('');
 
@@ -17,10 +17,10 @@ export default function RetrospectivePage() {
     );
   }
 
-  const completedSprints = sprints.sprints.filter((s) => s.status === 'completed').slice(-5);
+  const activeSprints = sprints.sprints.filter((s) => s.status === 'active');
   const selectedSprint = selectedSprintId
     ? sprints.sprints.find((s) => s.id === selectedSprintId)
-    : completedSprints[0];
+    : activeSprints[0];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -30,21 +30,21 @@ export default function RetrospectivePage() {
           <div className="flex items-center justify-between h-16">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Sprint Retrospective
+                Daily Standup
               </h1>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
-                Reflect and improve together
+                Track daily progress and blockers
               </p>
             </div>
 
             <div className="flex items-center gap-3">
-              {completedSprints.length > 0 && (
+              {activeSprints.length > 0 && (
                 <select
-                  value={selectedSprintId || completedSprints[0]?.id || ''}
+                  value={selectedSprintId || activeSprints[0]?.id || ''}
                   onChange={(e) => setSelectedSprintId(e.target.value)}
                   className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                 >
-                  {completedSprints.map((sprint) => (
+                  {activeSprints.map((sprint) => (
                     <option key={sprint.id} value={sprint.id}>
                       {sprint.name}
                     </option>
@@ -65,17 +65,17 @@ export default function RetrospectivePage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {selectedSprint ? (
-          <RetrospectiveBoard sprintId={selectedSprint.id} sprintName={selectedSprint.name} />
+          <DailyStandupBoard sprintId={selectedSprint.id} sprintName={selectedSprint.name} />
         ) : (
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-12 text-center">
             <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl">🔄</span>
+              <span className="text-4xl">🗣️</span>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              No Completed Sprints Yet
+              No Active Sprint
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Complete at least one sprint to hold a retrospective
+              Start a sprint to hold daily standups
             </p>
             <Link
               href="/scrum/planning"

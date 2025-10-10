@@ -1,49 +1,148 @@
 'use client';
 
-import { useState } from 'react';
-
-interface RetroItem {
-  id: string;
-  content: string;
-  votes: number;
-  category: 'went-well' | 'to-improve' | 'action-items';
-}
+import { useState, useEffect } from 'react';
+import { RetrospectiveService } from '@/lib/services/scrumService';
+import type { Retrospective, RetroItem, ActionItem } from '@/lib/types/scrum';
 
 interface RetrospectiveBoardProps {
+  sprintId: string;
   sprintName: string;
 }
 
-export default function RetrospectiveBoard({ sprintName }: RetrospectiveBoardProps) {
-  const [items, setItems] = useState<RetroItem[]>([]);
-  const [newItem, setNewItem] = useState({ category: 'went-well' as RetroItem['category'], content: '' });
+export default function RetrospectiveBoard({ sprintId, sprintName }: RetrospectiveBoardProps) {
+  const [retrospective, setRetrospective] = useState<Retrospective | null>(null);
+  const [newItem, setNewItem] = useState({ category: 'went-well' as 'went-well' | 'to-improve' | 'action-items', content: '' });
+  const [loading, setLoading] = useState(true);
+
+  // Load existing retrospective or create new one
+  useEffect(() => {
+    const existing = RetrospectiveService.getBySprintId(sprintId);
+    if (existing) {
+      setRetrospective(existing);
+    } else {
+      const newRetro: Omit<Retrospective, 'id' | 'createdAt'> = {
+        sprintId,
+        date: new Date().toISOString().split('T')[0],
+        attendees: [],
+        template: 'start-stop-continue',
+        wentWell: [],
+        toImprove: [],
+        actionItems: [],
+        mood: 'neutral',
+        createdBy: 'current-user',
+      };
+      const created = RetrospectiveService.create(newRetro);
+      setRetrospective(created);
+    }
+    setLoading(false);
+  }, [sprintId]);
 
   const addItem = () => {
-    if (newItem.content.trim()) {
-      setItems([
-        ...items,
-        {
-          id: Date.now().toString(),
-          content: newItem.content,
-          votes: 0,
-          category: newItem.category,
-        },
-      ]);
+    if (!newItem.content.trim() || !retrospective) return;
+
+    const item: RetroItem = {
+      id: Date.now().toString(),
+      content: newItem.content,
+      votes: 0,
+      votedBy: [],
+      createdBy: 'current-user',
+    };
+
+    const updates: Partial<Retrospective> = {};
+    if (newItem.category === 'went-well') {
+      updates.wentWell = [...retrospective.wentWell, item];
+    } else if (newItem.category === 'to-improve') {
+      updates.toImprove = [...retrospective.toImprove, item];
+    } else {
+      const actionItem: ActionItem = {
+        id: item.id,
+        description: item.content,
+        assignee: '',
+        status: 'pending',
+        priority: 'medium',
+        createdAt: new Date().toISOString(),
+      };
+      updates.actionItems = [...retrospective.actionItems, actionItem];
+    }
+
+    const updated = RetrospectiveService.update(retrospective.id, updates);
+    if (updated) {
+      setRetrospective(updated);
       setNewItem({ ...newItem, content: '' });
     }
   };
 
-  const voteItem = (id: string) => {
-    setItems(items.map((item) => (item.id === id ? { ...item, votes: item.votes + 1 } : item)));
+  const voteItem = (itemId: string, category: 'went-well' | 'to-improve') => {
+    if (!retrospective) return;
+
+    const updateArray = (items: RetroItem[]) =>
+      items.map((item) => {
+        if (item.id === itemId) {
+          const hasVoted = item.votedBy.includes('current-user');
+          return {
+            ...item,
+            votes: hasVoted ? item.votes - 1 : item.votes + 1,
+            votedBy: hasVoted
+              ? item.votedBy.filter(id => id !== 'current-user')
+              : [...item.votedBy, 'current-user'],
+          };
+        }
+        return item;
+      });
+
+    const updates: Partial<Retrospective> = {};
+    if (category === 'went-well') {
+      updates.wentWell = updateArray(retrospective.wentWell);
+    } else {
+      updates.toImprove = updateArray(retrospective.toImprove);
+    }
+
+    const updated = RetrospectiveService.update(retrospective.id, updates);
+    if (updated) setRetrospective(updated);
   };
 
-  const deleteItem = (id: string) => {
-    setItems(items.filter((item) => item.id !== id));
+  const deleteItem = (itemId: string, category: 'went-well' | 'to-improve' | 'action-items') => {
+    if (!retrospective) return;
+
+    const updates: Partial<Retrospective> = {};
+    if (category === 'went-well') {
+      updates.wentWell = retrospective.wentWell.filter(item => item.id !== itemId);
+    } else if (category === 'to-improve') {
+      updates.toImprove = retrospective.toImprove.filter(item => item.id !== itemId);
+    } else {
+      updates.actionItems = retrospective.actionItems.filter(item => item.id !== itemId);
+    }
+
+    const updated = RetrospectiveService.update(retrospective.id, updates);
+    if (updated) setRetrospective(updated);
   };
 
-  const getItemsByCategory = (category: RetroItem['category']) => {
-    return items
-      .filter((item) => item.category === category)
-      .sort((a, b) => b.votes - a.votes);
+  const updateActionItem = (itemId: string, status: ActionItem['status']) => {
+    if (!retrospective) return;
+
+    const updates: Partial<Retrospective> = {
+      actionItems: retrospective.actionItems.map(item =>
+        item.id === itemId
+          ? { ...item, status, completedAt: status === 'completed' ? new Date().toISOString() : undefined }
+          : item
+      ),
+    };
+
+    const updated = RetrospectiveService.update(retrospective.id, updates);
+    if (updated) setRetrospective(updated);
+  };
+
+  if (loading) {
+    return <div className="text-center py-8">Loading...</div>;
+  }
+
+  if (!retrospective) {
+    return <div className="text-center py-8">Unable to load retrospective</div>;
+  }
+
+  const getItemsByCategory = (category: 'went-well' | 'to-improve') => {
+    const items = category === 'went-well' ? retrospective.wentWell : retrospective.toImprove;
+    return items.sort((a, b) => b.votes - a.votes);
   };
 
   const categories = [
@@ -52,18 +151,21 @@ export default function RetrospectiveBoard({ sprintName }: RetrospectiveBoardPro
       title: 'What Went Well',
       icon: '✅',
       color: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
+      items: getItemsByCategory('went-well'),
     },
     {
       id: 'to-improve' as const,
       title: 'To Improve',
       icon: '🔧',
       color: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800',
+      items: getItemsByCategory('to-improve'),
     },
     {
       id: 'action-items' as const,
       title: 'Action Items',
       icon: '🎯',
       color: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
+      items: retrospective.actionItems,
     },
   ];
 
@@ -86,7 +188,7 @@ export default function RetrospectiveBoard({ sprintName }: RetrospectiveBoardPro
           <select
             value={newItem.category}
             onChange={(e) =>
-              setNewItem({ ...newItem, category: e.target.value as RetroItem['category'] })
+              setNewItem({ ...newItem, category: e.target.value as typeof newItem.category })
             }
             className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:border-transparent"
           >
@@ -113,34 +215,47 @@ export default function RetrospectiveBoard({ sprintName }: RetrospectiveBoardPro
 
       {/* Retrospective Columns */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {categories.map((category) => {
-          const categoryItems = getItemsByCategory(category.id);
-          return (
-            <div key={category.id} className={`border-2 rounded-lg p-6 ${category.color}`}>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">{category.icon}</span>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {category.title}
-                </h3>
-                <span className="ml-auto text-sm text-gray-600 dark:text-gray-400">
-                  {categoryItems.length}
-                </span>
-              </div>
+        {categories.map((category) => (
+          <div key={category.id} className={`border-2 rounded-lg p-6 ${category.color}`}>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl">{category.icon}</span>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {category.title}
+              </h3>
+              <span className="ml-auto text-sm text-gray-600 dark:text-gray-400">
+                {category.items.length}
+              </span>
+            </div>
 
-              <div className="space-y-3">
-                {categoryItems.length > 0 ? (
-                  categoryItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3"
-                    >
-                      <p className="text-sm text-gray-900 dark:text-white mb-2">
-                        {item.content}
-                      </p>
-                      <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              {category.items.length > 0 ? (
+                category.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3"
+                  >
+                    <p className="text-sm text-gray-900 dark:text-white mb-2">
+                      {'description' in item ? item.description : item.content}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      {category.id === 'action-items' ? (
+                        <select
+                          value={(item as ActionItem).status}
+                          onChange={(e) => updateActionItem(item.id, e.target.value as ActionItem['status'])}
+                          className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="in-progress">In Progress</option>
+                          <option value="completed">Completed</option>
+                        </select>
+                      ) : (
                         <button
-                          onClick={() => voteItem(item.id)}
-                          className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          onClick={() => voteItem(item.id, category.id)}
+                          className={`flex items-center gap-1 text-xs transition-colors ${
+                            (item as RetroItem).votedBy?.includes('current-user')
+                              ? 'text-blue-600 dark:text-blue-400'
+                              : 'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400'
+                          }`}
                         >
                           <svg
                             className="w-4 h-4"
@@ -149,30 +264,30 @@ export default function RetrospectiveBoard({ sprintName }: RetrospectiveBoardPro
                           >
                             <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
                           </svg>
-                          <span>{item.votes}</span>
+                          <span>{(item as RetroItem).votes}</span>
                         </button>
-                        <button
-                          onClick={() => deleteItem(item.id)}
-                          className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                        >
-                          Remove
-                        </button>
-                      </div>
+                      )}
+                      <button
+                        onClick={() => deleteItem(item.id, category.id)}
+                        className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                      >
+                        Remove
+                      </button>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center text-sm text-gray-500 dark:text-gray-500 py-8">
-                    No items yet
                   </div>
-                )}
-              </div>
+                ))
+              ) : (
+                <div className="text-center text-sm text-gray-500 dark:text-gray-500 py-8">
+                  No items yet
+                </div>
+              )}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
 
       {/* Summary */}
-      {items.length > 0 && (
+      {(retrospective.wentWell.length + retrospective.toImprove.length + retrospective.actionItems.length) > 0 && (
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Summary
@@ -180,7 +295,7 @@ export default function RetrospectiveBoard({ sprintName }: RetrospectiveBoardPro
           <div className="grid grid-cols-3 gap-6 text-center">
             <div>
               <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                {getItemsByCategory('went-well').length}
+                {retrospective.wentWell.length}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Positive Items
@@ -188,7 +303,7 @@ export default function RetrospectiveBoard({ sprintName }: RetrospectiveBoardPro
             </div>
             <div>
               <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
-                {getItemsByCategory('to-improve').length}
+                {retrospective.toImprove.length}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Improvements
@@ -196,10 +311,10 @@ export default function RetrospectiveBoard({ sprintName }: RetrospectiveBoardPro
             </div>
             <div>
               <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                {getItemsByCategory('action-items').length}
+                {retrospective.actionItems.filter(a => a.status === 'completed').length}/{retrospective.actionItems.length}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Action Items
+                Actions Completed
               </div>
             </div>
           </div>
