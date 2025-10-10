@@ -28,10 +28,15 @@ export default function ColorPicker({
   // Calculate position based on trigger element
   useEffect(() => {
     if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.right + window.scrollX - 288, // 288px = w-72 (18rem)
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        if (triggerRef.current) {
+          const rect = triggerRef.current.getBoundingClientRect();
+          setPosition({
+            top: rect.bottom + window.scrollY + 8,
+            left: rect.right + window.scrollX - 288, // 288px = w-72 (18rem)
+          });
+        }
       });
     }
   }, [triggerRef]);
@@ -68,6 +73,11 @@ export default function ColorPicker({
     onChange('');
     onClose();
   };
+
+  // Don't render until position is calculated
+  if (position.top === 0) {
+    return null;
+  }
 
   return createPortal(
     <div

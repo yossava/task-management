@@ -97,10 +97,15 @@ export function SortableTaskItem({
 
   useEffect(() => {
     if (taskMenuOpen && pickerTriggerRef.current) {
-      const rect = pickerTriggerRef.current.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + 4,
-        left: rect.right - 224, // 224px is the menu width (w-56 = 14rem = 224px)
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        if (pickerTriggerRef.current) {
+          const rect = pickerTriggerRef.current.getBoundingClientRect();
+          setMenuPosition({
+            top: rect.bottom + 4,
+            left: rect.right - 224, // 224px is the menu width (w-56 = 14rem = 224px)
+          });
+        }
       });
     }
   }, [taskMenuOpen]);
@@ -141,7 +146,7 @@ export function SortableTaskItem({
 
       {/* Text content - with left margin when checkbox is visible */}
       <div
-        className={`flex-1 min-w-0 transition-all duration-150 relative z-10 ${
+        className={`flex-1 min-w-0 transition-all duration-150 relative z-10 flex flex-col gap-2 ${
           task.completed || 'group-hover/task:ml-6'
         } ${task.completed ? 'ml-6' : ''}`}
       >
@@ -162,7 +167,7 @@ export function SortableTaskItem({
             className="w-full text-sm bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 focus:shadow-md text-gray-900 dark:text-white transition-all"
           />
         ) : (
-          <div className="flex flex-col gap-2">
+          <>
             <span
               onClick={onEdit}
               className={`text-sm cursor-text select-none ${
@@ -175,85 +180,87 @@ export function SortableTaskItem({
             </span>
 
             {/* Metadata section - separated into rows */}
-            <div className="flex flex-col gap-1.5">
-              {/* Row 1: Due Date and Progress */}
-              {(task.dueDate || (task.progress !== undefined && task.progress > 0)) && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  {task.dueDate && (
-                    <div
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
-                        isOverdue(task.dueDate) && !task.completed
-                          ? 'bg-red-500 text-white'
-                          : 'bg-gray-200 text-gray-700'
-                      }`}
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <span>{formatDueDate(task.dueDate)}</span>
-                    </div>
-                  )}
-                  {task.progress !== undefined && task.progress > 0 && (
-                    <div className="flex items-center gap-1.5">
-                      <svg className="w-3 h-3 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                      </svg>
-                      <div className="flex items-center gap-1">
-                        <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full transition-all duration-300 ${
-                              task.progress === 100
-                                ? 'bg-green-500'
-                                : task.progress >= 50
-                                ? 'bg-blue-500'
-                                : task.progress >= 25
-                                ? 'bg-yellow-500'
-                                : 'bg-red-500'
-                            }`}
-                            style={{ width: `${task.progress}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                          {task.progress}%
-                        </span>
+            {(task.dueDate || (task.progress !== undefined && task.progress > 0) || (task.tags && task.tags.length > 0) || (task.assigneeIds && task.assigneeIds.length > 0)) && (
+              <div className="flex flex-col gap-1.5">
+                {/* Row 1: Due Date and Progress */}
+                {(task.dueDate || (task.progress !== undefined && task.progress > 0)) && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {task.dueDate && (
+                      <div
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
+                          isOverdue(task.dueDate) && !task.completed
+                            ? 'bg-red-500 text-white'
+                            : 'bg-gray-200 text-gray-700'
+                        }`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>{formatDueDate(task.dueDate)}</span>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                    {task.progress !== undefined && task.progress > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <svg className="w-3 h-3 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        <div className="flex items-center gap-1">
+                          <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full transition-all duration-300 ${
+                                task.progress === 100
+                                  ? 'bg-green-500'
+                                  : task.progress >= 50
+                                  ? 'bg-blue-500'
+                                  : task.progress >= 25
+                                  ? 'bg-yellow-500'
+                                  : 'bg-red-500'
+                              }`}
+                              style={{ width: `${task.progress}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                            {task.progress}%
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-              {/* Row 2: Tags */}
-              {task.tags && task.tags.length > 0 && (
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {task.tags.slice(0, 3).map(tagId => {
-                    const tag = availableTags.find(t => t.id === tagId);
-                    return tag ? (
-                      <TagBadge key={tag.id} tag={tag} size="sm" />
-                    ) : null;
-                  })}
-                  {task.tags.length > 3 && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                      +{task.tags.length - 3}
-                    </span>
-                  )}
-                </div>
-              )}
+                {/* Row 2: Tags */}
+                {task.tags && task.tags.length > 0 && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {task.tags.slice(0, 3).map(tagId => {
+                      const tag = availableTags.find(t => t.id === tagId);
+                      return tag ? (
+                        <TagBadge key={tag.id} tag={tag} size="sm" />
+                      ) : null;
+                    })}
+                    {task.tags.length > 3 && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                        +{task.tags.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
 
-              {/* Row 3: Assignees */}
-              {task.assigneeIds && task.assigneeIds.length > 0 && (
-                <div className="flex items-center gap-1">
-                  {UserService.getByIds(task.assigneeIds.slice(0, 3)).map(user => (
-                    <UserAvatar key={user.id} user={user} size="sm" />
-                  ))}
-                  {task.assigneeIds.length > 3 && (
-                    <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-semibold text-gray-600 dark:text-gray-400">
-                      +{task.assigneeIds.length - 3}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+                {/* Row 3: Assignees */}
+                {task.assigneeIds && task.assigneeIds.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    {UserService.getByIds(task.assigneeIds.slice(0, 3)).map(user => (
+                      <UserAvatar key={user.id} user={user} size="sm" />
+                    ))}
+                    {task.assigneeIds.length > 3 && (
+                      <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-semibold text-gray-600 dark:text-gray-400">
+                        +{task.assigneeIds.length - 3}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -291,15 +298,15 @@ export function SortableTaskItem({
             onTaskMenuToggle();
           }}
           className="flex-shrink-0 opacity-0 group-hover/task:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-0.5 focus:outline-none"
-          aria-label="Edit task"
+          aria-label="Task menu"
         >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
           </svg>
         </button>
 
         {/* Dropdown Menu - rendered in portal */}
-        {mounted && taskMenuOpen && createPortal(
+        {mounted && taskMenuOpen && menuPosition.top > 0 && createPortal(
           <div
             ref={menuRef}
             className="fixed w-56 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 py-2"

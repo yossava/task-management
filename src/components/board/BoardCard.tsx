@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -52,12 +53,17 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
   const [boardColorPickerOpen, setBoardColorPickerOpen] = useState(false);
   const [taskDetailOpen, setTaskDetailOpen] = useState<string | null>(null);
   const [tagManagerOpen, setTagManagerOpen] = useState(false);
+  const [boardMenuOpen, setBoardMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [colorPickerPosition, setColorPickerPosition] = useState({ top: 0, left: 0 });
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const newTaskRef = useRef<HTMLInputElement>(null);
   const editTaskRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const boardColorPickerRef = useRef<HTMLDivElement>(null);
+  const boardMenuRef = useRef<HTMLDivElement>(null);
+  const boardMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   const {
     attributes,
@@ -74,6 +80,24 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (boardColorPickerOpen && boardMenuButtonRef.current) {
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        if (boardMenuButtonRef.current) {
+          const rect = boardMenuButtonRef.current.getBoundingClientRect();
+          setColorPickerPosition({
+            top: rect.bottom + 4,
+            left: rect.right - 256, // 256px is the color picker width (w-64 = 16rem = 256px)
+          });
+        }
+      });
+    }
+  }, [boardColorPickerOpen]);
 
   useEffect(() => {
     if (isEditingTitle) {
@@ -127,6 +151,19 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [boardColorPickerOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (boardMenuRef.current && !boardMenuRef.current.contains(event.target as Node)) {
+        setBoardMenuOpen(false);
+      }
+    };
+
+    if (boardMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [boardMenuOpen]);
 
 
   const handleTitleSave = () => {
@@ -299,7 +336,12 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
       {...attributes}
       data-board-id={board.id}
     >
-      <Card className="group hover:shadow-lg transition-shadow">
+      <Card className="group hover:shadow-lg transition-shadow relative overflow-hidden">
+        {/* Board color indicator - top-left quarter circle */}
+        <div
+          className="absolute left-0 top-0 w-12 h-12 group-hover:w-16 group-hover:h-16 rounded-br-full transition-all duration-500 ease-in-out"
+          style={{ backgroundColor: board.color || '#3b82f6', opacity: 0.15 }}
+        />
         <div className="p-6">
         {/* Header with drag handle */}
         <div className="flex items-start justify-between mb-4">
@@ -364,7 +406,32 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
               )
             )}
           </div>
-          <div className="relative ml-4 flex-shrink-0 flex items-center gap-2">
+          <div className="relative ml-4 flex-shrink-0 flex items-center">
+            {/* Drag Handle Icon - only visible on hover */}
+            <div
+              className="flex-shrink-0 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-all w-0 group-hover:w-4 group-hover:mr-2 overflow-hidden"
+              {...listeners}
+            >
+              <svg className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+              </svg>
+            </div>
+
+            {/* Board Menu Button - only visible on hover */}
+            <button
+              ref={boardMenuButtonRef}
+              onClick={(e) => {
+                e.stopPropagation();
+                setBoardMenuOpen(!boardMenuOpen);
+              }}
+              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all focus:outline-none opacity-0 group-hover:opacity-100 w-0 group-hover:w-6 group-hover:mr-2 overflow-hidden"
+              aria-label="Board menu"
+            >
+              <svg className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+              </svg>
+            </button>
+
             {/* Circular Progress Indicator */}
             {board.tasks && board.tasks.length > 0 && (
               <div className="relative w-7 h-7 flex-shrink-0">
@@ -413,35 +480,57 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
               </div>
             )}
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setBoardColorPickerOpen(!boardColorPickerOpen);
-              }}
-              className="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 transition-colors focus:outline-none"
-              style={{ backgroundColor: board.color || '#3b82f6' }}
-              aria-label="Change board color"
-            />
+            {/* Board Menu Dropdown */}
+            {boardMenuOpen && (
+              <div
+                ref={boardMenuRef}
+                className="absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 py-1 z-50"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => {
+                    setBoardColorPickerOpen(true);
+                    setBoardMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                  </svg>
+                  <span>Change color</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setBoardMenuOpen(false);
+                    if (confirm(`Are you sure you want to delete "${board.title}"? This will also delete all columns and tasks.`)) {
+                      onDelete(board.id);
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors focus:outline-none"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Delete board</span>
+                </button>
+              </div>
+            )}
 
-            {/* Drag Handle Icon */}
-            <div
-              className="flex-shrink-0 cursor-grab active:cursor-grabbing"
-              {...listeners}
-            >
-              <svg className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-              </svg>
-            </div>
-
-            {/* Board Color Picker */}
-            {boardColorPickerOpen && (
+            {/* Board Color Picker - rendered in portal */}
+            {mounted && boardColorPickerOpen && colorPickerPosition.top > 0 && createPortal(
               <div
                 ref={boardColorPickerRef}
-                className="absolute right-0 top-8 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-4 z-50"
+                className="fixed w-64 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-4"
+                style={{
+                  top: `${colorPickerPosition.top}px`,
+                  left: `${colorPickerPosition.left}px`,
+                  zIndex: 99999,
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Board Color</h3>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-2 mb-3">
                   {PRESET_COLORS.map((color) => (
                     <button
                       key={color}
@@ -457,7 +546,16 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
                     />
                   ))}
                 </div>
-              </div>
+                {board.color && (
+                  <button
+                    onClick={() => handleSetBoardColor('')}
+                    className="w-full px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors focus:outline-none"
+                  >
+                    Clear color
+                  </button>
+                )}
+              </div>,
+              document.body
             )}
           </div>
         </div>
@@ -552,23 +650,6 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
             Add an item
           </button>
         )}
-
-        <div className="flex items-center justify-end mt-4">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              if (confirm(`Are you sure you want to delete "${board.title}"? This will also delete all columns and tasks.`)) {
-                onDelete(board.id);
-              }
-            }}
-            className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none"
-            aria-label="Delete board"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-        </div>
       </div>
       </Card>
 
