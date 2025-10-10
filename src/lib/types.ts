@@ -109,3 +109,16 @@ export interface AppSettings {
   defaultView: ViewMode;
   compactMode: boolean;
 }
+
+export interface BoardTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: 'productivity' | 'development' | 'marketing' | 'personal' | 'business';
+  icon: string;
+  color: string;
+  tags?: Omit<Tag, 'createdAt'>[];
+  sampleTasks?: Omit<BoardTask, 'id' | 'createdAt'>[];
+  isCustom: boolean;
+  createdAt: number;
+}

@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   COLUMNS: 'pm_app_columns',
   USERS: 'pm_app_users',
   SETTINGS: 'pm_app_settings',
+  TEMPLATES: 'pm_app_templates',
   VERSION: 'pm_app_version',
 } as const;
 

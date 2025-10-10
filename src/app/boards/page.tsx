@@ -19,18 +19,21 @@ import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortab
 import { BoardCard } from '@/components/board/BoardCard';
 import { InlineBoardForm } from '@/components/board/InlineBoardForm';
 import { useBoards } from '@/hooks/useBoards';
-import { Board, BoardTask, TaskFilters, TaskSort, Tag } from '@/lib/types';
+import { Board, BoardTask, TaskFilters, TaskSort, Tag, BoardTemplate } from '@/lib/types';
 import { BoardService } from '@/lib/services/boardService';
 import { filterAndSortTasks } from '@/lib/utils/taskFilters';
 import Card from '@/components/ui/Card';
 import FilterPanel from '@/components/ui/FilterPanel';
 import GlobalSearch from '@/components/search/GlobalSearch';
+import TemplateGallery from '@/components/board/TemplateGallery';
+import { TemplateService } from '@/lib/services/templateService';
 
 const HEADER_STORAGE_KEY = 'boards_page_header';
 
 export default function BoardsPage() {
   const { boards, loading, createBoard, updateBoard, deleteBoard, reorderBoards } = useBoards();
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
+  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
   const [activeBoard, setActiveBoard] = useState<Board | null>(null);
   const [pageTitle, setPageTitle] = useState('Your Boards');
@@ -121,6 +124,13 @@ export default function BoardsPage() {
   const handleCreate = (data: Omit<Board, 'id' | 'createdAt' | 'updatedAt' | 'columns' | 'tasks'>) => {
     createBoard({ ...data, tasks: [] });
     setIsCreatingBoard(false);
+  };
+
+  const handleTemplateSelect = (template: BoardTemplate) => {
+    TemplateService.createBoardFromTemplate(template);
+    setShowTemplateGallery(false);
+    // Force reload boards - useBoards hook will pick up the change
+    window.location.reload();
   };
 
   const handleUpdate = (id: string, data: Partial<Board>) => {
@@ -405,24 +415,47 @@ export default function BoardsPage() {
               onCancel={() => setIsCreatingBoard(false)}
             />
           ) : (
-            <button
-              onClick={() => setIsCreatingBoard(true)}
-              className="min-h-[200px] bg-white/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-all flex flex-col items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium group focus:outline-none"
-            >
-              <div className="mb-3 relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl blur-md opacity-0 group-hover:opacity-75 transition-opacity" />
-                <div className="relative w-16 h-16 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
+            <div className="min-h-[200px] flex flex-col gap-3">
+              <button
+                onClick={() => setIsCreatingBoard(true)}
+                className="flex-1 bg-white/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-all flex flex-col items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium group focus:outline-none"
+              >
+                <div className="mb-2 relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl blur-md opacity-0 group-hover:opacity-75 transition-opacity" />
+                  <div className="relative w-12 h-12 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
                 </div>
-              </div>
-              <span className="text-lg">Create New Board</span>
-              <span className="text-sm text-gray-400 dark:text-gray-500 mt-1">Click to add a board</span>
-            </button>
+                <span className="text-base">Create Blank Board</span>
+              </button>
+              <button
+                onClick={() => setShowTemplateGallery(true)}
+                className="flex-1 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 hover:from-purple-100 hover:to-blue-100 dark:hover:from-purple-900 dark:hover:to-blue-900 rounded-2xl border-2 border-dashed border-purple-300 dark:border-purple-700 hover:border-purple-500 dark:hover:border-purple-500 transition-all flex flex-col items-center justify-center text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium group focus:outline-none"
+              >
+                <div className="mb-2 relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl blur-md opacity-0 group-hover:opacity-75 transition-opacity" />
+                  <div className="relative w-12 h-12 bg-gradient-to-br from-purple-600 via-purple-700 to-blue-700 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                    </svg>
+                  </div>
+                </div>
+                <span className="text-base">Use Template</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
+
+      {/* Template Gallery Modal */}
+      {showTemplateGallery && (
+        <TemplateGallery
+          onSelectTemplate={handleTemplateSelect}
+          onClose={() => setShowTemplateGallery(false)}
+        />
+      )}
 
       {/* Drag Overlay - shows the task or board being dragged */}
       <DragOverlay>
