@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { useScrum, useSprints, useSprintMetrics } from '@/lib/hooks/useScrum';
 import type { Sprint } from '@/lib/types/scrum';
+import TeamManager from '@/components/scrum/TeamManager';
 import Link from 'next/link';
 
 export default function ScrumDashboard() {
   const { sprints, activeSprint, loading: sprintsLoading } = useSprints();
-  const { team, members, totalCapacity, loading: teamLoading } = useScrum().team;
+  const teamHooks = useScrum().team;
+  const { team, members, totalCapacity, loading: teamLoading, createTeam, updateTeam, addMember, updateMember, removeMember } = teamHooks;
   const { epics, loading: epicsLoading } = useScrum().epics;
   const { stories, loading: storiesLoading } = useScrum().stories;
   const { metrics } = useSprintMetrics(activeSprint?.id || '');
@@ -105,9 +107,18 @@ export default function ScrumDashboard() {
               completedStories,
               activeEpics,
             }}
+            setView={setView}
           />
         ) : view === 'team' ? (
-          <TeamView team={team} members={members} totalCapacity={totalCapacity} />
+          <TeamManager
+            team={team}
+            members={members}
+            onCreateTeam={createTeam}
+            onUpdateTeam={updateTeam}
+            onAddMember={addMember}
+            onUpdateMember={updateMember}
+            onRemoveMember={removeMember}
+          />
         ) : (
           <SettingsView />
         )}
@@ -120,7 +131,7 @@ export default function ScrumDashboard() {
 // Overview View
 // ============================================================================
 
-function OverviewView({ sprints, activeSprint, epics, stories, members, totalCapacity, metrics, stats }: any) {
+function OverviewView({ sprints, activeSprint, epics, stories, members, totalCapacity, metrics, stats, setView }: any) {
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
@@ -288,7 +299,7 @@ function OverviewView({ sprints, activeSprint, epics, stories, members, totalCap
             </div>
           </div>
           <button
-            onClick={() => {}}
+            onClick={() => setView('team')}
             className="w-full mt-4 px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             Manage Team
@@ -328,33 +339,6 @@ function OverviewView({ sprints, activeSprint, epics, stories, members, totalCap
               </div>
             ))}
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// Team View
-// ============================================================================
-
-function TeamView({ team, members, totalCapacity }: any) {
-  return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-          Team Management
-        </h2>
-        <div className="text-center py-12">
-          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-4xl">👥</span>
-          </div>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Team management features coming soon
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Phase 1.2 - Team Management Components
-          </p>
         </div>
       </div>
     </div>
