@@ -7,6 +7,7 @@ import StoryList from '@/components/scrum/StoryList';
 import SprintCapacityWidget from '@/components/scrum/SprintCapacityWidget';
 import BlockerTracker from '@/components/scrum/BlockerTracker';
 import SprintHealthDashboard from '@/components/scrum/SprintHealthDashboard';
+import PredictiveCompletion from '@/components/scrum/PredictiveCompletion';
 import Link from 'next/link';
 
 export default function BoardPage() {
@@ -104,6 +105,16 @@ export default function BoardPage() {
           <SprintHealthDashboard
             sprint={selectedSprint}
             stories={stories.stories}
+          />
+        )}
+
+        {/* Predictive Completion */}
+        {selectedSprint && selectedSprint.status === 'active' && (
+          <PredictiveCompletion
+            sprint={selectedSprint}
+            stories={stories.stories}
+            historicalSprints={sprints.sprints.filter(s => s.status === 'completed')}
+            historicalStories={stories.stories}
           />
         )}
 
