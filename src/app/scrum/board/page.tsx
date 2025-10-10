@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useScrum } from '@/lib/hooks/useScrum';
 import ScrumBoardView from '@/components/scrum/ScrumBoardView';
 import StoryList from '@/components/scrum/StoryList';
+import SprintCapacityWidget from '@/components/scrum/SprintCapacityWidget';
 import Link from 'next/link';
 
 export default function BoardPage() {
@@ -95,7 +96,15 @@ export default function BoardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Sprint Capacity Widget */}
+        {selectedSprint && (
+          <SprintCapacityWidget
+            sprint={selectedSprint}
+            stories={stories.stories}
+          />
+        )}
+
         {stories.stories.length > 0 ? (
           <ScrumBoardView
             stories={stories.stories}
