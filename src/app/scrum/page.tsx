@@ -186,6 +186,12 @@ function OverviewView({ sprints, activeSprint, epics, stories, members, totalCap
           >
             Metrics
           </Link>
+          <Link
+            href="/scrum/releases"
+            className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
+          >
+            Releases
+          </Link>
         </div>
       </div>
 
