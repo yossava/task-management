@@ -6,6 +6,7 @@ import type { Sprint } from '@/lib/types/scrum';
 import TeamManager from '@/components/scrum/TeamManager';
 import LabelManager from '@/components/scrum/LabelManager';
 import SettingsConfig from '@/components/scrum/SettingsConfig';
+import WorkloadWidget from '@/components/scrum/WorkloadWidget';
 import Link from 'next/link';
 
 export default function ScrumDashboard() {
@@ -301,6 +302,16 @@ function OverviewView({ sprints, activeSprint, epics, stories, members, totalCap
             Create Sprint
           </Link>
         </div>
+      )}
+
+      {/* Workload Widget */}
+      {members.length > 0 && (
+        <WorkloadWidget
+          members={members}
+          stories={stories}
+          sprints={sprints}
+          epics={epics}
+        />
       )}
 
       {/* Team & Recent Sprints */}
