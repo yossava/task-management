@@ -497,8 +497,9 @@ export default function BoardsPage() {
           </div>
         </div>
 
-        {/* View Mode Switcher */}
-        <div className="mb-6 flex justify-center">
+        {/* View Mode Switcher and Filters */}
+        <div className="mb-6 flex justify-center items-center gap-4">
+          {/* View Mode Tabs */}
           <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1">
             <button
               onClick={() => setViewMode('board')}
@@ -542,26 +543,25 @@ export default function BoardsPage() {
               </svg>
               <span>Calendar</span>
             </button>
-            {viewMode !== 'calendar' && (
-              <>
-                <div className="w-px bg-gray-300 dark:bg-gray-600 my-2" />
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                    showFilters
-                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                  title="Filters & Sort"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
-                  <span>Filters</span>
-                </button>
-              </>
-            )}
           </div>
+
+          {/* Filters Button - Separate */}
+          {viewMode !== 'calendar' && (
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 border ${
+                showFilters
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/30'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
+              title="Filters & Sort"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              <span>Filters</span>
+            </button>
+          )}
         </div>
 
         {/* Calendar View */}
