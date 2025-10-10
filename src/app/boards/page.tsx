@@ -36,6 +36,7 @@ import NotificationsPanel from '@/components/notifications/NotificationsPanel';
 import { NotificationService } from '@/lib/services/notificationService';
 import CalendarView from '@/components/calendar/CalendarView';
 import ListView from '@/components/list/ListView';
+import QuickFilters from '@/components/ui/QuickFilters';
 import type { ViewMode } from '@/lib/types';
 
 const HEADER_STORAGE_KEY = 'boards_page_header';
@@ -507,6 +508,20 @@ export default function BoardsPage() {
             </button>
           </div>
         </div>
+
+        {/* Quick Filters - Only show in board/list view */}
+        {viewMode !== 'calendar' && (
+          <div className="mb-6">
+            <QuickFilters
+              onApplyPreset={(newFilters, newSort) => {
+                setFilters(newFilters);
+                setSort(newSort);
+              }}
+              currentFilters={filters}
+              currentSort={sort}
+            />
+          </div>
+        )}
 
         {/* Filter Panel - Only show in board/list view */}
         {viewMode !== 'calendar' && (
