@@ -481,6 +481,7 @@ export default function ListView({ boards, onTaskUpdate, onTaskDelete }: ListVie
         return (
           <TaskDetailModal
             task={task}
+            boardId={board.id}
             isOpen={true}
             onClose={() => setDetailModalOpen(null)}
             onUpdate={(updates) => onTaskUpdate(detailModalOpen.boardId, detailModalOpen.taskId, updates)}

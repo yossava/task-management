@@ -359,6 +359,7 @@ export default function CalendarView({ boards, onTaskUpdate }: CalendarViewProps
         return (
           <TaskDetailModal
             task={task}
+            boardId={board.id}
             isOpen={true}
             onClose={() => setDetailModalOpen(null)}
             onUpdate={(updates) => {

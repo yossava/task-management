@@ -11,6 +11,44 @@ export interface Tag {
   createdAt: number;
 }
 
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  boardId: string;
+  content: string;
+  author: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface TaskDependency {
+  id: string;
+  taskId: string;
+  dependsOnTaskId: string;
+  boardId: string;
+  type: 'blocks' | 'blocked_by';
+  createdAt: number;
+}
+
+export interface RecurringTask {
+  id: string;
+  boardId: string;
+  templateTaskId: string;
+  pattern: RecurringPattern;
+  nextDueDate: number;
+  lastGenerated?: number;
+  isActive: boolean;
+  createdAt: number;
+}
+
+export type RecurringPattern = {
+  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
+  interval: number; // Every N days/weeks/months
+  daysOfWeek?: number[]; // 0-6 for weekly patterns
+  dayOfMonth?: number; // 1-31 for monthly patterns
+  endDate?: number; // Optional end date
+};
+
 export interface BoardTask {
   id: string;
   text: string;
@@ -24,6 +62,10 @@ export interface BoardTask {
   checklist?: ChecklistItem[];
   priority?: Priority;
   tags?: string[]; // Array of tag IDs
+  comments?: TaskComment[];
+  dependencies?: string[]; // Array of dependency IDs
+  recurringTaskId?: string; // Link to recurring task template
+  completedAt?: number; // When task was completed
 }
 
 export interface Board {

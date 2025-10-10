@@ -262,4 +262,163 @@ export class TemplateService {
     StorageService.set(STORAGE_KEYS.TEMPLATES, filtered);
     return true;
   }
+
+  /**
+   * Export board as JSON
+   */
+  static exportBoard(board: Board): string {
+    const exportData = {
+      version: '1.0',
+      exportedAt: Date.now(),
+      board: {
+        ...board,
+        // Remove internal IDs that should be regenerated on import
+        id: undefined,
+      },
+    };
+
+    return JSON.stringify(exportData, null, 2);
+  }
+
+  /**
+   * Import board from JSON
+   */
+  static importBoard(jsonString: string): Board | null {
+    try {
+      const importData = JSON.parse(jsonString);
+
+      if (!importData.board) {
+        throw new Error('Invalid board data');
+      }
+
+      const boardData = importData.board;
+
+      // Create new board with imported data
+      const board = BoardService.create({
+        title: boardData.title || 'Imported Board',
+        description: boardData.description,
+        color: boardData.color,
+      });
+
+      // Import tags with new IDs
+      const tags: Tag[] = (boardData.tags || []).map((tag: any) => ({
+        id: crypto.randomUUID(),
+        name: tag.name,
+        color: tag.color,
+        createdAt: Date.now(),
+      }));
+
+      // Create tag ID mapping
+      const tagIdMap = new Map<string, string>();
+      (boardData.tags || []).forEach((oldTag: any, index: number) => {
+        tagIdMap.set(oldTag.id, tags[index].id);
+      });
+
+      // Import tasks with new IDs and remapped tag references
+      const tasks: BoardTask[] = (boardData.tasks || []).map((task: any) => ({
+        id: crypto.randomUUID(),
+        text: task.text,
+        completed: task.completed || false,
+        createdAt: Date.now(),
+        dueDate: task.dueDate,
+        color: task.color,
+        showGradient: task.showGradient,
+        description: task.description,
+        progress: task.progress || 0,
+        priority: task.priority,
+        tags: (task.tags || []).map((oldTagId: string) => tagIdMap.get(oldTagId) || oldTagId),
+        checklist: (task.checklist || []).map((item: any) => ({
+          id: crypto.randomUUID(),
+          text: item.text,
+          completed: item.completed || false,
+        })),
+      }));
+
+      // Update board with imported data
+      BoardService.update(board.id, {
+        tags,
+        tasks,
+      });
+
+      return BoardService.getById(board.id)!;
+    } catch (error) {
+      console.error('Error importing board:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Export multiple boards
+   */
+  static exportBoards(boards: Board[]): string {
+    const exportData = {
+      version: '1.0',
+      exportedAt: Date.now(),
+      boards: boards.map(board => ({
+        ...board,
+        id: undefined,
+      })),
+    };
+
+    return JSON.stringify(exportData, null, 2);
+  }
+
+  /**
+   * Import multiple boards from JSON
+   */
+  static importBoards(jsonString: string): Board[] {
+    try {
+      const importData = JSON.parse(jsonString);
+
+      if (!importData.boards || !Array.isArray(importData.boards)) {
+        throw new Error('Invalid boards data');
+      }
+
+      const importedBoards: Board[] = [];
+
+      importData.boards.forEach((boardData: any) => {
+        const board = this.importBoard(JSON.stringify({ board: boardData }));
+        if (board) {
+          importedBoards.push(board);
+        }
+      });
+
+      return importedBoards;
+    } catch (error) {
+      console.error('Error importing boards:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Download board as JSON file
+   */
+  static downloadBoard(board: Board, filename?: string): void {
+    const json = this.exportBoard(board);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename || `${board.title.toLowerCase().replace(/\s+/g, '-')}-export.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Download multiple boards as JSON file
+   */
+  static downloadBoards(boards: Board[], filename?: string): void {
+    const json = this.exportBoards(boards);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename || `boards-export-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 }

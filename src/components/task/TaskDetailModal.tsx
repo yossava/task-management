@@ -8,9 +8,11 @@ import PriorityPicker from '@/components/ui/PriorityPicker';
 import PriorityBadge from '@/components/ui/PriorityBadge';
 import TagPicker from '@/components/ui/TagPicker';
 import TagBadge from '@/components/ui/TagBadge';
+import TaskComments from '@/components/task/TaskComments';
 
 interface TaskDetailModalProps {
   task: BoardTask;
+  boardId: string;
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (updates: Partial<BoardTask>) => void;
@@ -18,13 +20,18 @@ interface TaskDetailModalProps {
   onManageTags: () => void;
 }
 
-export default function TaskDetailModal({ task, isOpen, onClose, onUpdate, availableTags, onManageTags }: TaskDetailModalProps) {
+export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpdate, availableTags, onManageTags }: TaskDetailModalProps) {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist || []);
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [priorityPickerOpen, setPriorityPickerOpen] = useState(false);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
+  const [commentsKey, setCommentsKey] = useState(0);
   const priorityButtonRef = useRef<HTMLButtonElement>(null);
   const tagButtonRef = useRef<HTMLButtonElement>(null);
+
+  const handleCommentsUpdate = () => {
+    setCommentsKey(prev => prev + 1);
+  };
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -502,6 +509,16 @@ export default function TaskDetailModal({ task, isOpen, onClose, onUpdate, avail
               <EditorContent
                 editor={editor}
                 className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-b-lg overflow-auto"
+              />
+            </div>
+
+            {/* Comments Section */}
+            <div key={commentsKey} className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <TaskComments
+                boardId={boardId}
+                taskId={task.id}
+                comments={task.comments || []}
+                onUpdate={handleCommentsUpdate}
               />
             </div>
           </div>

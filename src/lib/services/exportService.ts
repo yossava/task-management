@@ -70,7 +70,11 @@ export class ExportService {
     try {
       // Validate version
       if (!data.version) {
-        return { success: false, error: 'Invalid export file: missing version' };
+        return {
+          success: false,
+          error: 'Invalid export file: missing version',
+          imported: { boards: 0, templates: 0, activities: 0 }
+        };
       }
 
       const { replaceExisting = false, includeActivities = true } = options || {};

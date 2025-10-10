@@ -576,6 +576,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
       {taskDetailOpen && board.tasks?.find(t => t.id === taskDetailOpen) && (
         <TaskDetailModal
           task={board.tasks.find(t => t.id === taskDetailOpen)!}
+          boardId={board.id}
           isOpen={!!taskDetailOpen}
           onClose={() => setTaskDetailOpen(null)}
           onUpdate={(updates) => handleUpdateTaskDetails(board.tasks.find(t => t.id === taskDetailOpen)!, updates)}
