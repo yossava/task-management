@@ -12,6 +12,7 @@ import TaskComments from '@/components/task/TaskComments';
 import TaskDependencies from '@/components/task/TaskDependencies';
 import RecurringTaskModal from '@/components/task/RecurringTaskModal';
 import SubtasksSection from '@/components/task/SubtasksSection';
+import AssigneeSection from '@/components/user/AssigneeSection';
 
 interface TaskDetailModalProps {
   task: BoardTask;
@@ -31,6 +32,7 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
   const [commentsKey, setCommentsKey] = useState(0);
   const [dependenciesKey, setDependenciesKey] = useState(0);
   const [subtasksKey, setSubtasksKey] = useState(0);
+  const [assigneeKey, setAssigneeKey] = useState(0);
   const [recurringModalOpen, setRecurringModalOpen] = useState(false);
   const priorityButtonRef = useRef<HTMLButtonElement>(null);
   const tagButtonRef = useRef<HTMLButtonElement>(null);
@@ -45,6 +47,10 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
 
   const handleSubtasksUpdate = () => {
     setSubtasksKey(prev => prev + 1);
+  };
+
+  const handleAssigneeUpdate = () => {
+    setAssigneeKey(prev => prev + 1);
   };
 
   const handleRecurringUpdate = () => {
@@ -555,6 +561,15 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
                 taskId={task.id}
                 subtasks={task.subtasks || []}
                 onUpdate={handleSubtasksUpdate}
+              />
+            </div>
+
+            {/* Assignees Section */}
+            <div key={assigneeKey} className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <AssigneeSection
+                boardId={boardId}
+                task={task}
+                onUpdate={handleAssigneeUpdate}
               />
             </div>
 

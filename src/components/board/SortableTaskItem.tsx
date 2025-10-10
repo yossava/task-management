@@ -10,6 +10,8 @@ import ColorPicker from '@/components/ui/ColorPicker';
 import PriorityBadge from '@/components/ui/PriorityBadge';
 import PriorityPicker from '@/components/ui/PriorityPicker';
 import TagBadge from '@/components/ui/TagBadge';
+import UserAvatar from '@/components/user/UserAvatar';
+import { UserService } from '@/lib/services/userService';
 
 interface SortableTaskItemProps {
   task: BoardTask;
@@ -233,6 +235,20 @@ export function SortableTaskItem({
                     <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                       +{task.tags.length - 3}
                     </span>
+                  )}
+                </div>
+              )}
+
+              {/* Row 3: Assignees */}
+              {task.assigneeIds && task.assigneeIds.length > 0 && (
+                <div className="flex items-center gap-1">
+                  {UserService.getByIds(task.assigneeIds.slice(0, 3)).map(user => (
+                    <UserAvatar key={user.id} user={user} size="sm" />
+                  ))}
+                  {task.assigneeIds.length > 3 && (
+                    <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-semibold text-gray-600 dark:text-gray-400">
+                      +{task.assigneeIds.length - 3}
+                    </div>
                   )}
                 </div>
               )}
