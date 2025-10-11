@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { v4 as uuidv4 } from 'uuid';
+import { getCurrentUserId } from './session';
 
 export async function getOrCreateGuestId(): Promise<string> {
   const cookieStore = await cookies();
@@ -28,3 +29,13 @@ export async function clearGuestId(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete('guestId');
 }
+
+export async function isGuestUser(): Promise<boolean> {
+  const userId = await getCurrentUserId();
+  return !userId;
+}
+
+export const GUEST_LIMITS = {
+  MAX_BOARDS: 2,
+  MAX_TASKS_PER_BOARD: 20,
+} as const;

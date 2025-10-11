@@ -13,23 +13,23 @@ export default withAuth(
         return !!token;
       },
     },
+    pages: {
+      signIn: "/",
+    },
   }
 );
 
 export const config = {
   matcher: [
-    // Protected page routes
+    // Protected page routes (only protect authenticated-only features)
     "/dashboard/:path*",
-    "/boards/:path*",
-    "/scrum/:path*",
     "/settings/:path*",
     "/activity/:path*",
 
-    // Protected API routes
-    "/api/boards/:path*",
-    "/api/scrum/:path*",
-    "/api/tasks/:path*",
-    "/api/settings/:path*",
+    // Note: /boards and /scrum allow guest access, so they're not protected here
+    // Guest users can access these routes and use guest-specific features
+
+    // Protected API routes (authentication endpoints only)
     "/api/auth/change-password",
   ],
 };

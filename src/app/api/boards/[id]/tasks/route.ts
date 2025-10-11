@@ -55,6 +55,23 @@ export async function POST(
       );
     }
 
+    // Check task limit for guest users
+    if (!userId && guestId) {
+      const taskCount = await prisma.task.count({
+        where: { boardId: id },
+      });
+
+      if (taskCount >= 20) {
+        return NextResponse.json(
+          {
+            error: 'Guest users can only create 20 tasks per board. Please register to create more tasks.',
+            requiresAuth: true,
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // Get next order value
     const nextOrder = board.tasks.length > 0 ? board.tasks[0].order + 1 : 0;
 

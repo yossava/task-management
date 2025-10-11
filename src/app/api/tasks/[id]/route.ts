@@ -12,6 +12,7 @@ const updateTaskSchema = z.object({
   showGradient: z.boolean().optional(),
   dueDate: z.string().nullable().optional(),
   progress: z.number().min(0).max(100).optional(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).nullable().optional(),
   checklist: z.array(z.object({
     id: z.string(),
     text: z.string(),

@@ -86,12 +86,9 @@ model PageHeader {
   title     String   @default("Your Boards")
   subtitle  String   @default("Organize and manage all your projects in one place")
   userId    String?  @db.ObjectId
-  guestId   String?  // For anonymous users
+  guestId   String?  @unique // For anonymous users
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@unique([userId])
-  @@unique([guestId])
   @@map("page_headers")
 }
 

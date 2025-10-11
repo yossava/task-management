@@ -66,10 +66,10 @@ export async function POST(request: Request) {
         where: { guestId },
       });
 
-      if (boardCount >= 1) {
+      if (boardCount >= 2) {
         return NextResponse.json(
           {
-            error: 'Guest users can only create 1 board. Please register to create more boards.',
+            error: 'Guest users can only create 2 boards. Please register to create more boards.',
             requiresAuth: true,
           },
           { status: 403 }

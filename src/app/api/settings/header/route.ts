@@ -16,7 +16,7 @@ export async function GET() {
 
     let header;
     if (userId) {
-      header = await prisma.pageHeader.findUnique({
+      header = await prisma.pageHeader.findFirst({
         where: { userId },
       });
 
@@ -68,15 +68,26 @@ export async function PATCH(request: Request) {
 
     let header;
     if (userId) {
-      // Update or create for user
-      header = await prisma.pageHeader.upsert({
+      // Find existing header
+      const existing = await prisma.pageHeader.findFirst({
         where: { userId },
-        update: validatedData,
-        create: {
-          ...validatedData,
-          userId,
-        },
       });
+
+      if (existing) {
+        // Update existing
+        header = await prisma.pageHeader.update({
+          where: { id: existing.id },
+          data: validatedData,
+        });
+      } else {
+        // Create new
+        header = await prisma.pageHeader.create({
+          data: {
+            ...validatedData,
+            userId,
+          },
+        });
+      }
     } else {
       const guestId = await getOrCreateGuestId();
       // Update or create for guest

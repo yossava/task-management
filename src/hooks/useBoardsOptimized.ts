@@ -20,7 +20,10 @@ export function useBoardsOptimized() {
       const response = await boardsApi.getAll();
       return response.boards;
     },
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 1000, // Keep data fresh - 1 second
+    gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: true, // Refetch on mount to ensure data is fresh
   });
 
   // Create board mutation
@@ -33,17 +36,54 @@ export function useBoardsOptimized() {
       });
       return response.board;
     },
-    onMutate: async () => {
+    onMutate: async (data) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['boards'] });
+
+      // Snapshot previous value
+      const previousBoards = queryClient.getQueryData<Board[]>(['boards']);
+
+      // Create optimistic board
+      const optimisticBoard: Board = {
+        id: `temp-${Date.now()}`,
+        title: data.title,
+        description: data.description,
+        color: data.color || '#3b82f6',
+        tasks: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Optimistically update
+      queryClient.setQueryData<Board[]>(['boards'], (old = []) => [...old, optimisticBoard]);
+
       toast.loading('Creating board...', { id: 'create-board' });
+
+      return { previousBoards, optimisticBoard };
     },
-    onSuccess: (newBoard) => {
-      queryClient.setQueryData<Board[]>(['boards'], (old = []) => [...old, newBoard]);
+    onSuccess: (newBoard, _, context) => {
+      // Don't update the cache again - just dismiss the loading toast
       toast.success('Board created successfully!', { id: 'create-board' });
+
+      // Update only the ID in the background without triggering re-render
+      setTimeout(() => {
+        queryClient.setQueryData<Board[]>(['boards'], (old = []) =>
+          old.map((board) =>
+            board.id === context?.optimisticBoard.id
+              ? { ...board, id: newBoard.id }
+              : board
+          )
+        );
+      }, 0);
     },
-    onError: (err) => {
+    onError: (err, _, context) => {
+      // Rollback on error
+      if (context?.previousBoards) {
+        queryClient.setQueryData(['boards'], context.previousBoards);
+      }
       const error = err as ApiError;
       if (error.status === 403) {
-        toast.error('Guest users can only create 1 board. Please register!', { id: 'create-board' });
+        toast.error(error.message || 'Guest users can only create 2 boards. Please register!', { id: 'create-board' });
         setTimeout(() => router.push('/register'), 2000);
       } else {
         toast.error(`Failed to create board: ${error.message}`, { id: 'create-board' });
@@ -84,9 +124,6 @@ export function useBoardsOptimized() {
         queryClient.setQueryData(['boards'], context.previousBoards);
       }
       toast.error(`Failed to update: ${(err as ApiError).message}`);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['boards'] });
     },
   });
 

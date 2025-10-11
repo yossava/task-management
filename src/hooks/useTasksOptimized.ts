@@ -12,16 +12,70 @@ export function useTasksOptimized(boardId: string) {
       const response = await tasksApi.create(boardId, { text });
       return response.task;
     },
-    onMutate: async () => {
+    onMutate: async (text: string) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['boards'] });
+
+      // Snapshot previous value
+      const previousBoards = queryClient.getQueryData<any[]>(['boards']);
+
+      // Create optimistic task
+      const optimisticTask: BoardTask = {
+        id: `temp-${Date.now()}`,
+        text,
+        completed: false,
+        boardId,
+        order: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Optimistically update
+      queryClient.setQueryData<any[]>(['boards'], (old = []) =>
+        old.map((board) =>
+          board.id === boardId
+            ? { ...board, tasks: [...(board.tasks || []), optimisticTask] }
+            : board
+        )
+      );
+
       toast.loading('Adding task...', { id: `create-task-${boardId}` });
+
+      return { previousBoards, optimisticTask };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['boards'] });
+    onSuccess: (newTask, _, context) => {
+      // Don't update the cache again - just dismiss the loading toast
       toast.success('Task added!', { id: `create-task-${boardId}` });
+
+      // Update only the ID in the background without triggering re-render
+      setTimeout(() => {
+        queryClient.setQueryData<any[]>(['boards'], (old = []) =>
+          old.map((board) =>
+            board.id === boardId
+              ? {
+                  ...board,
+                  tasks: (board.tasks || []).map((task: BoardTask) =>
+                    task.id === context?.optimisticTask.id
+                      ? { ...task, id: newTask.id }
+                      : task
+                  ),
+                }
+              : board
+          )
+        );
+      }, 0);
     },
-    onError: (err) => {
+    onError: (err, _, context) => {
+      // Rollback on error
+      if (context?.previousBoards) {
+        queryClient.setQueryData(['boards'], context.previousBoards);
+      }
       const error = err as ApiError;
-      toast.error(`Failed to add task: ${error.message}`, { id: `create-task-${boardId}` });
+      if (error.status === 403) {
+        toast.error(error.message || 'Guest users can only create 20 tasks per board. Please register!', { id: `create-task-${boardId}` });
+      } else {
+        toast.error(`Failed to add task: ${error.message}`, { id: `create-task-${boardId}` });
+      }
     },
   });
 
@@ -36,16 +90,51 @@ export function useTasksOptimized(boardId: string) {
       const response = await tasksApi.update(taskId, apiUpdates);
       return response.task;
     },
-    onMutate: async () => {
+    onMutate: async ({ taskId, updates }) => {
+      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['boards'] });
+
+      // Snapshot previous value
+      const previousBoards = queryClient.getQueryData<any[]>(['boards']);
+
+      // Optimistically update task
+      queryClient.setQueryData<any[]>(['boards'], (old = []) =>
+        old.map((board) =>
+          board.id === boardId
+            ? {
+                ...board,
+                tasks: (board.tasks || []).map((task: BoardTask) =>
+                  task.id === taskId ? { ...task, ...updates } : task
+                ),
+              }
+            : board
+        )
+      );
+
+      return { previousBoards };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['boards'] });
+    onSuccess: (updatedTask, { taskId }) => {
+      // Replace optimistic update with server response
+      queryClient.setQueryData<any[]>(['boards'], (old = []) =>
+        old.map((board) =>
+          board.id === boardId
+            ? {
+                ...board,
+                tasks: (board.tasks || []).map((task: BoardTask) =>
+                  task.id === taskId ? updatedTask : task
+                ),
+              }
+            : board
+        )
+      );
     },
-    onError: (err) => {
+    onError: (err, _, context) => {
+      // Rollback on error
+      if (context?.previousBoards) {
+        queryClient.setQueryData(['boards'], context.previousBoards);
+      }
       const error = err as ApiError;
       toast.error(`Failed to update task: ${error.message}`);
-      queryClient.invalidateQueries({ queryKey: ['boards'] });
     },
   });
 
@@ -55,17 +144,39 @@ export function useTasksOptimized(boardId: string) {
       await tasksApi.delete(taskId);
       return taskId;
     },
-    onMutate: async () => {
+    onMutate: async (taskId: string) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['boards'] });
+
+      // Snapshot previous value
+      const previousBoards = queryClient.getQueryData<any[]>(['boards']);
+
+      // Optimistically remove task
+      queryClient.setQueryData<any[]>(['boards'], (old = []) =>
+        old.map((board) =>
+          board.id === boardId
+            ? {
+                ...board,
+                tasks: (board.tasks || []).filter((task: BoardTask) => task.id !== taskId),
+              }
+            : board
+        )
+      );
+
       toast.loading('Deleting task...', { id: `delete-task-${boardId}` });
+
+      return { previousBoards };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['boards'] });
       toast.success('Task deleted!', { id: `delete-task-${boardId}` });
     },
-    onError: (err) => {
+    onError: (err, _, context) => {
+      // Rollback on error
+      if (context?.previousBoards) {
+        queryClient.setQueryData(['boards'], context.previousBoards);
+      }
       const error = err as ApiError;
       toast.error(`Failed to delete task: ${error.message}`, { id: `delete-task-${boardId}` });
-      queryClient.invalidateQueries({ queryKey: ['boards'] });
     },
   });
 

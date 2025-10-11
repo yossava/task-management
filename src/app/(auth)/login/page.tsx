@@ -30,6 +30,20 @@ export default function LoginPage() {
         throw new Error(result.error);
       }
 
+      // Migrate guest data to user account
+      try {
+        const migrateRes = await fetch('/api/auth/migrate-guest', {
+          method: 'POST',
+        });
+        const migrateData = await migrateRes.json();
+        if (migrateData.migratedBoards > 0) {
+          console.log(`Migrated ${migrateData.migratedBoards} board(s) to your account`);
+        }
+      } catch (err) {
+        console.error('Migration error:', err);
+        // Don't fail login if migration fails
+      }
+
       // Redirect to boards page
       router.push('/boards');
       router.refresh();
