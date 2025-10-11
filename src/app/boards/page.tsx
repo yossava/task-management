@@ -37,6 +37,7 @@ import { RecurringTaskService } from '@/lib/services/recurringTaskService';
 import CalendarView from '@/components/calendar/CalendarView';
 import ListView from '@/components/list/ListView';
 import CommandPalette from '@/components/command/CommandPalette';
+import { AuthNav } from '@/components/navigation/AuthNav';
 import type { ViewMode } from '@/lib/types';
 
 export default function BoardsPage() {
@@ -511,6 +512,7 @@ export default function BoardsPage() {
               Export/Import
             </button>
             <GlobalSearch boards={boards} />
+            <AuthNav />
           </div>
         </div>
 
