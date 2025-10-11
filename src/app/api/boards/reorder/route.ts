@@ -20,15 +20,17 @@ export async function POST(request: Request) {
     const userId = await getCurrentUserId();
     const guestId = userId ? undefined : await getOrCreateGuestId();
 
+    // Build where clause based on authentication status
+    const authFilter = userId
+      ? { userId: userId }
+      : { guestId: guestId };
+
     // Update each board's order individually
     for (const board of validatedData.boards) {
       await prisma.board.updateMany({
         where: {
           id: board.id,
-          OR: [
-            { userId: userId || undefined },
-            { guestId: guestId || undefined },
-          ].filter(Boolean),
+          ...authFilter,
         },
         data: {
           order: board.order,
