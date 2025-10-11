@@ -7,7 +7,7 @@ import { getUserIdentity } from '@/lib/api/utils';
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     const { searchParams } = new URL(request.url);
     const storyId = searchParams.get('storyId');
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
     const body = await request.json();
 
     const {
@@ -52,7 +52,6 @@ export async function POST(request: Request) {
       status,
       estimatedHours,
       actualHours,
-      labels,
     } = body;
 
     if (!title) {
@@ -71,7 +70,6 @@ export async function POST(request: Request) {
         status: status || 'todo',
         estimatedHours,
         actualHours,
-        labels: labels || [],
         userId,
         guestId,
       },

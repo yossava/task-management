@@ -31,7 +31,7 @@ export async function GET() {
         });
       }
     } else {
-      const guestId = getOrCreateGuestId();
+      const guestId = await getOrCreateGuestId();
       header = await prisma.pageHeader.findUnique({
         where: { guestId },
       });
@@ -78,7 +78,7 @@ export async function PATCH(request: Request) {
         },
       });
     } else {
-      const guestId = getOrCreateGuestId();
+      const guestId = await getOrCreateGuestId();
       // Update or create for guest
       header = await prisma.pageHeader.upsert({
         where: { guestId },
@@ -96,7 +96,7 @@ export async function PATCH(request: Request) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Invalid input data', details: error.issues },
         { status: 400 }
       );
     }

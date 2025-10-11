@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const validatedData = reorderTasksSchema.parse(body);
 
     const userId = await getCurrentUserId();
-    const guestId = getGuestId();
+    const guestId = await getGuestId();
 
     // Update tasks in a transaction
     await prisma.$transaction(
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Invalid input data', details: error.issues },
         { status: 400 }
       );
     }

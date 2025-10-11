@@ -21,19 +21,20 @@ const createTaskSchema = z.object({
 // POST /api/boards/[id]/tasks - Create a new task
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const body = await request.json();
     const validatedData = createTaskSchema.parse(body);
 
     const userId = await getCurrentUserId();
-    const guestId = getGuestId();
+    const guestId = await getGuestId();
 
     // Verify board ownership
     const board = await prisma.board.findFirst({
       where: {
-        id: params.id,
+        id: id,
         OR: [
           { userId: userId || undefined },
           { guestId: guestId || undefined },
@@ -66,7 +67,7 @@ export async function POST(
         dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
         progress: validatedData.progress,
         checklist: validatedData.checklist,
-        boardId: params.id,
+        boardId: id,
         order: nextOrder,
       },
     });
@@ -77,7 +78,7 @@ export async function POST(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Invalid input data', details: error.issues },
         { status: 400 }
       );
     }
@@ -92,16 +93,17 @@ export async function POST(
 // GET /api/boards/[id]/tasks - Get all tasks for a board
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const userId = await getCurrentUserId();
-    const guestId = getGuestId();
+    const guestId = await getGuestId();
 
     // Verify board ownership
     const board = await prisma.board.findFirst({
       where: {
-        id: params.id,
+        id: id,
         OR: [
           { userId: userId || undefined },
           { guestId: guestId || undefined },
@@ -117,7 +119,7 @@ export async function GET(
     }
 
     const tasks = await prisma.task.findMany({
-      where: { boardId: params.id },
+      where: { boardId: id },
       orderBy: { order: 'asc' },
     });
 

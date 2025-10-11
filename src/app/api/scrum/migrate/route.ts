@@ -35,7 +35,7 @@ interface LocalStorageData {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
     const data: LocalStorageData = await request.json();
 
     const results = {
@@ -192,7 +192,6 @@ export async function POST(request: Request) {
               status: task.status || 'todo',
               estimatedHours: task.estimatedHours,
               actualHours: task.actualHours,
-              labels: task.labels || [],
               userId,
               guestId,
             },
@@ -216,6 +215,7 @@ export async function POST(request: Request) {
             await prisma.retrospective.create({
               data: {
                 sprintId,
+                date: retro.date ? new Date(retro.date) : new Date(),
                 wentWell: retro.wentWell || [],
                 improve: retro.improve || [],
                 actionItems: retro.actionItems || [],
@@ -270,9 +270,10 @@ export async function POST(request: Request) {
               data: {
                 sprintId,
                 date: new Date(review.date),
-                completed: review.completed || [],
+                completedStories: review.completedStories || review.completed || [],
+                incompleteStories: review.incompleteStories || [],
                 demos: review.demos || [],
-                feedback: review.feedback || [],
+                feedback: review.feedback,
                 userId,
                 guestId,
               },
@@ -290,12 +291,10 @@ export async function POST(request: Request) {
       try {
         await prisma.scrumSettings.create({
           data: {
-            sprintDuration: data.settings.defaultSprintDuration || 14,
-            workingDaysPerWeek: data.settings.workingDays?.length || 5,
-            hoursPerDay: data.settings.dailyCapacity || 8,
-            velocityTracking: true,
-            burndownChart: true,
+            defaultSprintDuration: data.settings.defaultSprintDuration || 2,
             storyPointScale: data.settings.storyPointScale || [1, 2, 3, 5, 8, 13, 21],
+            workingDays: data.settings.workingDays || [1, 2, 3, 4, 5],
+            dailyCapacity: data.settings.dailyCapacity || 6,
             userId,
             guestId,
           },

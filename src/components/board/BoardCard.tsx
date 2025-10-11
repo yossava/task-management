@@ -11,6 +11,7 @@ import { useTasksOptimized } from '@/hooks/useTasksOptimized';
 import { SortableTaskItem } from './SortableTaskItem';
 import TaskDetailModal from '@/components/task/TaskDetailModal';
 import TagManager from '@/components/ui/TagManager';
+import { BoardService } from '@/lib/services/boardService';
 
 interface BoardCardProps {
   board: Board;

@@ -5,11 +5,11 @@ import { cookies } from 'next/headers';
 /**
  * Get user identity (userId or guestId) from session
  */
-export function getUserIdentity(session: Session | null): {
+export async function getUserIdentity(session: Session | null): Promise<{
   userId: string | null;
   guestId: string | null;
   isGuest: boolean;
-} {
+}> {
   if (session?.user?.email) {
     // Registered user
     return {
@@ -20,7 +20,7 @@ export function getUserIdentity(session: Session | null): {
   }
 
   // Guest user - get or create guest ID from cookie
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   let guestId = cookieStore.get('guest-id')?.value;
 
   if (!guestId) {

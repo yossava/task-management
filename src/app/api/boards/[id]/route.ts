@@ -13,15 +13,16 @@ const updateBoardSchema = z.object({
 // GET /api/boards/[id] - Get a single board
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const userId = await getCurrentUserId();
-    const guestId = getGuestId();
+    const guestId = await getGuestId();
 
     const board = await prisma.board.findFirst({
       where: {
-        id: params.id,
+        id,
         OR: [
           { userId: userId || undefined },
           { guestId: guestId || undefined },
@@ -51,19 +52,20 @@ export async function GET(
 // PATCH /api/boards/[id] - Update a board
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const body = await request.json();
     const validatedData = updateBoardSchema.parse(body);
 
     const userId = await getCurrentUserId();
-    const guestId = getGuestId();
+    const guestId = await getGuestId();
 
     // Verify ownership
     const existingBoard = await prisma.board.findFirst({
       where: {
-        id: params.id,
+        id,
         OR: [
           { userId: userId || undefined },
           { guestId: guestId || undefined },
@@ -79,7 +81,7 @@ export async function PATCH(
     }
 
     const board = await prisma.board.update({
-      where: { id: params.id },
+      where: { id },
       data: validatedData,
       include: {
         tasks: {
@@ -94,7 +96,7 @@ export async function PATCH(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Invalid input data', details: error.issues },
         { status: 400 }
       );
     }
@@ -109,16 +111,17 @@ export async function PATCH(
 // DELETE /api/boards/[id] - Delete a board
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const userId = await getCurrentUserId();
-    const guestId = getGuestId();
+    const guestId = await getGuestId();
 
     // Verify ownership
     const existingBoard = await prisma.board.findFirst({
       where: {
-        id: params.id,
+        id,
         OR: [
           { userId: userId || undefined },
           { guestId: guestId || undefined },
@@ -134,7 +137,7 @@ export async function DELETE(
     }
 
     await prisma.board.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: 'Board deleted successfully' });

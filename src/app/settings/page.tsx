@@ -59,7 +59,8 @@ export default function SettingsPage() {
   };
 
   // Redirect guests to login
-  if (session?.user?.isGuest) {
+  const isGuest = !session?.user?.email;
+  if (isGuest) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
@@ -125,7 +126,7 @@ export default function SettingsPage() {
             </label>
             <div className="px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
               <span className="inline-flex items-center gap-2 text-gray-900 dark:text-white">
-                {session?.user?.isGuest ? (
+                {!session?.user?.email ? (
                   <>
                     <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
                     Guest User

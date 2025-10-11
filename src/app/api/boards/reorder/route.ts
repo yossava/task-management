@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const validatedData = reorderBoardsSchema.parse(body);
 
     const userId = await getCurrentUserId();
-    const guestId = getGuestId();
+    const guestId = await getGuestId();
 
     // Since Board model doesn't have an order field in the schema,
     // we'll just return success for now
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Invalid input data', details: error.issues },
         { status: 400 }
       );
     }

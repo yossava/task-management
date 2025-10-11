@@ -29,7 +29,7 @@ export async function GET() {
       });
     } else {
       // Fetch guest's boards
-      const guestId = getOrCreateGuestId();
+      const guestId = await getOrCreateGuestId();
       boards = await prisma.board.findMany({
         where: { guestId },
         include: {
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
     if (!userId) {
       // Guest user - check board limit
-      const guestId = getOrCreateGuestId();
+      const guestId = await getOrCreateGuestId();
       const boardCount = await prisma.board.count({
         where: { guestId },
       });
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Invalid input data', details: error.issues },
         { status: 400 }
       );
     }

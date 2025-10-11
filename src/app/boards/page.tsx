@@ -185,7 +185,7 @@ export default function BoardsPage() {
   );
 
   const handleCreate = (data: Omit<Board, 'id' | 'createdAt' | 'updatedAt' | 'columns' | 'tasks'>) => {
-    createBoard({ ...data, tasks: [] });
+    createBoard(data);
     setIsCreatingBoard(false);
   };
 
@@ -284,7 +284,7 @@ export default function BoardsPage() {
         const board = boards.find(b => b.id === sourceBoardId);
         if (!board) return;
 
-        const updatedTasks = board.tasks.map(t =>
+        const updatedTasks = board.tasks.map((t: BoardTask) =>
           t.id === task.id ? { ...t, dueDate: newDueDate } : t
         );
 
@@ -303,11 +303,11 @@ export default function BoardsPage() {
           if (!sourceBoard) return;
 
           const tasks = sourceBoard.tasks || [];
-          const oldIndex = tasks.findIndex((t) => t.id === active.id);
-          const newIndex = tasks.findIndex((t) => t.id === over.id);
+          const oldIndex = tasks.findIndex((t: BoardTask) => t.id === active.id);
+          const newIndex = tasks.findIndex((t: BoardTask) => t.id === over.id);
 
           if (oldIndex !== newIndex) {
-            const reorderedTasks = arrayMove(tasks, oldIndex, newIndex);
+            const reorderedTasks = arrayMove<BoardTask>(tasks, oldIndex, newIndex);
             BoardService.update(sourceBoardId, { tasks: reorderedTasks });
             updateBoard(sourceBoardId, { tasks: reorderedTasks });
           }
@@ -330,7 +330,7 @@ export default function BoardsPage() {
 
   const findTaskInBoards = (taskId: string): { sourceBoardId: string; task: BoardTask } | null => {
     for (const board of boards) {
-      const task = board.tasks?.find(t => t.id === taskId);
+      const task = board.tasks?.find((t: BoardTask) => t.id === taskId);
       if (task) {
         return { sourceBoardId: board.id, task };
       }
@@ -345,13 +345,13 @@ export default function BoardsPage() {
     if (!sourceBoard || !targetBoard) return;
 
     // Remove task from source board
-    const updatedSourceTasks = sourceBoard.tasks.filter(t => t.id !== task.id);
+    const updatedSourceTasks = sourceBoard.tasks.filter((t: BoardTask) => t.id !== task.id);
 
     // Add task to target board
     let updatedTargetTasks: BoardTask[];
     if (targetTaskId) {
       // Insert at specific position
-      const targetIndex = targetBoard.tasks.findIndex(t => t.id === targetTaskId);
+      const targetIndex = targetBoard.tasks.findIndex((t: BoardTask) => t.id === targetTaskId);
       updatedTargetTasks = [...targetBoard.tasks];
       updatedTargetTasks.splice(targetIndex, 0, task);
     } else {
@@ -372,7 +372,7 @@ export default function BoardsPage() {
   const allTags = useMemo(() => {
     const tagMap = new Map<string, Tag>();
     boards.forEach(board => {
-      board.tags?.forEach(tag => {
+      board.tags?.forEach((tag: Tag) => {
         if (!tagMap.has(tag.id)) {
           tagMap.set(tag.id, tag);
         }
@@ -599,7 +599,7 @@ export default function BoardsPage() {
                 const board = boards.find(b => b.id === boardId);
                 if (!board) return;
 
-                const updatedTasks = board.tasks.map(task =>
+                const updatedTasks = board.tasks.map((task: BoardTask) =>
                   task.id === taskId ? { ...task, ...updates } : task
                 );
 
@@ -619,7 +619,7 @@ export default function BoardsPage() {
                 const board = boards.find(b => b.id === boardId);
                 if (!board) return;
 
-                const updatedTasks = board.tasks.map(task =>
+                const updatedTasks = board.tasks.map((task: BoardTask) =>
                   task.id === taskId ? { ...task, ...updates } : task
                 );
 
@@ -630,7 +630,7 @@ export default function BoardsPage() {
                 const board = boards.find(b => b.id === boardId);
                 if (!board) return;
 
-                const updatedTasks = board.tasks.filter(task => task.id !== taskId);
+                const updatedTasks = board.tasks.filter((task: BoardTask) => task.id !== taskId);
 
                 BoardService.update(boardId, { tasks: updatedTasks });
                 updateBoard(boardId, { tasks: updatedTasks });

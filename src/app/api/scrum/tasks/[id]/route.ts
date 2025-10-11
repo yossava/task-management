@@ -6,15 +6,16 @@ import { getUserIdentity } from '@/lib/api/utils';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     const task = await prisma.scrumTask.findFirst({
       where: {
-        id: params.id,
+        id: id,
         OR: [{ userId }, { guestId }].filter(Boolean),
       },
       include: {
@@ -39,16 +40,17 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
     const body = await request.json();
 
     const result = await prisma.scrumTask.updateMany({
       where: {
-        id: params.id,
+        id: id,
         OR: [{ userId }, { guestId }].filter(Boolean),
       },
       data: {
@@ -68,7 +70,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.scrumTask.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         story: true,
         assignee: true,
@@ -87,15 +89,16 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     const result = await prisma.scrumTask.deleteMany({
       where: {
-        id: params.id,
+        id: id,
         OR: [{ userId }, { guestId }].filter(Boolean),
       },
     });

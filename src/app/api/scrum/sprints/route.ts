@@ -7,7 +7,7 @@ import { getUserIdentity } from '@/lib/api/utils';
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     const sprints = await prisma.sprint.findMany({
       where: {
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
     const body = await request.json();
 
     const { name, goal, startDate, endDate, commitment, status } = body;

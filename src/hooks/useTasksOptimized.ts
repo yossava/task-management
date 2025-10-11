@@ -28,7 +28,12 @@ export function useTasksOptimized(boardId: string) {
   // Update task mutation
   const updateTaskMutation = useMutation({
     mutationFn: async ({ taskId, updates }: { taskId: string; updates: Partial<BoardTask> }) => {
-      const response = await tasksApi.update(taskId, updates);
+      // Convert dueDate from number to ISO string if present
+      const apiUpdates: any = { ...updates };
+      if ('dueDate' in updates) {
+        apiUpdates.dueDate = updates.dueDate ? new Date(updates.dueDate).toISOString() : null;
+      }
+      const response = await tasksApi.update(taskId, apiUpdates);
       return response.task;
     },
     onMutate: async () => {
@@ -68,8 +73,7 @@ export function useTasksOptimized(boardId: string) {
   const reorderTasksMutation = useMutation({
     mutationFn: async (tasks: BoardTask[]) => {
       await tasksApi.reorder(
-        boardId,
-        tasks.map((task, index) => ({ id: task.id, order: index }))
+        tasks.map((task, index) => ({ id: task.id, order: index, boardId }))
       );
       return tasks;
     },

@@ -7,7 +7,7 @@ import { getUserIdentity } from '@/lib/api/utils';
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     const { searchParams } = new URL(request.url);
     const sprintId = searchParams.get('sprintId');
@@ -42,10 +42,10 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
     const body = await request.json();
 
-    const { sprintId, date, completed, demos, feedback } = body;
+    const { sprintId, date, completedStories, incompleteStories, demos, feedback } = body;
 
     if (!sprintId || !date) {
       return NextResponse.json(
@@ -58,9 +58,10 @@ export async function POST(request: Request) {
       data: {
         sprintId,
         date: new Date(date),
-        completed: completed || [],
+        completedStories: completedStories || [],
+        incompleteStories: incompleteStories || [],
         demos: demos || [],
-        feedback: feedback || [],
+        feedback,
         userId,
         guestId,
       },

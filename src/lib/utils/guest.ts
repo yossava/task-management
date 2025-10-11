@@ -1,8 +1,8 @@
 import { cookies } from 'next/headers';
 import { v4 as uuidv4 } from 'uuid';
 
-export function getOrCreateGuestId(): string {
-  const cookieStore = cookies();
+export async function getOrCreateGuestId(): Promise<string> {
+  const cookieStore = await cookies();
   let guestId = cookieStore.get('guestId')?.value;
 
   if (!guestId) {
@@ -19,12 +19,12 @@ export function getOrCreateGuestId(): string {
   return guestId;
 }
 
-export function getGuestId(): string | undefined {
-  const cookieStore = cookies();
+export async function getGuestId(): Promise<string | undefined> {
+  const cookieStore = await cookies();
   return cookieStore.get('guestId')?.value;
 }
 
-export function clearGuestId(): void {
-  const cookieStore = cookies();
+export async function clearGuestId(): Promise<void> {
+  const cookieStore = await cookies();
   cookieStore.delete('guestId');
 }

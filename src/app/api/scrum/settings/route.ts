@@ -7,14 +7,14 @@ import { getUserIdentity } from '@/lib/api/utils';
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     let settings = await prisma.scrumSettings.findFirst({
       where: {
         OR: [
-          userId ? { userId } : null,
-          guestId ? { guestId } : null,
-        ].filter(Boolean),
+          userId ? { userId } : undefined,
+          guestId ? { guestId } : undefined,
+        ].filter((item): item is { userId: string } | { guestId: string } => item !== undefined),
       },
     });
 
@@ -22,12 +22,10 @@ export async function GET(request: Request) {
     if (!settings) {
       settings = await prisma.scrumSettings.create({
         data: {
-          sprintDuration: 14,
-          workingDaysPerWeek: 5,
-          hoursPerDay: 8,
-          velocityTracking: true,
-          burndownChart: true,
+          defaultSprintDuration: 2,
           storyPointScale: [1, 2, 3, 5, 8, 13, 21],
+          workingDays: [1, 2, 3, 4, 5],
+          dailyCapacity: 6,
           userId,
           guestId,
         },
@@ -47,16 +45,16 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
     const body = await request.json();
 
     // Try to find existing settings
     const existing = await prisma.scrumSettings.findFirst({
       where: {
         OR: [
-          userId ? { userId } : null,
-          guestId ? { guestId } : null,
-        ].filter(Boolean),
+          userId ? { userId } : undefined,
+          guestId ? { guestId } : undefined,
+        ].filter((item): item is { userId: string } | { guestId: string } => item !== undefined),
       },
     });
 
@@ -67,11 +65,9 @@ export async function PATCH(request: Request) {
       settings = await prisma.scrumSettings.update({
         where: { id: existing.id },
         data: {
-          ...(body.sprintDuration !== undefined && { sprintDuration: body.sprintDuration }),
-          ...(body.workingDaysPerWeek !== undefined && { workingDaysPerWeek: body.workingDaysPerWeek }),
-          ...(body.hoursPerDay !== undefined && { hoursPerDay: body.hoursPerDay }),
-          ...(body.velocityTracking !== undefined && { velocityTracking: body.velocityTracking }),
-          ...(body.burndownChart !== undefined && { burndownChart: body.burndownChart }),
+          ...(body.defaultSprintDuration !== undefined && { defaultSprintDuration: body.defaultSprintDuration }),
+          ...(body.workingDays !== undefined && { workingDays: body.workingDays }),
+          ...(body.dailyCapacity !== undefined && { dailyCapacity: body.dailyCapacity }),
           ...(body.storyPointScale !== undefined && { storyPointScale: body.storyPointScale }),
         },
       });
@@ -79,12 +75,10 @@ export async function PATCH(request: Request) {
       // Create new settings
       settings = await prisma.scrumSettings.create({
         data: {
-          sprintDuration: body.sprintDuration ?? 14,
-          workingDaysPerWeek: body.workingDaysPerWeek ?? 5,
-          hoursPerDay: body.hoursPerDay ?? 8,
-          velocityTracking: body.velocityTracking ?? true,
-          burndownChart: body.burndownChart ?? true,
+          defaultSprintDuration: body.defaultSprintDuration ?? 2,
           storyPointScale: body.storyPointScale ?? [1, 2, 3, 5, 8, 13, 21],
+          workingDays: body.workingDays ?? [1, 2, 3, 4, 5],
+          dailyCapacity: body.dailyCapacity ?? 6,
           userId,
           guestId,
         },

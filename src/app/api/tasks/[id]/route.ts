@@ -24,18 +24,19 @@ const updateTaskSchema = z.object({
 // PATCH /api/tasks/[id] - Update a task
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const body = await request.json();
     const validatedData = updateTaskSchema.parse(body);
 
     const userId = await getCurrentUserId();
-    const guestId = getGuestId();
+    const guestId = await getGuestId();
 
     // Get task with board to verify ownership
     const task = await prisma.task.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: { board: true },
     });
 
@@ -73,7 +74,7 @@ export async function PATCH(
     }
 
     const updatedTask = await prisma.task.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(validatedData.text !== undefined && { text: validatedData.text }),
         ...(validatedData.completed !== undefined && { completed: validatedData.completed }),
@@ -96,7 +97,7 @@ export async function PATCH(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Invalid input data', details: error.issues },
         { status: 400 }
       );
     }
@@ -111,15 +112,16 @@ export async function PATCH(
 // DELETE /api/tasks/[id] - Delete a task
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const userId = await getCurrentUserId();
-    const guestId = getGuestId();
+    const guestId = await getGuestId();
 
     // Get task with board to verify ownership
     const task = await prisma.task.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: { board: true },
     });
 
@@ -137,7 +139,7 @@ export async function DELETE(
     }
 
     await prisma.task.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     return NextResponse.json({ message: 'Task deleted successfully' });

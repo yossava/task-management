@@ -7,7 +7,7 @@ import { getUserIdentity } from '@/lib/api/utils';
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     const epics = await prisma.epic.findMany({
       where: {
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
     const body = await request.json();
 
     const { title, description, color, status, startDate, targetDate } = body;

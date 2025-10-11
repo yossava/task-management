@@ -7,15 +7,15 @@ import { getUserIdentity } from '@/lib/api/utils';
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     const members = await prisma.teamMember.findMany({
       where: {
         OR: [{ userId }, { guestId }].filter(Boolean),
       },
       include: {
-        stories: true,
-        tasks: true,
+        assignedStories: true,
+        assignedTasks: true,
       },
       orderBy: {
         name: 'asc',
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
     const body = await request.json();
 
     const { name, email, role, avatar, capacity, availability } = body;
@@ -53,14 +53,14 @@ export async function POST(request: Request) {
         email,
         role,
         avatar,
-        capacity: capacity || 40,
+        capacity: capacity || 8,
         availability: availability || 100,
         userId,
         guestId,
       },
       include: {
-        stories: true,
-        tasks: true,
+        assignedStories: true,
+        assignedTasks: true,
       },
     });
 

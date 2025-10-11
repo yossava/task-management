@@ -50,7 +50,7 @@ export function AuthNav() {
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{session.user.name}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{session.user.email}</p>
               </div>
-              {!session.user.isGuest && (
+              {session.user.email && (
                 <button
                   onClick={() => {
                     setShowMenu(false);

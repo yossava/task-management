@@ -7,7 +7,7 @@ import { getGuestId, clearGuestId } from '@/lib/utils/guest';
 export async function POST() {
   try {
     const userId = await getCurrentUserId();
-    const guestId = getGuestId();
+    const guestId = await getGuestId();
 
     if (!userId) {
       return NextResponse.json(
@@ -42,7 +42,7 @@ export async function POST() {
     });
 
     // Clear guest cookie
-    clearGuestId();
+    await clearGuestId();
 
     return NextResponse.json({
       message: 'Guest data migrated successfully',

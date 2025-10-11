@@ -7,7 +7,7 @@ import { getUserIdentity } from '@/lib/api/utils';
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     const { searchParams } = new URL(request.url);
     const sprintId = searchParams.get('sprintId');
@@ -38,10 +38,10 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
     const body = await request.json();
 
-    const { sprintId, wentWell, improve, actionItems } = body;
+    const { sprintId, date, wentWell, improve, actionItems } = body;
 
     if (!sprintId) {
       return NextResponse.json(
@@ -53,6 +53,7 @@ export async function POST(request: Request) {
     const retrospective = await prisma.retrospective.create({
       data: {
         sprintId,
+        date: date ? new Date(date) : new Date(),
         wentWell: wentWell || [],
         improve: improve || [],
         actionItems: actionItems || [],

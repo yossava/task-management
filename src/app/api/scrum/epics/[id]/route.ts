@@ -6,15 +6,16 @@ import { getUserIdentity } from '@/lib/api/utils';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     const epic = await prisma.epic.findFirst({
       where: {
-        id: params.id,
+        id: id,
         OR: [{ userId }, { guestId }].filter(Boolean),
       },
       include: {
@@ -43,18 +44,19 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
     const body = await request.json();
 
     const { title, description, color, status, progress, startDate, targetDate } = body;
 
     const result = await prisma.epic.updateMany({
       where: {
-        id: params.id,
+        id: id,
         OR: [{ userId }, { guestId }].filter(Boolean),
       },
       data: {
@@ -73,7 +75,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.epic.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: { stories: true },
     });
 
@@ -89,15 +91,16 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     const result = await prisma.epic.deleteMany({
       where: {
-        id: params.id,
+        id: id,
         OR: [{ userId }, { guestId }].filter(Boolean),
       },
     });

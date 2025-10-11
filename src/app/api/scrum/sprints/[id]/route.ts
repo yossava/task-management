@@ -6,15 +6,16 @@ import { getUserIdentity } from '@/lib/api/utils';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     const sprint = await prisma.sprint.findFirst({
       where: {
-        id: params.id,
+        id: id,
         OR: [{ userId }, { guestId }].filter(Boolean),
       },
       include: {
@@ -49,18 +50,19 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
     const body = await request.json();
 
     const { name, goal, startDate, endDate, status, commitment, velocity } = body;
 
     const sprint = await prisma.sprint.updateMany({
       where: {
-        id: params.id,
+        id: id,
         OR: [{ userId }, { guestId }].filter(Boolean),
       },
       data: {
@@ -82,7 +84,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.sprint.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         stories: true,
         retrospectives: true,
@@ -103,15 +105,16 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    const { userId, guestId } = getUserIdentity(session);
+    const { userId, guestId } = await getUserIdentity(session);
 
     const result = await prisma.sprint.deleteMany({
       where: {
-        id: params.id,
+        id: id,
         OR: [{ userId }, { guestId }].filter(Boolean),
       },
     });
