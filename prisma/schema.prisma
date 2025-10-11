@@ -94,3 +94,230 @@ model PageHeader {
   @@unique([guestId])
   @@map("page_headers")
 }
+
+// ============================================================================
+// Scrum Models
+// ============================================================================
+
+model Sprint {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  goal        String?
+  startDate   DateTime
+  endDate     DateTime
+  status      String   @default("planning") // planning, active, completed
+  commitment  Int      @default(0)
+  velocity    Int      @default(0)
+  userId      String?  @db.ObjectId
+  guestId     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stories         UserStory[]
+  retrospectives  Retrospective[]
+  reviews         SprintReview[]
+  standups        DailyStandup[]
+
+  @@index([userId])
+  @@index([guestId])
+  @@index([status])
+  @@map("sprints")
+}
+
+model Epic {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  color       String   @default("#8b5cf6")
+  status      String   @default("active") // active, completed, archived
+  progress    Int      @default(0)
+  startDate   DateTime?
+  targetDate  DateTime?
+  userId      String?  @db.ObjectId
+  guestId     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stories     UserStory[]
+
+  @@index([userId])
+  @@index([guestId])
+  @@index([status])
+  @@map("epics")
+}
+
+model UserStory {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  description   String?
+  acceptanceCriteria String?
+  storyPoints   Int?
+  priority      String    @default("medium") // low, medium, high, critical
+  status        String    @default("backlog") // backlog, todo, in-progress, review, testing, done
+  sprintId      String?   @db.ObjectId
+  epicId        String?   @db.ObjectId
+  assigneeId    String?   @db.ObjectId
+  labels        String[]  @default([])
+  userId        String?   @db.ObjectId
+  guestId       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sprint        Sprint?       @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+  epic          Epic?         @relation(fields: [epicId], references: [id], onDelete: SetNull)
+  assignee      TeamMember?   @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  tasks         ScrumTask[]
+
+  @@index([userId])
+  @@index([guestId])
+  @@index([sprintId])
+  @@index([epicId])
+  @@index([status])
+  @@map("user_stories")
+}
+
+model ScrumTask {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  status      String    @default("todo") // todo, in-progress, done
+  storyId     String    @db.ObjectId
+  assigneeId  String?   @db.ObjectId
+  estimatedHours Int?
+  actualHours    Int?
+  order       Int       @default(0)
+  userId      String?   @db.ObjectId
+  guestId     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  story       UserStory   @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  assignee    TeamMember? @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@index([storyId])
+  @@index([userId])
+  @@index([guestId])
+  @@map("scrum_tasks")
+}
+
+model TeamMember {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String
+  role        String   // developer, designer, tester, product-owner, scrum-master
+  avatar      String?
+  capacity    Int      @default(8) // hours per day
+  availability Int     @default(100) // percentage
+  userId      String?  @db.ObjectId
+  guestId     String?
+  joinedAt    DateTime @default(now())
+
+  assignedStories UserStory[]
+  assignedTasks   ScrumTask[]
+
+  @@index([userId])
+  @@index([guestId])
+  @@map("team_members")
+}
+
+model Retrospective {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  sprintId    String   @db.ObjectId
+  date        DateTime
+  wentWell    RetrospectiveItem[]
+  improve     RetrospectiveItem[]
+  actionItems RetrospectiveActionItem[]
+  userId      String?  @db.ObjectId
+  guestId     String?
+  createdAt   DateTime @default(now())
+
+  sprint      Sprint   @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+
+  @@index([sprintId])
+  @@index([userId])
+  @@index([guestId])
+  @@map("retrospectives")
+}
+
+type RetrospectiveItem {
+  id      String
+  content String
+  votes   Int
+}
+
+type RetrospectiveActionItem {
+  id          String
+  description String
+  assignee    String
+  status      String
+  dueDate     DateTime?
+}
+
+model DailyStandup {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  sprintId    String   @db.ObjectId
+  date        DateTime
+  updates     StandupUpdate[]
+  impediments String[]
+  userId      String?  @db.ObjectId
+  guestId     String?
+  createdAt   DateTime @default(now())
+
+  sprint      Sprint   @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+
+  @@index([sprintId])
+  @@index([date])
+  @@index([userId])
+  @@index([guestId])
+  @@map("daily_standups")
+}
+
+type StandupUpdate {
+  memberId    String
+  memberName  String
+  yesterday   String
+  today       String
+  blockers    String
+}
+
+model SprintReview {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  sprintId      String   @db.ObjectId
+  date          DateTime
+  completedStories String[]
+  incompleteStories String[]
+  demos         DemoItem[]
+  feedback      String?
+  userId        String?  @db.ObjectId
+  guestId       String?
+  createdAt     DateTime @default(now())
+
+  sprint        Sprint   @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+
+  @@index([sprintId])
+  @@index([userId])
+  @@index([guestId])
+  @@map("sprint_reviews")
+}
+
+type DemoItem {
+  id          String
+  storyId     String
+  title       String
+  presenter   String
+  feedback    String
+}
+
+model ScrumSettings {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  defaultSprintDuration Int      @default(2) // weeks
+  storyPointScale       Int[]    @default([1, 2, 3, 5, 8, 13, 21])
+  workingDays           Int[]    @default([1, 2, 3, 4, 5]) // Monday to Friday
+  dailyCapacity         Int      @default(6) // hours
+  userId                String?  @unique @db.ObjectId
+  guestId               String?  @unique
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("scrum_settings")
+}
