@@ -8,6 +8,7 @@ import TeamManager from '@/components/scrum/TeamManager';
 import LabelManager from '@/components/scrum/LabelManager';
 import SettingsConfig from '@/components/scrum/SettingsConfig';
 import WorkloadWidget from '@/components/scrum/WorkloadWidget';
+import DataExportImport from '@/components/scrum/DataExportImport';
 import Link from 'next/link';
 
 export default function ScrumDashboard() {
@@ -337,7 +338,8 @@ function OverviewView({ sprints, activeSprint, epics, stories, members, totalCap
 // ============================================================================
 
 function SettingsView() {
-  const [activeTab, setActiveTab] = useState<'labels' | 'general'>('labels');
+  const [activeTab, setActiveTab] = useState<'labels' | 'general' | 'data'>('labels');
+  const [showExportImport, setShowExportImport] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -365,15 +367,99 @@ function SettingsView() {
             >
               General Settings
             </button>
+            <button
+              onClick={() => setActiveTab('data')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'data'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Data Management
+            </button>
           </nav>
         </div>
 
         <div className="p-6">
           {activeTab === 'labels' ? (
             <LabelManager />
-          ) : (
+          ) : activeTab === 'general' ? (
             <SettingsConfig />
+          ) : (
+            <DataManagementPanel onOpenExportImport={() => setShowExportImport(true)} />
           )}
+        </div>
+      </div>
+
+      {/* Export/Import Modal */}
+      {showExportImport && (
+        <DataExportImport onClose={() => setShowExportImport(false)} />
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// Data Management Panel Component
+// ============================================================================
+
+function DataManagementPanel({ onOpenExportImport }: { onOpenExportImport: () => void }) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          Data Management
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Export and import your Scrum data for backup or migration purposes.
+        </p>
+      </div>
+
+      {/* Export/Import Section */}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+            <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+              Export & Import Data
+            </h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Download all your Scrum data as JSON or import data from a previous export. This includes sprints, stories, epics, and team members.
+            </p>
+            <button
+              onClick={onOpenExportImport}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+              </svg>
+              Manage Data
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Info Section */}
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+        <div className="flex gap-3">
+          <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <h5 className="text-sm font-semibold text-yellow-900 dark:text-yellow-300 mb-1">
+              Important Information
+            </h5>
+            <ul className="text-sm text-yellow-800 dark:text-yellow-400 space-y-1">
+              <li>• Export your data regularly to prevent data loss</li>
+              <li>• Import will add new items to your existing data</li>
+              <li>• Always backup before importing to avoid conflicts</li>
+              <li>• Export files contain all sprints, stories, epics, and team data</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
