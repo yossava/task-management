@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useScrum, useSprints, useSprintMetrics } from '@/lib/hooks/useScrum';
 import type { Sprint } from '@/lib/types/scrum';
+import ScrumLayout from '@/components/scrum/ScrumLayout';
 import TeamManager from '@/components/scrum/TeamManager';
 import LabelManager from '@/components/scrum/LabelManager';
 import SettingsConfig from '@/components/scrum/SettingsConfig';
@@ -28,15 +29,15 @@ export default function ScrumDashboard() {
   const activeEpics = epics.filter((e) => e.status === 'in-progress').length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <ScrumLayout>
       {/* Header */}
-      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50">
+      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-8">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Scrum Board
+                  Scrum Dashboard
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
                   Agile sprint planning and management
@@ -75,15 +76,6 @@ export default function ScrumDashboard() {
                   Settings
                 </button>
               </nav>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Link
-                href="/boards"
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                Back to Boards
-              </Link>
             </div>
           </div>
         </div>
@@ -126,7 +118,7 @@ export default function ScrumDashboard() {
           <SettingsView />
         )}
       </main>
-    </div>
+    </ScrumLayout>
   );
 }
 
