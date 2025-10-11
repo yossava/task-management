@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { APP_NAME, APP_DESCRIPTION } from '@/lib/constants';
+import { SessionProvider } from '@/components/providers/SessionProvider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -39,7 +40,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className="min-h-screen">
-        {children}
+        <SessionProvider>
+          {children}
+        </SessionProvider>
         <script dangerouslySetInnerHTML={{
           __html: `
             if ('serviceWorker' in navigator) {

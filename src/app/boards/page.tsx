@@ -39,8 +39,6 @@ import ListView from '@/components/list/ListView';
 import CommandPalette from '@/components/command/CommandPalette';
 import type { ViewMode } from '@/lib/types';
 
-const HEADER_STORAGE_KEY = 'boards_page_header';
-
 export default function BoardsPage() {
   const { boards, loading, createBoard, updateBoard, deleteBoard, reorderBoards } = useBoards();
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
@@ -74,23 +72,32 @@ export default function BoardsPage() {
     direction: 'desc',
   });
 
-  // Load header from localStorage
+  // Load header from API
   useEffect(() => {
-    const saved = localStorage.getItem(HEADER_STORAGE_KEY);
-    if (saved) {
+    const loadHeader = async () => {
       try {
-        const { title, subtitle } = JSON.parse(saved);
-        if (title) setPageTitle(title);
-        if (subtitle) setPageSubtitle(subtitle);
-      } catch (e) {
-        // Ignore parse errors
+        const { settingsApi } = await import('@/lib/api/client');
+        const response = await settingsApi.getHeader();
+        if (response.header) {
+          setPageTitle(response.header.title);
+          setPageSubtitle(response.header.subtitle);
+        }
+      } catch (err) {
+        // Use default values on error
+        console.error('Failed to load header:', err);
       }
-    }
+    };
+    loadHeader();
   }, []);
 
-  // Save header to localStorage
-  const saveHeader = (title: string, subtitle: string) => {
-    localStorage.setItem(HEADER_STORAGE_KEY, JSON.stringify({ title, subtitle }));
+  // Save header to API
+  const saveHeader = async (title: string, subtitle: string) => {
+    try {
+      const { settingsApi } = await import('@/lib/api/client');
+      await settingsApi.updateHeader({ title, subtitle });
+    } catch (err) {
+      console.error('Failed to save header:', err);
+    }
   };
 
   // Check for due date notifications periodically
