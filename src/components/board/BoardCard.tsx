@@ -7,7 +7,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Board, BoardTask, Priority } from '@/lib/types';
 import Card from '@/components/ui/Card';
-import { BoardService } from '@/lib/services/boardService';
+import { useTasksOptimized } from '@/hooks/useTasksOptimized';
 import { SortableTaskItem } from './SortableTaskItem';
 import TaskDetailModal from '@/components/task/TaskDetailModal';
 import TagManager from '@/components/ui/TagManager';
@@ -38,6 +38,20 @@ const PRESET_COLORS = [
 ];
 
 export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
+  // Use optimized task hook
+  const {
+    createTask,
+    deleteTask,
+    toggleTask,
+    updateTaskText,
+    setTaskDueDate,
+    setTaskColor,
+    setTaskPriority,
+    updateTaskDetails,
+    isCreating,
+    isDeleting,
+  } = useTasksOptimized(board.id);
+
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [title, setTitle] = useState(board.title);
@@ -184,23 +198,16 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
     }
   };
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (newTaskText.trim()) {
-      const newTask = BoardService.addTask(board.id, newTaskText);
-      if (newTask) {
-        onUpdate(board.id, { tasks: [...(board.tasks || []), newTask] });
-      }
+      await createTask(newTaskText.trim());
       setNewTaskText('');
       setIsAddingTask(false);
     }
   };
 
   const handleToggleTask = (task: BoardTask) => {
-    BoardService.updateTask(board.id, task.id, { completed: !task.completed });
-    const updatedTasks = board.tasks.map(t =>
-      t.id === task.id ? { ...t, completed: !t.completed } : t
-    );
-    onUpdate(board.id, { tasks: updatedTasks });
+    toggleTask(task);
   };
 
   const handleEditTask = (task: BoardTask) => {
@@ -210,11 +217,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
 
   const handleSaveTaskEdit = (task: BoardTask) => {
     if (editingTaskText.trim() && editingTaskText !== task.text) {
-      BoardService.updateTask(board.id, task.id, { text: editingTaskText.trim() });
-      const updatedTasks = board.tasks.map(t =>
-        t.id === task.id ? { ...t, text: editingTaskText.trim() } : t
-      );
-      onUpdate(board.id, { tasks: updatedTasks });
+      updateTaskText(task.id, editingTaskText.trim());
     }
     setEditingTaskId(null);
     setEditingTaskText('');
@@ -223,11 +226,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
 
   const handleSetDueDate = (task: BoardTask, timestamp: number) => {
     const dueDate = timestamp || undefined; // 0 means clear date
-    BoardService.updateTask(board.id, task.id, { dueDate });
-    const updatedTasks = board.tasks.map(t =>
-      t.id === task.id ? { ...t, dueDate } : t
-    );
-    onUpdate(board.id, { tasks: updatedTasks });
+    setTaskDueDate(task.id, dueDate);
     setDatePickerOpen(null);
     setTaskMenuOpen(null);
   };
@@ -244,22 +243,14 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
   };
 
   const handleSetTaskColor = (task: BoardTask, color: string) => {
-    BoardService.updateTask(board.id, task.id, { color, showGradient: task.showGradient ?? true });
-    const updatedTasks = board.tasks.map(t =>
-      t.id === task.id ? { ...t, color, showGradient: task.showGradient ?? true } : t
-    );
-    onUpdate(board.id, { tasks: updatedTasks });
+    setTaskColor(task.id, color, task.showGradient ?? true);
     setColorPickerOpen(null);
     setTaskMenuOpen(null);
   };
 
   const handleToggleGradient = (task: BoardTask) => {
     const newShowGradient = !task.showGradient;
-    BoardService.updateTask(board.id, task.id, { showGradient: newShowGradient });
-    const updatedTasks = board.tasks.map(t =>
-      t.id === task.id ? { ...t, showGradient: newShowGradient } : t
-    );
-    onUpdate(board.id, { tasks: updatedTasks });
+    updateTaskDetails(task.id, { showGradient: newShowGradient });
   };
 
   const handleSetBoardColor = (color: string) => {
@@ -268,27 +259,17 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
   };
 
   const handleSetTaskPriority = (task: BoardTask, priority: Priority | undefined) => {
-    BoardService.updateTask(board.id, task.id, { priority });
-    const updatedTasks = board.tasks.map(t =>
-      t.id === task.id ? { ...t, priority } : t
-    );
-    onUpdate(board.id, { tasks: updatedTasks });
+    setTaskPriority(task.id, priority);
     setPriorityPickerOpen(null);
     setTaskMenuOpen(null);
   };
 
   const handleUpdateTaskDetails = (task: BoardTask, updates: Partial<BoardTask>) => {
-    BoardService.updateTask(board.id, task.id, updates);
-    const updatedTasks = board.tasks.map(t =>
-      t.id === task.id ? { ...t, ...updates } : t
-    );
-    onUpdate(board.id, { tasks: updatedTasks });
+    updateTaskDetails(task.id, updates);
   };
 
   const handleDeleteTask = (taskId: string) => {
-    const updatedTasks = board.tasks.filter(t => t.id !== taskId);
-    BoardService.deleteTask(board.id, taskId);
-    onUpdate(board.id, { tasks: updatedTasks });
+    deleteTask(taskId);
   };
 
   // Tag management handlers

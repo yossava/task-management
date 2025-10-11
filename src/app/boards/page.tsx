@@ -18,7 +18,7 @@ import {
 import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
 import { BoardCard } from '@/components/board/BoardCard';
 import { InlineBoardForm } from '@/components/board/InlineBoardForm';
-import { useBoards } from '@/hooks/useBoards';
+import { useBoardsOptimized } from '@/hooks/useBoardsOptimized';
 import { Board, BoardTask, TaskFilters, TaskSort, Tag, BoardTemplate } from '@/lib/types';
 import { BoardService } from '@/lib/services/boardService';
 import { filterAndSortTasks } from '@/lib/utils/taskFilters';
@@ -41,7 +41,7 @@ import { AuthNav } from '@/components/navigation/AuthNav';
 import type { ViewMode } from '@/lib/types';
 
 export default function BoardsPage() {
-  const { boards, loading, createBoard, updateBoard, deleteBoard, reorderBoards } = useBoards();
+  const { boards, loading, createBoard, updateBoard, deleteBoard, reorderBoards, isCreating, isUpdating, isDeleting } = useBoardsOptimized();
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const [showExportImport, setShowExportImport] = useState(false);
