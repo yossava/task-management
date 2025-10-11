@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGO_URI")
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  email         String    @unique
+  name          String?
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  boards        Board[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Board {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  color       String   @default("#3b82f6")
+  userId      String?  @db.ObjectId
+  guestId     String?  // For anonymous users
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tasks       Task[]
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([guestId])
+  @@map("boards")
+}
+
+model Task {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  text        String
+  completed   Boolean   @default(false)
+  boardId     String    @db.ObjectId
+  order       Int       @default(0)
+
+  // Task details
+  description String?
+  color       String?
+  showGradient Boolean? @default(true)
+  dueDate     DateTime?
+  progress    Int?      @default(0)
+
+  // Checklist items (embedded)
+  checklist   ChecklistItem[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  board       Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@index([boardId])
+  @@map("tasks")
+}
+
+type ChecklistItem {
+  id        String
+  text      String
+  completed Boolean
+}
+
+model PageHeader {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String   @default("Your Boards")
+  subtitle  String   @default("Organize and manage all your projects in one place")
+  userId    String?  @db.ObjectId
+  guestId   String?  // For anonymous users
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId])
+  @@unique([guestId])
+  @@map("page_headers")
+}
