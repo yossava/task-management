@@ -34,7 +34,7 @@ export default function CustomReportBuilder({
 }: CustomReportBuilderProps) {
   // Report configuration
   const [reportType, setReportType] = useState<ReportType>('comprehensive');
-  const [dateRange, setDateRange] = useState<DateRangeType>('last-3-sprints');
+  const [dateRange, setDateRange] = useState<DateRangeType>('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');

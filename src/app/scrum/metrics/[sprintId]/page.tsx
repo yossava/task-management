@@ -11,9 +11,9 @@ import TeamPerformanceAnalytics from '@/components/scrum/TeamPerformanceAnalytic
 import CustomReportBuilder from '@/components/scrum/CustomReportBuilder';
 import Link from 'next/link';
 
-export default function MetricsPage() {
+export default function MetricsPage({ params }: { params: { sprintId: string } }) {
   const { sprints, stories, team, loading } = useScrum();
-  const [selectedSprintId, setSelectedSprintId] = useState<string>('');
+  const [selectedSprintId, setSelectedSprintId] = useState<string>(params.sprintId || '');
 
   if (loading) {
     return (
