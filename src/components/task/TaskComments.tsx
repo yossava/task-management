@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { TaskComment } from '@/lib/types';
+import { TaskComment, Board } from '@/lib/types';
 import { CommentService } from '@/lib/services/commentService';
+import { useBoardsOptimized } from '@/hooks/useBoardsOptimized';
 
 interface TaskCommentsProps {
   boardId: string;
@@ -17,12 +18,15 @@ export default function TaskComments({ boardId, taskId, comments, onUpdate }: Ta
   const [editContent, setEditContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { boards, updateBoard } = useBoardsOptimized();
+  const board = boards.find(b => b.id === boardId);
+
   const handleAddComment = async () => {
-    if (!newComment.trim() || isSubmitting) return;
+    if (!newComment.trim() || isSubmitting || !board) return;
 
     setIsSubmitting(true);
     try {
-      CommentService.addComment(boardId, taskId, newComment.trim());
+      await CommentService.addComment(board, taskId, newComment.trim(), 'User', updateBoard);
       setNewComment('');
       onUpdate();
     } finally {
@@ -39,11 +43,11 @@ export default function TaskComments({ boardId, taskId, comments, onUpdate }: Ta
   };
 
   const handleSaveEdit = async () => {
-    if (!editingId || !editContent.trim() || isSubmitting) return;
+    if (!editingId || !editContent.trim() || isSubmitting || !board) return;
 
     setIsSubmitting(true);
     try {
-      CommentService.updateComment(boardId, taskId, editingId, editContent.trim());
+      await CommentService.updateComment(board, taskId, editingId, editContent.trim(), updateBoard);
       setEditingId(null);
       setEditContent('');
       onUpdate();
@@ -53,9 +57,9 @@ export default function TaskComments({ boardId, taskId, comments, onUpdate }: Ta
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('Delete this comment?')) return;
+    if (!confirm('Delete this comment?') || !board) return;
 
-    CommentService.deleteComment(boardId, taskId, commentId);
+    await CommentService.deleteComment(board, taskId, commentId, updateBoard);
     onUpdate();
   };
 

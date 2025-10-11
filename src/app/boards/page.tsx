@@ -20,7 +20,6 @@ import { BoardCard } from '@/components/board/BoardCard';
 import { InlineBoardForm } from '@/components/board/InlineBoardForm';
 import { useBoardsOptimized } from '@/hooks/useBoardsOptimized';
 import { Board, BoardTask, TaskFilters, TaskSort, Tag, BoardTemplate } from '@/lib/types';
-import { BoardService } from '@/lib/services/boardService';
 import { filterAndSortTasks } from '@/lib/utils/taskFilters';
 import Card from '@/components/ui/Card';
 import FilterPanel from '@/components/ui/FilterPanel';
@@ -189,8 +188,8 @@ export default function BoardsPage() {
     setIsCreatingBoard(false);
   };
 
-  const handleTemplateSelect = (template: BoardTemplate) => {
-    TemplateService.createBoardFromTemplate(template);
+  const handleTemplateSelect = async (template: BoardTemplate) => {
+    await TemplateService.createBoardFromTemplate(template);
     setShowTemplateGallery(false);
     // Force reload boards - useBoards hook will pick up the change
     window.location.reload();
@@ -288,7 +287,6 @@ export default function BoardsPage() {
           t.id === task.id ? { ...t, dueDate: newDueDate } : t
         );
 
-        BoardService.update(sourceBoardId, { tasks: updatedTasks });
         updateBoard(sourceBoardId, { tasks: updatedTasks });
         return;
       }
@@ -308,7 +306,6 @@ export default function BoardsPage() {
 
           if (oldIndex !== newIndex) {
             const reorderedTasks = arrayMove<BoardTask>(tasks, oldIndex, newIndex);
-            BoardService.update(sourceBoardId, { tasks: reorderedTasks });
             updateBoard(sourceBoardId, { tasks: reorderedTasks });
           }
         } else {
@@ -359,11 +356,7 @@ export default function BoardsPage() {
       updatedTargetTasks = [...(targetBoard.tasks || []), task];
     }
 
-    // Update storage
-    BoardService.update(sourceBoardId, { tasks: updatedSourceTasks });
-    BoardService.update(targetBoardId, { tasks: updatedTargetTasks });
-
-    // Update state
+    // Update via API
     updateBoard(sourceBoardId, { tasks: updatedSourceTasks });
     updateBoard(targetBoardId, { tasks: updatedTargetTasks });
   };
@@ -603,7 +596,6 @@ export default function BoardsPage() {
                   task.id === taskId ? { ...task, ...updates } : task
                 );
 
-                BoardService.update(boardId, { tasks: updatedTasks });
                 updateBoard(boardId, { tasks: updatedTasks });
               }}
             />
@@ -623,7 +615,6 @@ export default function BoardsPage() {
                   task.id === taskId ? { ...task, ...updates } : task
                 );
 
-                BoardService.update(boardId, { tasks: updatedTasks });
                 updateBoard(boardId, { tasks: updatedTasks });
               }}
               onTaskDelete={(boardId, taskId) => {
@@ -632,7 +623,6 @@ export default function BoardsPage() {
 
                 const updatedTasks = board.tasks.filter((task: BoardTask) => task.id !== taskId);
 
-                BoardService.update(boardId, { tasks: updatedTasks });
                 updateBoard(boardId, { tasks: updatedTasks });
               }}
             />
@@ -728,6 +718,7 @@ export default function BoardsPage() {
         onNewBoard={() => setIsCreatingBoard(true)}
         onSearch={() => setShowSearch(true)}
         onViewMode={setViewMode}
+        boards={boards}
       />
 
       {/* Filters Modal */}

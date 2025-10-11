@@ -1,29 +1,23 @@
 import { TaskDependency, Board } from '@/lib/types';
-import { StorageService, STORAGE_KEYS } from '@/lib/storage';
 import { ActivityService } from './activityService';
 
 export class DependencyService {
   /**
    * Add a dependency between two tasks
    */
-  static addDependency(
-    boardId: string,
+  static async addDependency(
+    board: Board,
     taskId: string,
-    dependsOnTaskId: string
-  ): TaskDependency | null {
-    const boards = StorageService.get<Board[]>(STORAGE_KEYS.BOARDS, []);
-    const boardIndex = boards.findIndex(b => b.id === boardId);
-
-    if (boardIndex === -1) return null;
-
-    const board = boards[boardIndex];
+    dependsOnTaskId: string,
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>
+  ): Promise<TaskDependency | null> {
     const task = board.tasks?.find(t => t.id === taskId);
     const dependsOnTask = board.tasks?.find(t => t.id === dependsOnTaskId);
 
     if (!task || !dependsOnTask) return null;
 
     // Prevent circular dependencies
-    if (this.wouldCreateCircularDependency(boardId, taskId, dependsOnTaskId)) {
+    if (this.wouldCreateCircularDependency(board, taskId, dependsOnTaskId)) {
       console.warn('Cannot create circular dependency');
       return null;
     }
@@ -37,7 +31,7 @@ export class DependencyService {
       id: crypto.randomUUID(),
       taskId,
       dependsOnTaskId,
-      boardId,
+      boardId: board.id,
       type: 'blocked_by',
       createdAt: Date.now(),
     };
@@ -48,12 +42,12 @@ export class DependencyService {
     }
 
     task.dependencies.push(dependsOnTaskId);
-    board.updatedAt = Date.now();
 
-    StorageService.set(STORAGE_KEYS.BOARDS, boards);
+    const updatedTasks = board.tasks.map(t => t.id === taskId ? task : t);
+    await updateBoard(board.id, { tasks: updatedTasks });
 
     // Log activity
-    ActivityService.log('task_updated', boardId, board.title, {
+    ActivityService.log('task_updated', board.id, board.title, {
       taskId,
       taskText: task.text,
       changes: [
@@ -71,17 +65,12 @@ export class DependencyService {
   /**
    * Remove a dependency
    */
-  static removeDependency(
-    boardId: string,
+  static async removeDependency(
+    board: Board,
     taskId: string,
-    dependsOnTaskId: string
-  ): boolean {
-    const boards = StorageService.get<Board[]>(STORAGE_KEYS.BOARDS, []);
-    const boardIndex = boards.findIndex(b => b.id === boardId);
-
-    if (boardIndex === -1) return false;
-
-    const board = boards[boardIndex];
+    dependsOnTaskId: string,
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>
+  ): Promise<boolean> {
     const task = board.tasks?.find(t => t.id === taskId);
 
     if (!task || !task.dependencies) return false;
@@ -91,11 +80,11 @@ export class DependencyService {
 
     if (task.dependencies.length === initialLength) return false;
 
-    board.updatedAt = Date.now();
-    StorageService.set(STORAGE_KEYS.BOARDS, boards);
+    const updatedTasks = board.tasks.map(t => t.id === taskId ? task : t);
+    await updateBoard(board.id, { tasks: updatedTasks });
 
     // Log activity
-    ActivityService.log('task_updated', boardId, board.title, {
+    ActivityService.log('task_updated', board.id, board.title, {
       taskId,
       taskText: task.text,
       changes: [
@@ -113,12 +102,7 @@ export class DependencyService {
   /**
    * Get all dependencies for a task (tasks that this task depends on)
    */
-  static getTaskDependencies(boardId: string, taskId: string): Board['tasks'] {
-    const boards = StorageService.get<Board[]>(STORAGE_KEYS.BOARDS, []);
-    const board = boards.find(b => b.id === boardId);
-
-    if (!board) return [];
-
+  static getTaskDependencies(board: Board, taskId: string): Board['tasks'] {
     const task = board.tasks?.find(t => t.id === taskId);
     if (!task || !task.dependencies) return [];
 
@@ -128,20 +112,15 @@ export class DependencyService {
   /**
    * Get all tasks that depend on this task (blockers)
    */
-  static getBlockingTasks(boardId: string, taskId: string): Board['tasks'] {
-    const boards = StorageService.get<Board[]>(STORAGE_KEYS.BOARDS, []);
-    const board = boards.find(b => b.id === boardId);
-
-    if (!board) return [];
-
+  static getBlockingTasks(board: Board, taskId: string): Board['tasks'] {
     return board.tasks.filter(t => t.dependencies?.includes(taskId)) || [];
   }
 
   /**
    * Check if a task can be started (all dependencies are completed)
    */
-  static canStartTask(boardId: string, taskId: string): boolean {
-    const dependencies = this.getTaskDependencies(boardId, taskId);
+  static canStartTask(board: Board, taskId: string): boolean {
+    const dependencies = this.getTaskDependencies(board, taskId);
     return dependencies.every(dep => dep.completed);
   }
 
@@ -149,7 +128,7 @@ export class DependencyService {
    * Check if removing/creating a dependency would create a circular dependency
    */
   static wouldCreateCircularDependency(
-    boardId: string,
+    board: Board,
     taskId: string,
     dependsOnTaskId: string
   ): boolean {
@@ -167,7 +146,7 @@ export class DependencyService {
       if (visited.has(currentId)) continue;
       visited.add(currentId);
 
-      const deps = this.getTaskDependencies(boardId, currentId);
+      const deps = this.getTaskDependencies(board, currentId);
       deps.forEach(dep => queue.push(dep.id));
     }
 
@@ -177,36 +156,30 @@ export class DependencyService {
   /**
    * Get dependency chain for visualization
    */
-  static getDependencyChain(boardId: string, taskId: string): {
+  static getDependencyChain(board: Board, taskId: string): {
     task: Board['tasks'][0];
     dependencies: Board['tasks'];
     blockers: Board['tasks'];
   } | null {
-    const boards = StorageService.get<Board[]>(STORAGE_KEYS.BOARDS, []);
-    const board = boards.find(b => b.id === boardId);
-
-    if (!board) return null;
-
     const task = board.tasks?.find(t => t.id === taskId);
     if (!task) return null;
 
     return {
       task,
-      dependencies: this.getTaskDependencies(boardId, taskId),
-      blockers: this.getBlockingTasks(boardId, taskId),
+      dependencies: this.getTaskDependencies(board, taskId),
+      blockers: this.getBlockingTasks(board, taskId),
     };
   }
 
   /**
    * Get all blocked tasks across all boards
    */
-  static getAllBlockedTasks(): Array<{
+  static getAllBlockedTasks(boards: Board[]): Array<{
     boardId: string;
     boardTitle: string;
     task: Board['tasks'][0];
     blockedBy: Board['tasks'];
   }> {
-    const boards = StorageService.get<Board[]>(STORAGE_KEYS.BOARDS, []);
     const blockedTasks: Array<{
       boardId: string;
       boardTitle: string;

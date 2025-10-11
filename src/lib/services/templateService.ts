@@ -1,6 +1,5 @@
 import { BoardTemplate, Board, BoardTask, Tag } from '@/lib/types';
 import { StorageService, STORAGE_KEYS } from '@/lib/storage';
-import { BoardService } from './boardService';
 
 // Pre-built templates
 const BUILT_IN_TEMPLATES: BoardTemplate[] = [
@@ -187,7 +186,7 @@ export class TemplateService {
     return this.getAllTemplates().filter(t => t.category === category);
   }
 
-  static createBoardFromTemplate(template: BoardTemplate, customTitle?: string): Board {
+  static async createBoardFromTemplate(template: BoardTemplate, customTitle?: string): Promise<Board> {
     // Create tags with proper IDs and timestamps
     const tags: Tag[] = (template.tags || []).map(tag => ({
       ...tag,
@@ -209,17 +208,18 @@ export class TemplateService {
       tags: task.tags?.map(oldTagId => tagIdMap.get(oldTagId) || oldTagId),
     }));
 
-    // Create the board
-    const board = BoardService.create({
+    // Create the board via API
+    const { boardsApi } = await import('@/lib/api/client');
+    const response = await boardsApi.create({
       title: customTitle || template.name,
       description: template.description,
       color: template.color,
     });
 
     // Update with tags and tasks
-    BoardService.update(board.id, { tags, tasks });
+    const updatedResponse = await boardsApi.update(response.board.id, { tags, tasks });
 
-    return BoardService.getById(board.id)!;
+    return updatedResponse.board;
   }
 
   static saveAsTemplate(
@@ -283,7 +283,7 @@ export class TemplateService {
   /**
    * Import board from JSON
    */
-  static importBoard(jsonString: string): Board | null {
+  static async importBoard(jsonString: string): Promise<Board | null> {
     try {
       const importData = JSON.parse(jsonString);
 
@@ -293,8 +293,9 @@ export class TemplateService {
 
       const boardData = importData.board;
 
-      // Create new board with imported data
-      const board = BoardService.create({
+      // Create new board with imported data via API
+      const { boardsApi } = await import('@/lib/api/client');
+      const response = await boardsApi.create({
         title: boardData.title || 'Imported Board',
         description: boardData.description,
         color: boardData.color,
@@ -335,12 +336,12 @@ export class TemplateService {
       }));
 
       // Update board with imported data
-      BoardService.update(board.id, {
+      const updatedResponse = await boardsApi.update(response.board.id, {
         tags,
         tasks,
       });
 
-      return BoardService.getById(board.id)!;
+      return updatedResponse.board;
     } catch (error) {
       console.error('Error importing board:', error);
       return null;
@@ -366,7 +367,7 @@ export class TemplateService {
   /**
    * Import multiple boards from JSON
    */
-  static importBoards(jsonString: string): Board[] {
+  static async importBoards(jsonString: string): Promise<Board[]> {
     try {
       const importData = JSON.parse(jsonString);
 
@@ -376,12 +377,12 @@ export class TemplateService {
 
       const importedBoards: Board[] = [];
 
-      importData.boards.forEach((boardData: any) => {
-        const board = this.importBoard(JSON.stringify({ board: boardData }));
+      for (const boardData of importData.boards) {
+        const board = await this.importBoard(JSON.stringify({ board: boardData }));
         if (board) {
           importedBoards.push(board);
         }
-      });
+      }
 
       return importedBoards;
     } catch (error) {

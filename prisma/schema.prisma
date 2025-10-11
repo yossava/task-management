@@ -36,6 +36,7 @@ model Board {
   title       String
   description String?
   color       String   @default("#3b82f6")
+  order       Int      @default(0)
   userId      String?  @db.ObjectId
   guestId     String?  // For anonymous users
   createdAt   DateTime @default(now())
@@ -62,6 +63,7 @@ model Task {
   showGradient Boolean? @default(true)
   dueDate     DateTime?
   progress    Int?      @default(0)
+  priority    String?   // low, medium, high, urgent
 
   // Checklist items (embedded)
   checklist   ChecklistItem[]

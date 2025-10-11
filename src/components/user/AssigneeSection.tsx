@@ -1,20 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { BoardTask } from '@/lib/types';
-import { BoardService } from '@/lib/services/boardService';
+import { BoardTask, Board } from '@/lib/types';
 import { UserService } from '@/lib/services/userService';
 import UserPicker from './UserPicker';
 import UserAvatar from './UserAvatar';
 
 interface AssigneeSectionProps {
-  boardId: string;
+  board: Board;
   task: BoardTask;
-  onUpdate: () => void;
+  onUpdate: (boardId: string, updates: Partial<Board>) => Promise<void>;
 }
 
 export default function AssigneeSection({
-  boardId,
+  board,
   task,
   onUpdate,
 }: AssigneeSectionProps) {
@@ -24,11 +23,11 @@ export default function AssigneeSection({
     ? UserService.getByIds(task.assigneeIds)
     : [];
 
-  const handleAssigneeChange = (userIds: string[]) => {
-    BoardService.updateTask(boardId, task.id, {
-      assigneeIds: userIds,
-    });
-    onUpdate();
+  const handleAssigneeChange = async (userIds: string[]) => {
+    const updatedTasks = board.tasks.map(t =>
+      t.id === task.id ? { ...t, assigneeIds: userIds } : t
+    );
+    await onUpdate(board.id, { tasks: updatedTasks });
     setIsEditing(false);
   };
 
@@ -76,14 +75,14 @@ export default function AssigneeSection({
             >
               <UserAvatar user={user} size="md" showName />
               <button
-                onClick={() => {
+                onClick={async () => {
                   const newAssignees = task.assigneeIds?.filter(
                     (id) => id !== user.id
                   );
-                  BoardService.updateTask(boardId, task.id, {
-                    assigneeIds: newAssignees || [],
-                  });
-                  onUpdate();
+                  const updatedTasks = board.tasks.map(t =>
+                    t.id === task.id ? { ...t, assigneeIds: newAssignees || [] } : t
+                  );
+                  await onUpdate(board.id, { tasks: updatedTasks });
                 }}
                 className="text-gray-400 hover:text-red-500 transition-colors"
                 title="Remove assignee"

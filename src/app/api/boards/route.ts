@@ -25,7 +25,7 @@ export async function GET() {
             orderBy: { order: 'asc' },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { order: 'asc' },
       });
     } else {
       // Fetch guest's boards
@@ -37,7 +37,7 @@ export async function GET() {
             orderBy: { order: 'asc' },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { order: 'asc' },
       });
     }
 
@@ -76,12 +76,21 @@ export async function POST(request: Request) {
         );
       }
 
+      // Get the highest order number for guest boards
+      const lastBoard = await prisma.board.findFirst({
+        where: { guestId },
+        orderBy: { order: 'desc' },
+        select: { order: true },
+      });
+      const nextOrder = (lastBoard?.order ?? -1) + 1;
+
       // Create board for guest
       const board = await prisma.board.create({
         data: {
           title: validatedData.title,
           description: validatedData.description,
           color: validatedData.color,
+          order: nextOrder,
           guestId,
         },
         include: {
@@ -92,12 +101,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ board }, { status: 201 });
     }
 
+    // Get the highest order number for user boards
+    const lastBoard = await prisma.board.findFirst({
+      where: { userId },
+      orderBy: { order: 'desc' },
+      select: { order: true },
+    });
+    const nextOrder = (lastBoard?.order ?? -1) + 1;
+
     // Create board for authenticated user
     const board = await prisma.board.create({
       data: {
         title: validatedData.title,
         description: validatedData.description,
         color: validatedData.color,
+        order: nextOrder,
         userId,
       },
       include: {

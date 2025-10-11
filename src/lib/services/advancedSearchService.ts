@@ -1,5 +1,4 @@
 import { BoardTask, Board, SearchQuery, SavedSearch, SearchHistory } from '@/lib/types';
-import { BoardService } from './boardService';
 import { StorageService } from '@/lib/storage';
 
 const SAVED_SEARCHES_KEY = 'saved_searches';
@@ -9,8 +8,7 @@ export class AdvancedSearchService {
   /**
    * Perform advanced search across all boards
    */
-  static search(query: SearchQuery): { board: Board; task: BoardTask }[] {
-    const boards = BoardService.getAll();
+  static search(boards: Board[], query: SearchQuery): { board: Board; task: BoardTask }[] {
     const results: { board: Board; task: BoardTask }[] = [];
 
     boards.forEach((board) => {

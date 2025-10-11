@@ -1,5 +1,4 @@
-import { TimeLog, ActiveTimer } from '@/lib/types';
-import { BoardService } from './boardService';
+import { TimeLog, ActiveTimer, Board } from '@/lib/types';
 import { StorageService } from '@/lib/storage';
 import { ActivityService } from './activityService';
 
@@ -9,38 +8,41 @@ export class TimeTrackingService {
   /**
    * Start a timer for a task
    */
-  static startTimer(boardId: string, taskId: string, userId?: string): ActiveTimer | null {
-    const board = BoardService.getById(boardId);
-    if (!board) return null;
-
+  static async startTimer(
+    board: Board,
+    taskId: string,
+    userId: string | undefined,
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>
+  ): Promise<ActiveTimer | null> {
     const task = board.tasks.find((t) => t.id === taskId);
     if (!task) return null;
 
-    // Stop any existing timer for this task
-    this.stopTimer(boardId, taskId);
-
     const timer: ActiveTimer = {
       taskId,
-      boardId,
+      boardId: board.id,
       startTime: Date.now(),
       userId,
     };
 
     // Save to storage
     const timers = this.getActiveTimers();
-    timers.push(timer);
-    StorageService.set(ACTIVE_TIMERS_KEY, timers);
+    // Remove any existing timer for this task
+    const filteredTimers = timers.filter(
+      (t) => !(t.taskId === taskId && t.boardId === board.id)
+    );
+    filteredTimers.push(timer);
+    StorageService.set(ACTIVE_TIMERS_KEY, filteredTimers);
 
     // Update task with active timer
     const updatedTasks = board.tasks.map((t) =>
       t.id === taskId ? { ...t, activeTimer: timer } : t
     );
 
-    BoardService.update(boardId, { tasks: updatedTasks });
+    await updateBoard(board.id, { tasks: updatedTasks });
 
     ActivityService.log(
       'task_updated',
-      boardId,
+      board.id,
       board.title,
       {
         taskId,
@@ -55,10 +57,12 @@ export class TimeTrackingService {
   /**
    * Stop a timer and create a time log
    */
-  static stopTimer(boardId: string, taskId: string, note?: string): TimeLog | null {
-    const board = BoardService.getById(boardId);
-    if (!board) return null;
-
+  static async stopTimer(
+    board: Board,
+    taskId: string,
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>,
+    note?: string
+  ): Promise<TimeLog | null> {
     const task = board.tasks.find((t) => t.id === taskId);
     if (!task || !task.activeTimer) return null;
 
@@ -68,7 +72,7 @@ export class TimeTrackingService {
     const timeLog: TimeLog = {
       id: `log-${Date.now()}`,
       taskId,
-      boardId,
+      boardId: board.id,
       startTime: task.activeTimer.startTime,
       endTime,
       duration,
@@ -86,17 +90,17 @@ export class TimeTrackingService {
 
     const updatedTasks = board.tasks.map((t) => (t.id === taskId ? updatedTask : t));
 
-    BoardService.update(boardId, { tasks: updatedTasks });
+    await updateBoard(board.id, { tasks: updatedTasks });
 
     // Remove from active timers
     const timers = this.getActiveTimers().filter(
-      (t) => !(t.taskId === taskId && t.boardId === boardId)
+      (t) => !(t.taskId === taskId && t.boardId === board.id)
     );
     StorageService.set(ACTIVE_TIMERS_KEY, timers);
 
     ActivityService.log(
       'task_updated',
-      boardId,
+      board.id,
       board.title,
       {
         taskId,
@@ -118,10 +122,7 @@ export class TimeTrackingService {
   /**
    * Get active timer for a task
    */
-  static getActiveTimer(boardId: string, taskId: string): ActiveTimer | null {
-    const board = BoardService.getById(boardId);
-    if (!board) return null;
-
+  static getActiveTimer(board: Board, taskId: string): ActiveTimer | null {
     const task = board.tasks.find((t) => t.id === taskId);
     return task?.activeTimer || null;
   }
@@ -136,25 +137,24 @@ export class TimeTrackingService {
   /**
    * Set estimated time for a task
    */
-  static setEstimatedTime(boardId: string, taskId: string, minutes: number): boolean {
-    const board = BoardService.getById(boardId);
-    if (!board) return false;
-
+  static async setEstimatedTime(
+    board: Board,
+    taskId: string,
+    minutes: number,
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>
+  ): Promise<boolean> {
     const updatedTasks = board.tasks.map((t) =>
       t.id === taskId ? { ...t, estimatedTime: minutes } : t
     );
 
-    BoardService.update(boardId, { tasks: updatedTasks });
+    await updateBoard(board.id, { tasks: updatedTasks });
     return true;
   }
 
   /**
    * Get time logs for a task
    */
-  static getTimeLogs(boardId: string, taskId: string): TimeLog[] {
-    const board = BoardService.getById(boardId);
-    if (!board) return [];
-
+  static getTimeLogs(board: Board, taskId: string): TimeLog[] {
     const task = board.tasks.find((t) => t.id === taskId);
     return task?.timeLogs || [];
   }
@@ -162,10 +162,12 @@ export class TimeTrackingService {
   /**
    * Delete a time log
    */
-  static deleteTimeLog(boardId: string, taskId: string, logId: string): boolean {
-    const board = BoardService.getById(boardId);
-    if (!board) return false;
-
+  static async deleteTimeLog(
+    board: Board,
+    taskId: string,
+    logId: string,
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>
+  ): Promise<boolean> {
     const task = board.tasks.find((t) => t.id === taskId);
     if (!task || !task.timeLogs) return false;
 
@@ -181,35 +183,21 @@ export class TimeTrackingService {
         : t
     );
 
-    BoardService.update(boardId, { tasks: updatedTasks });
+    await updateBoard(board.id, { tasks: updatedTasks });
     return true;
   }
 
   /**
    * Get total tracked time for a board (in minutes)
    */
-  static getTotalTimeForBoard(boardId: string): number {
-    const board = BoardService.getById(boardId);
-    if (!board) return 0;
-
+  static getTotalTimeForBoard(board: Board): number {
     return board.tasks.reduce((total, task) => total + (task.actualTime || 0), 0);
   }
 
   /**
    * Get time tracking statistics
    */
-  static getStatistics(boardId: string) {
-    const board = BoardService.getById(boardId);
-    if (!board) {
-      return {
-        totalEstimated: 0,
-        totalActual: 0,
-        totalRemaining: 0,
-        tasksWithTime: 0,
-        completionRate: 0,
-      };
-    }
-
+  static getStatistics(board: Board) {
     const tasksWithTime = board.tasks.filter((t) => t.estimatedTime || t.actualTime);
     const totalEstimated = board.tasks.reduce((sum, t) => sum + (t.estimatedTime || 0), 0);
     const totalActual = board.tasks.reduce((sum, t) => sum + (t.actualTime || 0), 0);

@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Board } from '@/lib/types';
-import { StorageService, STORAGE_KEYS } from '@/lib/storage';
 import { AnalyticsService, AnalyticsSummary } from '@/lib/services/analyticsService';
+import { useBoardsOptimized } from '@/hooks/useBoardsOptimized';
 import StatCard from '@/components/dashboard/StatCard';
 import TaskCompletionChart from '@/components/dashboard/TaskCompletionChart';
 import PriorityDistributionChart from '@/components/dashboard/PriorityDistributionChart';
@@ -12,29 +12,24 @@ import UpcomingDeadlines from '@/components/dashboard/UpcomingDeadlines';
 import ProductivityStreak from '@/components/dashboard/ProductivityStreak';
 
 export default function DashboardPage() {
-  const [boards, setBoards] = useState<Board[]>([]);
+  const { boards, isLoading: boardsLoading } = useBoardsOptimized();
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = () => {
-    try {
-      const storedBoards = StorageService.get<Board[]>(STORAGE_KEYS.BOARDS, []);
-      setBoards(storedBoards);
-
-      const analyticsSummary = AnalyticsService.getAnalyticsSummary(storedBoards);
-      setAnalytics(analyticsSummary);
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setIsLoading(false);
+    if (boards.length > 0) {
+      try {
+        const analyticsSummary = AnalyticsService.getAnalyticsSummary(boards);
+        setAnalytics(analyticsSummary);
+      } catch (error) {
+        console.error('Error calculating analytics:', error);
+      }
+    } else if (!boardsLoading) {
+      // No boards, set empty analytics
+      setAnalytics(AnalyticsService.getAnalyticsSummary([]));
     }
-  };
+  }, [boards, boardsLoading]);
 
-  if (isLoading) {
+  if (boardsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">

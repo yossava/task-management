@@ -1,42 +1,39 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { BoardTask } from '@/lib/types';
+import { BoardTask, Board } from '@/lib/types';
 import { DependencyService } from '@/lib/services/dependencyService';
-import { BoardService } from '@/lib/services/boardService';
 
 interface TaskDependenciesProps {
-  boardId: string;
+  board: Board;
   taskId: string;
   currentTask: BoardTask;
-  onUpdate: () => void;
+  onUpdate: (boardId: string, updates: Partial<Board>) => Promise<void>;
 }
 
-export default function TaskDependencies({ boardId, taskId, currentTask, onUpdate }: TaskDependenciesProps) {
+export default function TaskDependencies({ board, taskId, currentTask, onUpdate }: TaskDependenciesProps) {
   const [isAddingDependency, setIsAddingDependency] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState('');
   const [circularWarning, setCircularWarning] = useState('');
 
   // Get dependencies and blocking tasks
   const dependencies = useMemo(
-    () => DependencyService.getTaskDependencies(boardId, taskId) || [],
-    [boardId, taskId]
+    () => DependencyService.getTaskDependencies(board, taskId) || [],
+    [board, taskId]
   );
 
   const blockingTasks = useMemo(
-    () => DependencyService.getBlockingTasks(boardId, taskId) || [],
-    [boardId, taskId]
+    () => DependencyService.getBlockingTasks(board, taskId) || [],
+    [board, taskId]
   );
 
   const canStart = useMemo(
-    () => DependencyService.canStartTask(boardId, taskId),
-    [boardId, taskId]
+    () => DependencyService.canStartTask(board, taskId),
+    [board, taskId]
   );
 
   // Get all tasks from board for selection
-  const board = BoardService.getById(boardId);
   const availableTasks = useMemo(() => {
-    if (!board) return [];
     return board.tasks.filter(
       (t) =>
         t.id !== taskId &&
@@ -45,25 +42,23 @@ export default function TaskDependencies({ boardId, taskId, currentTask, onUpdat
     );
   }, [board, taskId, dependencies]);
 
-  const handleAddDependency = () => {
+  const handleAddDependency = async () => {
     if (!selectedTaskId) return;
 
     // Check for circular dependency
-    if (DependencyService.wouldCreateCircularDependency(boardId, taskId, selectedTaskId)) {
+    if (DependencyService.wouldCreateCircularDependency(board, taskId, selectedTaskId)) {
       setCircularWarning('Adding this dependency would create a circular dependency!');
       return;
     }
 
-    DependencyService.addDependency(boardId, taskId, selectedTaskId);
+    await DependencyService.addDependency(board, taskId, selectedTaskId, onUpdate);
     setSelectedTaskId('');
     setCircularWarning('');
     setIsAddingDependency(false);
-    onUpdate();
   };
 
-  const handleRemoveDependency = (dependencyTaskId: string) => {
-    DependencyService.removeDependency(boardId, taskId, dependencyTaskId);
-    onUpdate();
+  const handleRemoveDependency = async (dependencyTaskId: string) => {
+    await DependencyService.removeDependency(board, taskId, dependencyTaskId, onUpdate);
   };
 
   return (

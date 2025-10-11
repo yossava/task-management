@@ -1,5 +1,4 @@
 import { Board, BoardTemplate, ActivityLog } from '@/lib/types';
-import { BoardService } from './boardService';
 import { TemplateService } from './templateService';
 import { ActivityService } from './activityService';
 
@@ -17,11 +16,11 @@ export class ExportService {
   /**
    * Export all data to JSON
    */
-  static exportAll(): ExportData {
+  static exportAll(boards: Board[]): ExportData {
     return {
       version: this.VERSION,
       exportedAt: Date.now(),
-      boards: BoardService.getAll(),
+      boards: boards,
       customTemplates: TemplateService.getAllTemplates().filter(t => t.isCustom),
       activities: ActivityService.getAll(),
     };
@@ -30,16 +29,13 @@ export class ExportService {
   /**
    * Export specific board to JSON
    */
-  static exportBoard(boardId: string): ExportData | null {
-    const board = BoardService.getById(boardId);
-    if (!board) return null;
-
+  static exportBoard(board: Board): ExportData {
     return {
       version: this.VERSION,
       exportedAt: Date.now(),
       boards: [board],
       customTemplates: [],
-      activities: ActivityService.getByBoard(boardId),
+      activities: ActivityService.getByBoard(board.id),
     };
   }
 
@@ -62,11 +58,13 @@ export class ExportService {
 
   /**
    * Import data from JSON
+   * @deprecated This method uses localStorage. Use TemplateService.importBoard() or importBoards() instead
+   * which properly handle API-based board creation.
    */
-  static importData(data: ExportData, options?: {
+  static async importData(data: ExportData, options?: {
     replaceExisting?: boolean;
     includeActivities?: boolean;
-  }): { success: boolean; error?: string; imported: { boards: number; templates: number; activities: number } } {
+  }): Promise<{ success: boolean; error?: string; imported: { boards: number; templates: number; activities: number } }> {
     try {
       // Validate version
       if (!data.version) {
@@ -82,33 +80,20 @@ export class ExportService {
       let importedTemplates = 0;
       let importedActivities = 0;
 
-      // Import boards
+      // Import boards using TemplateService which uses API
       if (data.boards && Array.isArray(data.boards)) {
         if (replaceExisting) {
-          // Clear existing boards
-          const existingBoards = BoardService.getAll();
-          existingBoards.forEach(board => BoardService.delete(board.id));
+          console.warn('replaceExisting option is not supported with API-based import');
         }
 
-        data.boards.forEach(board => {
-          // Create new IDs to avoid conflicts
-          const newBoard = {
-            ...board,
-            id: crypto.randomUUID(),
-            tasks: board.tasks.map(task => ({
-              ...task,
-              id: crypto.randomUUID(),
-            })),
-            tags: board.tags?.map(tag => ({
-              ...tag,
-              id: crypto.randomUUID(),
-            })),
-            createdAt: replaceExisting ? board.createdAt : Date.now(),
-            updatedAt: Date.now(),
-          };
-          BoardService.create(newBoard as any);
-          importedBoards++;
-        });
+        for (const board of data.boards) {
+          try {
+            await TemplateService.importBoard(JSON.stringify({ board }));
+            importedBoards++;
+          } catch (error) {
+            console.error('Failed to import board:', board.title, error);
+          }
+        }
       }
 
       // Import custom templates
@@ -167,8 +152,7 @@ export class ExportService {
   /**
    * Export to CSV format (for boards and tasks)
    */
-  static exportToCSV(boardId?: string): string {
-    const boards = boardId ? [BoardService.getById(boardId)!].filter(Boolean) : BoardService.getAll();
+  static exportToCSV(boards: Board[]): string {
 
     const headers = ['Board', 'Task', 'Status', 'Priority', 'Due Date', 'Tags', 'Created At'];
     const rows = [headers.join(',')];
@@ -194,8 +178,8 @@ export class ExportService {
   /**
    * Download CSV export
    */
-  static downloadCSV(boardId?: string, filename?: string): void {
-    const csv = this.exportToCSV(boardId);
+  static downloadCSV(boards: Board[], filename?: string): void {
+    const csv = this.exportToCSV(boards);
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
 

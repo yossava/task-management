@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUserId } from '@/lib/utils/session';
-import { getGuestId } from '@/lib/utils/guest';
+import { getOrCreateGuestId } from '@/lib/utils/guest';
 import { z } from 'zod';
 
 const reorderBoardsSchema = z.object({
@@ -18,16 +18,25 @@ export async function POST(request: Request) {
     const validatedData = reorderBoardsSchema.parse(body);
 
     const userId = await getCurrentUserId();
-    const guestId = await getGuestId();
+    const guestId = userId ? undefined : await getOrCreateGuestId();
 
-    // Since Board model doesn't have an order field in the schema,
-    // we'll just return success for now
-    // In a full implementation, you'd add an 'order' field to the Board model
+    // Update each board's order individually
+    for (const board of validatedData.boards) {
+      await prisma.board.updateMany({
+        where: {
+          id: board.id,
+          OR: [
+            { userId: userId || undefined },
+            { guestId: guestId || undefined },
+          ].filter(Boolean),
+        },
+        data: {
+          order: board.order,
+        },
+      });
+    }
 
-    return NextResponse.json({
-      message: 'Board reordering acknowledged',
-      note: 'Board order field needs to be added to schema for persistence'
-    });
+    return NextResponse.json({ message: 'Boards reordered successfully' });
   } catch (error) {
     console.error('Error reordering boards:', error);
 

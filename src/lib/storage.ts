@@ -1,13 +1,8 @@
 const STORAGE_VERSION = '1.0.0';
 
 export const STORAGE_KEYS = {
-  BOARDS: 'pm_app_boards',
-  TASKS: 'pm_app_tasks',
-  COLUMNS: 'pm_app_columns',
-  USERS: 'pm_app_users',
+  // UI preferences only - all data now stored in database
   SETTINGS: 'pm_app_settings',
-  TEMPLATES: 'pm_app_templates',
-  ACTIVITY: 'pm_app_activity',
   NOTIFICATIONS: 'pm_app_notifications',
   VERSION: 'pm_app_version',
 } as const;

@@ -1,5 +1,4 @@
 import { Board, BoardTask } from '../types';
-import { BoardService } from './boardService';
 
 export interface SearchFilters {
   query?: string;
@@ -22,8 +21,7 @@ export class SearchService {
   /**
    * Search across all boards and tasks
    */
-  static search(filters: SearchFilters): SearchResult[] {
-    const boards = BoardService.getAll();
+  static search(boards: Board[], filters: SearchFilters): SearchResult[] {
     const results: SearchResult[] = [];
 
     boards.forEach((board) => {
@@ -122,8 +120,7 @@ export class SearchService {
   /**
    * Get all unique colors from all tasks
    */
-  static getAllColors(): string[] {
-    const boards = BoardService.getAll();
+  static getAllColors(boards: Board[]): string[] {
     const colors = new Set<string>();
 
     boards.forEach((board) => {
@@ -140,10 +137,9 @@ export class SearchService {
   /**
    * Get search suggestions based on partial query
    */
-  static getSuggestions(query: string, limit = 5): string[] {
+  static getSuggestions(boards: Board[], query: string, limit = 5): string[] {
     if (!query.trim()) return [];
 
-    const boards = BoardService.getAll();
     const suggestions = new Set<string>();
     const lowerQuery = query.toLowerCase();
 

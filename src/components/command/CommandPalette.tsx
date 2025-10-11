@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { BoardService } from '@/lib/services/boardService';
+import { Board } from '@/lib/types';
 
 interface Command {
   id: string;
@@ -21,6 +21,7 @@ interface CommandPaletteProps {
   onNewTask?: () => void;
   onSearch?: () => void;
   onViewMode?: (mode: 'board' | 'list' | 'calendar') => void;
+  boards?: Board[];
 }
 
 export default function CommandPalette({
@@ -30,13 +31,12 @@ export default function CommandPalette({
   onNewTask,
   onSearch,
   onViewMode,
+  boards = [],
 }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-
-  const boards = BoardService.getAll();
 
   const commands: Command[] = [
     // Navigation

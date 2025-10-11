@@ -1,19 +1,16 @@
-import { BoardTask } from '@/lib/types';
-import { BoardService } from './boardService';
+import { BoardTask, Board } from '@/lib/types';
 import { ActivityService } from './activityService';
 
 export class SubtaskService {
   /**
    * Add a subtask to a parent task
    */
-  static addSubtask(
-    boardId: string,
+  static async addSubtask(
+    board: Board,
     parentTaskId: string,
-    subtaskData: Omit<BoardTask, 'id' | 'createdAt' | 'parentTaskId' | 'isSubtask'>
-  ): BoardTask | null {
-    const board = BoardService.getById(boardId);
-    if (!board) return null;
-
+    subtaskData: Omit<BoardTask, 'id' | 'createdAt' | 'parentTaskId' | 'isSubtask'>,
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>
+  ): Promise<BoardTask | null> {
     const parentTask = board.tasks.find((t) => t.id === parentTaskId);
     if (!parentTask) return null;
 
@@ -35,11 +32,11 @@ export class SubtaskService {
     // Update board with modified parent task
     const updatedTasks = board.tasks.map((t) => (t.id === parentTaskId ? updatedParent : t));
 
-    BoardService.update(boardId, { tasks: updatedTasks });
+    await updateBoard(board.id, { tasks: updatedTasks });
 
     ActivityService.log(
       'task_created',
-      boardId,
+      board.id,
       board.title,
       {
         taskId: newSubtask.id,
@@ -53,15 +50,13 @@ export class SubtaskService {
   /**
    * Update a subtask
    */
-  static updateSubtask(
-    boardId: string,
+  static async updateSubtask(
+    board: Board,
     parentTaskId: string,
     subtaskId: string,
-    updates: Partial<BoardTask>
-  ): boolean {
-    const board = BoardService.getById(boardId);
-    if (!board) return false;
-
+    updates: Partial<BoardTask>,
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>
+  ): Promise<boolean> {
     const parentTask = board.tasks.find((t) => t.id === parentTaskId);
     if (!parentTask || !parentTask.subtasks) return false;
 
@@ -80,11 +75,11 @@ export class SubtaskService {
 
     const updatedTasks = board.tasks.map((t) => (t.id === parentTaskId ? updatedParent : t));
 
-    BoardService.update(boardId, { tasks: updatedTasks });
+    await updateBoard(board.id, { tasks: updatedTasks });
 
     ActivityService.log(
       'task_updated',
-      boardId,
+      board.id,
       board.title,
       {
         taskId: subtaskId,
@@ -98,10 +93,12 @@ export class SubtaskService {
   /**
    * Delete a subtask
    */
-  static deleteSubtask(boardId: string, parentTaskId: string, subtaskId: string): boolean {
-    const board = BoardService.getById(boardId);
-    if (!board) return false;
-
+  static async deleteSubtask(
+    board: Board,
+    parentTaskId: string,
+    subtaskId: string,
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>
+  ): Promise<boolean> {
     const parentTask = board.tasks.find((t) => t.id === parentTaskId);
     if (!parentTask || !parentTask.subtasks) return false;
 
@@ -118,11 +115,11 @@ export class SubtaskService {
 
     const updatedTasks = board.tasks.map((t) => (t.id === parentTaskId ? updatedParent : t));
 
-    BoardService.update(boardId, { tasks: updatedTasks });
+    await updateBoard(board.id, { tasks: updatedTasks });
 
     ActivityService.log(
       'task_deleted',
-      boardId,
+      board.id,
       board.title,
       {
         taskId: subtaskId,
@@ -135,10 +132,12 @@ export class SubtaskService {
   /**
    * Promote a subtask to a standalone task
    */
-  static promoteToTask(boardId: string, parentTaskId: string, subtaskId: string): BoardTask | null {
-    const board = BoardService.getById(boardId);
-    if (!board) return null;
-
+  static async promoteToTask(
+    board: Board,
+    parentTaskId: string,
+    subtaskId: string,
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>
+  ): Promise<BoardTask | null> {
     const parentTask = board.tasks.find((t) => t.id === parentTaskId);
     if (!parentTask || !parentTask.subtasks) return null;
 
@@ -169,11 +168,11 @@ export class SubtaskService {
     const updatedTasks = board.tasks.map((t) => (t.id === parentTaskId ? updatedParent : t));
     updatedTasks.push(newTask);
 
-    BoardService.update(boardId, { tasks: updatedTasks });
+    await updateBoard(board.id, { tasks: updatedTasks });
 
     ActivityService.log(
       'task_created',
-      boardId,
+      board.id,
       board.title,
       {
         taskId: newTask.id,
@@ -199,10 +198,7 @@ export class SubtaskService {
   /**
    * Get all subtasks for a task
    */
-  static getSubtasks(boardId: string, taskId: string): BoardTask[] {
-    const board = BoardService.getById(boardId);
-    if (!board) return [];
-
+  static getSubtasks(board: Board, taskId: string): BoardTask[] {
     const task = board.tasks.find((t) => t.id === taskId);
     return task?.subtasks || [];
   }
@@ -210,10 +206,7 @@ export class SubtaskService {
   /**
    * Get subtask by ID
    */
-  static getSubtask(boardId: string, parentTaskId: string, subtaskId: string): BoardTask | null {
-    const board = BoardService.getById(boardId);
-    if (!board) return null;
-
+  static getSubtask(board: Board, parentTaskId: string, subtaskId: string): BoardTask | null {
     const parentTask = board.tasks.find((t) => t.id === parentTaskId);
     if (!parentTask || !parentTask.subtasks) return null;
 
@@ -223,10 +216,7 @@ export class SubtaskService {
   /**
    * Count total subtasks across all tasks in a board
    */
-  static countSubtasks(boardId: string): number {
-    const board = BoardService.getById(boardId);
-    if (!board) return 0;
-
+  static countSubtasks(board: Board): number {
     return board.tasks.reduce((count, task) => {
       return count + (task.subtasks?.length || 0);
     }, 0);
@@ -235,10 +225,7 @@ export class SubtaskService {
   /**
    * Get tasks with subtasks
    */
-  static getTasksWithSubtasks(boardId: string): BoardTask[] {
-    const board = BoardService.getById(boardId);
-    if (!board) return [];
-
+  static getTasksWithSubtasks(board: Board): BoardTask[] {
     return board.tasks.filter((task) => task.subtasks && task.subtasks.length > 0);
   }
 }

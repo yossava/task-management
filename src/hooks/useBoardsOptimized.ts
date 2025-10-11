@@ -20,10 +20,10 @@ export function useBoardsOptimized() {
       const response = await boardsApi.getAll();
       return response.boards;
     },
-    staleTime: 1000, // Keep data fresh - 1 second
+    staleTime: 30 * 1000, // Keep data fresh for 30 seconds
     gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
     refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchOnMount: true, // Refetch on mount to ensure data is fresh
+    refetchOnMount: false, // Use cached data if available
   });
 
   // Create board mutation
@@ -113,9 +113,15 @@ export function useBoardsOptimized() {
         old.map((board) => (board.id === id ? { ...board, ...updates } : board))
       );
 
-      return { previousBoards };
+      return { previousBoards, boardId: id };
     },
-    onSuccess: () => {
+    onSuccess: (updatedBoard, { id }) => {
+      // Replace optimistic update with server response
+      setTimeout(() => {
+        queryClient.setQueryData<Board[]>(['boards'], (old = []) =>
+          old.map((board) => (board.id === id ? updatedBoard : board))
+        );
+      }, 0);
       toast.success('Board updated!');
     },
     onError: (err, _, context) => {
@@ -160,6 +166,7 @@ export function useBoardsOptimized() {
   // Reorder boards mutation
   const reorderBoardsMutation = useMutation({
     mutationFn: async (newBoards: Board[]) => {
+      console.log('Sending reorder request:', newBoards.map((b, i) => ({ id: b.id, order: i })));
       await boardsApi.reorder(
         newBoards.map((board, index) => ({ id: board.id, order: index }))
       );
@@ -169,12 +176,23 @@ export function useBoardsOptimized() {
       await queryClient.cancelQueries({ queryKey: ['boards'] });
       const previousBoards = queryClient.getQueryData<Board[]>(['boards']);
 
-      // Optimistically update order
-      queryClient.setQueryData<Board[]>(['boards'], newBoards);
+      console.log('Optimistically updating boards order');
+
+      // Optimistically update order with order property
+      const boardsWithOrder = newBoards.map((board, index) => ({
+        ...board,
+        order: index,
+      }));
+      queryClient.setQueryData<Board[]>(['boards'], boardsWithOrder);
 
       return { previousBoards };
     },
+    onSuccess: () => {
+      console.log('Reorder successful');
+      // Keep the optimistic update - it should match the server now
+    },
     onError: (err, _, context) => {
+      console.error('Reorder failed:', err);
       if (context?.previousBoards) {
         queryClient.setQueryData(['boards'], context.previousBoards);
       }

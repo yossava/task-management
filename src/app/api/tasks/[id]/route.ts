@@ -86,6 +86,7 @@ export async function PATCH(
           dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
         }),
         ...(validatedData.progress !== undefined && { progress: validatedData.progress }),
+        ...(validatedData.priority !== undefined && { priority: validatedData.priority }),
         ...(validatedData.checklist !== undefined && { checklist: validatedData.checklist }),
         ...(validatedData.boardId !== undefined && { boardId: validatedData.boardId }),
         ...(validatedData.order !== undefined && { order: validatedData.order }),

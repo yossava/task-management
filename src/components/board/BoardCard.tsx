@@ -11,7 +11,6 @@ import { useTasksOptimized } from '@/hooks/useTasksOptimized';
 import { SortableTaskItem } from './SortableTaskItem';
 import TaskDetailModal from '@/components/task/TaskDetailModal';
 import TagManager from '@/components/ui/TagManager';
-import { BoardService } from '@/lib/services/boardService';
 
 interface BoardCardProps {
   board: Board;
@@ -275,29 +274,34 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
 
   // Tag management handlers
   const handleCreateTag = (name: string, color: string) => {
-    const newTag = BoardService.createTag(board.id, name, color);
-    if (newTag) {
-      const updatedBoard = BoardService.getById(board.id);
-      if (updatedBoard) {
-        onUpdate(board.id, { tags: updatedBoard.tags });
-      }
-    }
+    const newTag = {
+      id: crypto.randomUUID(),
+      name,
+      color,
+      createdAt: Date.now(),
+    };
+    const updatedTags = [...(board.tags || []), newTag];
+    onUpdate(board.id, { tags: updatedTags });
   };
 
   const handleUpdateTag = (tagId: string, name: string, color: string) => {
-    BoardService.updateTag(board.id, tagId, name, color);
-    const updatedBoard = BoardService.getById(board.id);
-    if (updatedBoard) {
-      onUpdate(board.id, { tags: updatedBoard.tags });
-    }
+    const updatedTags = (board.tags || []).map(tag =>
+      tag.id === tagId ? { ...tag, name, color } : tag
+    );
+    onUpdate(board.id, { tags: updatedTags });
   };
 
   const handleDeleteTag = (tagId: string) => {
-    BoardService.deleteTag(board.id, tagId);
-    const updatedBoard = BoardService.getById(board.id);
-    if (updatedBoard) {
-      onUpdate(board.id, { tags: updatedBoard.tags, tasks: updatedBoard.tasks });
-    }
+    // Remove tag from board
+    const updatedTags = (board.tags || []).filter(t => t.id !== tagId);
+
+    // Remove tag from all tasks
+    const updatedTasks = board.tasks.map(task => ({
+      ...task,
+      tags: (task.tags || []).filter(tid => tid !== tagId),
+    }));
+
+    onUpdate(board.id, { tags: updatedTags, tasks: updatedTasks });
   };
 
   const calculateBoardProgress = () => {

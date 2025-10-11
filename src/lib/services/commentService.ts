@@ -1,16 +1,11 @@
 import { TaskComment, Board } from '@/lib/types';
-import { StorageService, STORAGE_KEYS } from '@/lib/storage';
 import { ActivityService } from './activityService';
 
 export class CommentService {
   /**
    * Get all comments for a specific task
    */
-  static getTaskComments(boardId: string, taskId: string): TaskComment[] {
-    const boards = StorageService.get<Board[]>(STORAGE_KEYS.BOARDS, []);
-    const board = boards.find(b => b.id === boardId);
-    if (!board) return [];
-
+  static getTaskComments(board: Board, taskId: string): TaskComment[] {
     const task = board.tasks?.find(t => t.id === taskId);
     return task?.comments || [];
   }
@@ -18,28 +13,20 @@ export class CommentService {
   /**
    * Add a comment to a task
    */
-  static addComment(
-    boardId: string,
+  static async addComment(
+    board: Board,
     taskId: string,
     content: string,
-    author: string = 'User'
-  ): TaskComment | null {
-    const boards = StorageService.get<Board[]>(STORAGE_KEYS.BOARDS, []);
-    const boardIndex = boards.findIndex(b => b.id === boardId);
-
-    if (boardIndex === -1) return null;
-
-    const board = boards[boardIndex];
-    const taskIndex = board.tasks?.findIndex(t => t.id === taskId) ?? -1;
-
-    if (taskIndex === -1) return null;
-
-    const task = board.tasks![taskIndex];
+    author: string = 'User',
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>
+  ): Promise<TaskComment | null> {
+    const task = board.tasks?.find(t => t.id === taskId);
+    if (!task) return null;
 
     const newComment: TaskComment = {
       id: crypto.randomUUID(),
       taskId,
-      boardId,
+      boardId: board.id,
       content,
       author,
       createdAt: Date.now(),
@@ -52,12 +39,12 @@ export class CommentService {
     }
 
     task.comments.push(newComment);
-    board.updatedAt = Date.now();
 
-    StorageService.set(STORAGE_KEYS.BOARDS, boards);
+    const updatedTasks = board.tasks.map(t => t.id === taskId ? task : t);
+    await updateBoard(board.id, { tasks: updatedTasks });
 
     // Log activity
-    ActivityService.log('task_updated', boardId, board.title, {
+    ActivityService.log('task_updated', board.id, board.title, {
       taskId,
       taskText: task.text,
       changes: [
@@ -75,20 +62,14 @@ export class CommentService {
   /**
    * Update a comment
    */
-  static updateComment(
-    boardId: string,
+  static async updateComment(
+    board: Board,
     taskId: string,
     commentId: string,
-    content: string
-  ): boolean {
-    const boards = StorageService.get<Board[]>(STORAGE_KEYS.BOARDS, []);
-    const boardIndex = boards.findIndex(b => b.id === boardId);
-
-    if (boardIndex === -1) return false;
-
-    const board = boards[boardIndex];
+    content: string,
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>
+  ): Promise<boolean> {
     const task = board.tasks?.find(t => t.id === taskId);
-
     if (!task || !task.comments) return false;
 
     const commentIndex = task.comments.findIndex(c => c.id === commentId);
@@ -96,12 +77,12 @@ export class CommentService {
 
     task.comments[commentIndex].content = content;
     task.comments[commentIndex].updatedAt = Date.now();
-    board.updatedAt = Date.now();
 
-    StorageService.set(STORAGE_KEYS.BOARDS, boards);
+    const updatedTasks = board.tasks.map(t => t.id === taskId ? task : t);
+    await updateBoard(board.id, { tasks: updatedTasks });
 
     // Log activity
-    ActivityService.log('task_updated', boardId, board.title, {
+    ActivityService.log('task_updated', board.id, board.title, {
       taskId,
       taskText: task.text,
       changes: [
@@ -119,19 +100,13 @@ export class CommentService {
   /**
    * Delete a comment
    */
-  static deleteComment(
-    boardId: string,
+  static async deleteComment(
+    board: Board,
     taskId: string,
-    commentId: string
-  ): boolean {
-    const boards = StorageService.get<Board[]>(STORAGE_KEYS.BOARDS, []);
-    const boardIndex = boards.findIndex(b => b.id === boardId);
-
-    if (boardIndex === -1) return false;
-
-    const board = boards[boardIndex];
+    commentId: string,
+    updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>
+  ): Promise<boolean> {
     const task = board.tasks?.find(t => t.id === taskId);
-
     if (!task || !task.comments) return false;
 
     const initialLength = task.comments.length;
@@ -139,11 +114,11 @@ export class CommentService {
 
     if (task.comments.length === initialLength) return false;
 
-    board.updatedAt = Date.now();
-    StorageService.set(STORAGE_KEYS.BOARDS, boards);
+    const updatedTasks = board.tasks.map(t => t.id === taskId ? task : t);
+    await updateBoard(board.id, { tasks: updatedTasks });
 
     // Log activity
-    ActivityService.log('task_updated', boardId, board.title, {
+    ActivityService.log('task_updated', board.id, board.title, {
       taskId,
       taskText: task.text,
       changes: [
@@ -161,15 +136,14 @@ export class CommentService {
   /**
    * Get comment count for a task
    */
-  static getCommentCount(boardId: string, taskId: string): number {
-    return this.getTaskComments(boardId, taskId).length;
+  static getCommentCount(board: Board, taskId: string): number {
+    return this.getTaskComments(board, taskId).length;
   }
 
   /**
    * Get all comments across all boards (for activity feed)
    */
-  static getAllComments(limit?: number): (TaskComment & { boardTitle: string; taskText: string })[] {
-    const boards = StorageService.get<Board[]>(STORAGE_KEYS.BOARDS, []);
+  static getAllComments(boards: Board[], limit?: number): (TaskComment & { boardTitle: string; taskText: string })[] {
     const allComments: (TaskComment & { boardTitle: string; taskText: string })[] = [];
 
     boards.forEach(board => {
