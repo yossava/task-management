@@ -30,7 +30,7 @@ export default function ScrumLayout({ children }: ScrumLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
+    <>
       {/* Sidebar */}
       <aside
         className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 z-40 ${
@@ -116,6 +116,6 @@ export default function ScrumLayout({ children }: ScrumLayoutProps) {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-    </div>
+    </>
   );
 }
