@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useScrum } from '@/lib/hooks/useScrum';
+import ScrumLayout from '@/components/scrum/ScrumLayout';
 import SprintReviewBoard from '@/components/scrum/SprintReviewBoard';
 import Link from 'next/link';
 
@@ -11,9 +12,13 @@ export default function SprintReviewPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
+      <ScrumLayout>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+          <div className="flex items-center justify-center h-screen">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </div>
+      </ScrumLayout>
     );
   }
 
@@ -26,7 +31,8 @@ export default function SprintReviewPage() {
     : allReviewableSprints[0];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <ScrumLayout>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -102,6 +108,7 @@ export default function SprintReviewPage() {
           </div>
         )}
       </main>
-    </div>
+      </div>
+    </ScrumLayout>
   );
 }

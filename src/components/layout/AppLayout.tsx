@@ -10,10 +10,6 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const pathname = usePathname();
-
-  // Determine if sidebar should be shown based on route
-  const showSidebar = pathname?.startsWith('/boards') || pathname?.startsWith('/dashboard') || pathname?.startsWith('/activity');
 
   // Load sidebar state from localStorage
   useEffect(() => {
@@ -47,25 +43,23 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
-      {showSidebar && <Sidebar isOpen={sidebarOpen} onToggle={handleToggle} />}
+      <Sidebar isOpen={sidebarOpen} onToggle={handleToggle} />
 
       {/* Main content area */}
       <div
         className={`flex-1 transition-all duration-300 ${
-          showSidebar && sidebarOpen ? 'lg:ml-64' : showSidebar ? 'lg:ml-20' : ''
+          sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'
         }`}
       >
-        {/* Mobile menu button - only show when sidebar is enabled */}
-        {showSidebar && (
-          <button
-            onClick={handleToggle}
-            className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
-          >
-            <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        )}
+        {/* Mobile menu button */}
+        <button
+          onClick={handleToggle}
+          className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+        >
+          <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
 
         {children}
       </div>

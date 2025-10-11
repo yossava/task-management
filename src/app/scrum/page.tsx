@@ -30,7 +30,7 @@ export default function ScrumDashboard() {
 
   return (
     <ScrumLayout>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <>
         {/* Header */}
         <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -83,7 +83,7 @@ export default function ScrumDashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen bg-gray-50 dark:bg-gray-950">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -119,7 +119,7 @@ export default function ScrumDashboard() {
           <SettingsView />
         )}
       </main>
-      </div>
+      </>
     </ScrumLayout>
   );
 }
@@ -134,59 +134,9 @@ function OverviewView({ sprints, activeSprint, epics, stories, members, totalCap
       {/* Welcome Section */}
       <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white">
         <h2 className="text-3xl font-bold mb-2">Welcome to Scrum Board</h2>
-        <p className="text-blue-100 mb-6">
-          Manage your agile sprints, track progress, and collaborate with your team
+        <p className="text-blue-100">
+          Manage your agile sprints, track progress, and collaborate with your team. Use the sidebar to navigate between different Scrum sections.
         </p>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/scrum/backlog"
-            className="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
-          >
-            Product Backlog
-          </Link>
-          <Link
-            href="/scrum/board"
-            className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
-          >
-            Sprint Board
-          </Link>
-          <Link
-            href="/scrum/planning"
-            className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
-          >
-            Sprint Planning
-          </Link>
-          <Link
-            href="/scrum/standup"
-            className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
-          >
-            Daily Standup
-          </Link>
-          <Link
-            href="/scrum/review"
-            className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
-          >
-            Sprint Review
-          </Link>
-          <Link
-            href="/scrum/retrospective"
-            className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
-          >
-            Retrospective
-          </Link>
-          <Link
-            href="/scrum/metrics"
-            className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
-          >
-            Metrics
-          </Link>
-          <Link
-            href="/scrum/releases"
-            className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
-          >
-            Releases
-          </Link>
-        </div>
       </div>
 
       {/* Stats Grid */}

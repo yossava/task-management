@@ -17,7 +17,9 @@ export default function ScrumLayout({ children }: ScrumLayoutProps) {
     { href: '/scrum/backlog', label: 'Product Backlog', icon: '📋' },
     { href: '/scrum/planning', label: 'Sprint Planning', icon: '📅' },
     { href: '/scrum/board', label: 'Sprint Board', icon: '📊' },
-    { href: '/scrum/retrospective', label: 'Ceremonies', icon: '🔄' },
+    { href: '/scrum/standup', label: 'Daily Standup', icon: '🗣️' },
+    { href: '/scrum/review', label: 'Sprint Review', icon: '📝' },
+    { href: '/scrum/retrospective', label: 'Retrospective', icon: '🔄' },
     { href: '/scrum/metrics', label: 'Metrics & Analytics', icon: '📈' },
     { href: '/scrum/releases', label: 'Releases', icon: '🚀' },
   ];
@@ -102,7 +104,7 @@ export default function ScrumLayout({ children }: ScrumLayoutProps) {
 
       {/* Main Content */}
       <div
-        className={`flex-1 transition-all duration-300 ${
+        className={`transition-all duration-300 ${
           sidebarOpen ? 'ml-64' : 'ml-20'
         }`}
       >

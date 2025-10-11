@@ -10,9 +10,13 @@ export default function ReleasesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
+      <ScrumLayout>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+          <div className="flex items-center justify-center h-screen">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </div>
+      </ScrumLayout>
     );
   }
 
