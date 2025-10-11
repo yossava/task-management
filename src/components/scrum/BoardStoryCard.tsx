@@ -44,38 +44,40 @@ export default function BoardStoryCard({ story, epic, onEdit, onClick }: BoardSt
             {story.title}
           </h4>
         </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowMenu(!showMenu);
-          }}
-          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all flex-shrink-0"
-        >
-          <svg
-            className="w-4 h-4 text-gray-500"
-            fill="currentColor"
-            viewBox="0 0 20 20"
+        <div className="relative flex-shrink-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMenu(!showMenu);
+            }}
+            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
           >
-            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-          </svg>
-        </button>
-
-        {showMenu && (
-          <div
-            className="absolute right-0 mt-6 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => {
-                onEdit(story);
-                setShowMenu(false);
-              }}
-              className="w-full px-3 py-1.5 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            <svg
+              className="w-4 h-4 text-gray-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
             >
-              Edit
-            </button>
-          </div>
-        )}
+              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+            </svg>
+          </button>
+
+          {showMenu && (
+            <div
+              className="absolute right-0 top-full mt-1 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => {
+                  onEdit(story);
+                  setShowMenu(false);
+                }}
+                className="w-full px-3 py-1.5 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                Edit
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Epic Tag */}

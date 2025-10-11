@@ -4,17 +4,18 @@ import ScrumLayout from '@/components/scrum/ScrumLayout';
 import { useState } from 'react';
 import { useScrum } from '@/lib/hooks/useScrum';
 import ScrumBoardView from '@/components/scrum/ScrumBoardView';
-import StoryList from '@/components/scrum/StoryList';
+import StoryModal from '@/components/scrum/StoryModal';
 import SprintCapacityWidget from '@/components/scrum/SprintCapacityWidget';
 import BlockerTracker from '@/components/scrum/BlockerTracker';
 import SprintHealthDashboard from '@/components/scrum/SprintHealthDashboard';
 import PredictiveCompletion from '@/components/scrum/PredictiveCompletion';
 import Link from 'next/link';
+import type { UserStory } from '@/lib/types/scrum';
 
 export default function BoardPage() {
   const { sprints, stories, epics, team, loading } = useScrum();
   const [selectedSprintId, setSelectedSprintId] = useState<string>('all');
-  const [editingStory, setEditingStory] = useState<any>(null);
+  const [editingStory, setEditingStory] = useState<UserStory | null>(null);
   const [showStoryModal, setShowStoryModal] = useState(false);
 
   if (loading) {
@@ -171,54 +172,15 @@ export default function BoardPage() {
 
       {/* Story Edit Modal */}
       {showStoryModal && editingStory && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Edit Story
-                </h3>
-                <button
-                  onClick={handleCloseModal}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <svg
-                    className="w-6 h-6 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    {editingStory.title}
-                  </h4>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {editingStory.description}
-                  </p>
-                </div>
-                <div className="pt-4">
-                  <Link
-                    href="/scrum/backlog"
-                    onClick={handleCloseModal}
-                    className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                  >
-                    Edit in Backlog
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <StoryModal
+          story={editingStory}
+          epics={epics.epics}
+          onSave={(data) => {
+            stories.updateStory(editingStory.id, data);
+            handleCloseModal();
+          }}
+          onClose={handleCloseModal}
+        />
       )}
           </div>
     </ScrumLayout>

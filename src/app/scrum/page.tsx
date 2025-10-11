@@ -222,7 +222,7 @@ function OverviewView({ sprints, activeSprint, epics, stories, members, totalCap
 
           <div className="flex gap-3 mt-6">
             <Link
-              href={`/scrum/board/${activeSprint.id}`}
+              href="/scrum/board"
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-center"
             >
               View Board
