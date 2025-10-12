@@ -70,9 +70,7 @@ export default function SignInPage() {
           {/* Logo */}
           <Link href="/" className="flex items-center justify-center gap-2 mb-8 group">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/50">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
+              <span className="text-white font-bold text-base">PT</span>
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               {APP_NAME}
@@ -262,10 +260,10 @@ export default function SignInPage() {
 
         <div className="relative z-10 flex flex-col justify-center px-16 text-white">
           <h2 className="text-5xl font-bold mb-6 leading-tight">
-            Streamline your workflow
+            Your Personal Productivity Hub
           </h2>
           <p className="text-xl text-blue-100 mb-12 leading-relaxed max-w-md">
-            Join thousands of teams using {APP_NAME} to manage projects, collaborate seamlessly, and ship faster.
+            Simple task boards for personal use and powerful scrum tools for project managers. 100% free, forever.
           </p>
 
           {/* Feature List */}
@@ -296,13 +294,13 @@ export default function SignInPage() {
               ))}
             </div>
             <p className="text-white/90 mb-4 italic">
-              "{APP_NAME} has completely transformed how our team collaborates. It's simply the best tool we've used."
+              "Finally found a task manager that just works. No bloat, just pure productivity!"
             </p>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-400" />
               <div>
-                <div className="font-semibold">Michael Rodriguez</div>
-                <div className="text-sm text-blue-200">CTO, TechCorp</div>
+                <div className="font-semibold">Alex Thompson</div>
+                <div className="text-sm text-blue-200">Freelance Developer</div>
               </div>
             </div>
           </div>
