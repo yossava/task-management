@@ -65,9 +65,6 @@ model Task {
   progress    Int?      @default(0)
   priority    String?   // low, medium, high, urgent
 
-  // Checklist items (embedded)
-  checklist   ChecklistItem[]
-
   // Subtasks (embedded)
   subtasks    SubtaskItem[]
 
@@ -95,18 +92,10 @@ model Task {
   @@map("tasks")
 }
 
-type ChecklistItem {
+type SubtaskItem {
   id        String
   text      String
   completed Boolean
-}
-
-type SubtaskItem {
-  id          String
-  text        String
-  completed   Boolean
-  createdAt   DateTime
-  dueDate     DateTime?
 }
 
 type TimeLog {

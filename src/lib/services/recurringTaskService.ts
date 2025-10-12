@@ -181,7 +181,7 @@ export class RecurringTaskService {
       priority: templateTask.priority,
       tags: templateTask.tags || [],
       recurringTaskId: recurringTask.id,
-      checklist: templateTask.checklist?.map(item => ({
+      subtasks: templateTask.subtasks?.map(item => ({
         ...item,
         id: crypto.randomUUID(),
         completed: false,

@@ -152,7 +152,7 @@ const BUILT_IN_TEMPLATES: BoardTemplate[] = [
   {
     id: 'onboarding',
     name: 'Employee Onboarding',
-    description: 'New employee onboarding checklist with training and setup tasks',
+    description: 'New employee onboarding with training and setup tasks',
     category: 'business',
     icon: '👋',
     color: '#06b6d4',
@@ -328,7 +328,7 @@ export class TemplateService {
         progress: task.progress || 0,
         priority: task.priority,
         tags: (task.tags || []).map((oldTagId: string) => tagIdMap.get(oldTagId) || oldTagId),
-        checklist: (task.checklist || []).map((item: any) => ({
+        subtasks: (task.subtasks || []).map((item: any) => ({
           id: crypto.randomUUID(),
           text: item.text,
           completed: item.completed || false,

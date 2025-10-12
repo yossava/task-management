@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { BoardTask, ChecklistItem, Priority, Tag } from '@/lib/types';
+import { BoardTask, SubtaskItem, Priority, Tag } from '@/lib/types';
 import PriorityPicker from '@/components/ui/PriorityPicker';
 import PriorityBadge from '@/components/ui/PriorityBadge';
 import TagPicker from '@/components/ui/TagPicker';
@@ -11,7 +11,6 @@ import TagBadge from '@/components/ui/TagBadge';
 import TaskComments from '@/components/task/TaskComments';
 import TaskDependencies from '@/components/task/TaskDependencies';
 import RecurringTaskModal from '@/components/task/RecurringTaskModal';
-import SubtasksSection from '@/components/task/SubtasksSection';
 import AssigneeSection from '@/components/user/AssigneeSection';
 import TimeTrackingSection from '@/components/time/TimeTrackingSection';
 
@@ -26,13 +25,12 @@ interface TaskDetailModalProps {
 }
 
 export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpdate, availableTags, onManageTags }: TaskDetailModalProps) {
-  const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist || []);
-  const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [subtasks, setSubtasks] = useState<SubtaskItem[]>(task.subtasks || []);
+  const [newSubtaskItem, setNewSubtaskItem] = useState('');
   const [priorityPickerOpen, setPriorityPickerOpen] = useState(false);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [commentsKey, setCommentsKey] = useState(0);
   const [dependenciesKey, setDependenciesKey] = useState(0);
-  const [subtasksKey, setSubtasksKey] = useState(0);
   const [assigneeKey, setAssigneeKey] = useState(0);
   const [timeTrackingKey, setTimeTrackingKey] = useState(0);
   const [recurringModalOpen, setRecurringModalOpen] = useState(false);
@@ -45,10 +43,6 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
 
   const handleDependenciesUpdate = () => {
     setDependenciesKey(prev => prev + 1);
-  };
-
-  const handleSubtasksUpdate = () => {
-    setSubtasksKey(prev => prev + 1);
   };
 
   const handleAssigneeUpdate = () => {
@@ -79,7 +73,7 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
     if (editor && task.description !== editor.getHTML()) {
       editor.commands.setContent(task.description || '<p>Write your description here...</p>');
     }
-    setChecklist(task.checklist || []);
+    setSubtasks(task.subtasks || []);
   }, [task, editor]);
 
   // Close on ESC
@@ -98,7 +92,7 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
     onUpdate({
       description: editor?.getHTML() || '',
       progress: calculateProgress(),
-      checklist,
+      subtasks,
     });
     onClose();
   };
@@ -122,55 +116,55 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
     });
   };
 
-  const handleAddChecklistItem = () => {
-    if (newChecklistItem.trim()) {
-      const newItem: ChecklistItem = {
-        id: `check-${Date.now()}`,
-        text: newChecklistItem.trim(),
+  const handleAddSubtaskItem = () => {
+    if (newSubtaskItem.trim()) {
+      const newItem: SubtaskItem = {
+        id: `subtask-${Date.now()}`,
+        text: newSubtaskItem.trim(),
         completed: false,
       };
-      setChecklist([...checklist, newItem]);
-      setNewChecklistItem('');
+      setSubtasks([...subtasks, newItem]);
+      setNewSubtaskItem('');
     }
   };
 
-  const handleToggleChecklistItem = (id: string) => {
-    setChecklist(checklist.map(item =>
+  const handleToggleSubtaskItem = (id: string) => {
+    setSubtasks(subtasks.map(item =>
       item.id === id ? { ...item, completed: !item.completed } : item
     ));
   };
 
-  const handleDeleteChecklistItem = (id: string) => {
-    setChecklist(checklist.filter(item => item.id !== id));
+  const handleDeleteSubtaskItem = (id: string) => {
+    setSubtasks(subtasks.filter(item => item.id !== id));
   };
 
   const calculateProgress = () => {
-    if (checklist.length === 0) return 0;
-    const completed = checklist.filter(item => item.completed).length;
-    return Math.round((completed / checklist.length) * 100);
+    if (subtasks.length === 0) return 0;
+    const completed = subtasks.filter(item => item.completed).length;
+    return Math.round((completed / subtasks.length) * 100);
   };
 
-  // Auto-update progress and completion status whenever checklist changes
+  // Auto-update progress and completion status whenever subtasks changes
   useEffect(() => {
     if (!isOpen) return;
 
     const newProgress = calculateProgress();
-    const shouldBeCompleted = checklist.length > 0 && newProgress === 100;
+    const shouldBeCompleted = subtasks.length > 0 && newProgress === 100;
 
     // Only update if values actually changed to prevent infinite loops
     if (
       task.progress !== newProgress ||
       task.completed !== shouldBeCompleted ||
-      JSON.stringify(task.checklist) !== JSON.stringify(checklist)
+      JSON.stringify(task.subtasks) !== JSON.stringify(subtasks)
     ) {
       onUpdate({
         progress: newProgress,
-        checklist,
+        subtasks,
         completed: shouldBeCompleted,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [checklist, isOpen]);
+  }, [subtasks, isOpen]);
 
   if (!isOpen) return null;
 
@@ -312,75 +306,6 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
 
           {/* Content */}
           <div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
-            {/* Checklist */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Checklist
-                </label>
-                {checklist.length > 0 && (
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {checklist.filter(item => item.completed).length} / {checklist.length} completed ({calculateProgress()}%)
-                  </span>
-                )}
-              </div>
-
-              {/* Checklist items */}
-              <div className="space-y-2 mb-3">
-                {checklist.map((item) => (
-                  <label
-                    key={item.id}
-                    className="flex items-center gap-3 group/item p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={item.completed}
-                      onChange={() => handleToggleChecklistItem(item.id)}
-                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
-                    />
-                    <span className={`flex-1 text-sm ${item.completed ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
-                      {item.text}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleDeleteChecklistItem(item.id);
-                      }}
-                      className="opacity-0 group-hover/item:opacity-100 text-red-500 hover:text-red-600 transition-opacity"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </label>
-                ))}
-              </div>
-
-              {/* Add checklist item */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newChecklistItem}
-                  onChange={(e) => setNewChecklistItem(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddChecklistItem();
-                    }
-                  }}
-                  placeholder="Add checklist item..."
-                  className="flex-1 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-                <button
-                  onClick={handleAddChecklistItem}
-                  className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-
             {/* WYSIWYG Editor */}
             <div>
               <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 block mb-3">
@@ -561,14 +486,73 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
               />
             </div>
 
-            {/* Subtasks Section */}
-            <div key={`subtasks-${subtasksKey}`} className="border-t border-gray-200 dark:border-gray-700 pt-6">
-              <SubtasksSection
-                boardId={boardId}
-                taskId={task.id}
-                subtasks={task.subtasks || []}
-                onUpdate={handleSubtasksUpdate}
-              />
+            {/* Subtasks */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Subtasks
+                </label>
+                {subtasks.length > 0 && (
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {subtasks.filter(item => item.completed).length} / {subtasks.length} completed ({calculateProgress()}%)
+                  </span>
+                )}
+              </div>
+
+              {/* Subtask items */}
+              <div className="space-y-2 mb-3">
+                {subtasks.map((item) => (
+                  <label
+                    key={item.id}
+                    className="flex items-center gap-3 group/item p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={item.completed}
+                      onChange={() => handleToggleSubtaskItem(item.id)}
+                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                    />
+                    <span className={`flex-1 text-sm ${item.completed ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                      {item.text}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleDeleteSubtaskItem(item.id);
+                      }}
+                      className="opacity-0 group-hover/item:opacity-100 text-red-500 hover:text-red-600 transition-opacity"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </label>
+                ))}
+              </div>
+
+              {/* Add subtask item */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newSubtaskItem}
+                  onChange={(e) => setNewSubtaskItem(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddSubtaskItem();
+                    }
+                  }}
+                  placeholder="Breakdown this task into smaller task..."
+                  className="flex-1 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                />
+                <button
+                  onClick={handleAddSubtaskItem}
+                  className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  Add
+                </button>
+              </div>
             </div>
 
             {/* Assignees Section */}

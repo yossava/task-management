@@ -1,4 +1,4 @@
-export interface ChecklistItem {
+export interface SubtaskItem {
   id: string;
   text: string;
   completed: boolean;
@@ -59,18 +59,13 @@ export interface BoardTask {
   showGradient?: boolean;
   description?: string; // Markdown content
   progress?: number; // 0-100
-  checklist?: ChecklistItem[];
+  subtasks?: SubtaskItem[];
   priority?: Priority;
   tags?: string[]; // Array of tag IDs
   comments?: TaskComment[];
   dependencies?: string[]; // Array of dependency IDs
   recurringTaskId?: string; // Link to recurring task template
   completedAt?: number; // When task was completed
-
-  // Feature 1: Subtasks
-  parentTaskId?: string; // For nested subtasks
-  subtasks?: BoardTask[]; // Nested subtasks
-  isSubtask?: boolean; // Flag to identify subtasks
 
   // Feature 2: Team Collaboration
   assigneeIds?: string[]; // Assigned user IDs

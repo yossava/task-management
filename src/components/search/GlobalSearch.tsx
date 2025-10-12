@@ -9,7 +9,7 @@ interface SearchResult {
   type: 'board' | 'task';
   board: Board;
   task?: BoardTask;
-  matchType: 'title' | 'description' | 'tag' | 'checklist';
+  matchType: 'title' | 'description' | 'tag' | 'subtask';
   matchText: string;
 }
 
@@ -108,13 +108,13 @@ export default function GlobalSearch({ boards }: GlobalSearchProps) {
             matchType: 'description',
             matchText: task.description,
           });
-        } else if (task.checklist?.some(item => item.text.toLowerCase().includes(lowerQuery))) {
-          const matchItem = task.checklist.find(item => item.text.toLowerCase().includes(lowerQuery));
+        } else if (task.subtasks?.some(item => item.text.toLowerCase().includes(lowerQuery))) {
+          const matchItem = task.subtasks.find(item => item.text.toLowerCase().includes(lowerQuery));
           searchResults.push({
             type: 'task',
             board,
             task,
-            matchType: 'checklist',
+            matchType: 'subtask',
             matchText: matchItem?.text || '',
           });
         } else if (task.tags?.length) {

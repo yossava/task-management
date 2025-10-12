@@ -119,7 +119,7 @@ export const tasksApi = {
     showGradient?: boolean;
     dueDate?: string | null;
     progress?: number;
-    checklist?: any[];
+    subtasks?: any[];
     boardId?: string;
     order?: number;
   }) {

@@ -11,7 +11,7 @@ const createTaskSchema = z.object({
   showGradient: z.boolean().optional().default(true),
   dueDate: z.string().optional(),
   progress: z.number().min(0).max(100).optional().default(0),
-  checklist: z.array(z.object({
+  subtasks: z.array(z.object({
     id: z.string(),
     text: z.string(),
     completed: z.boolean(),
@@ -83,7 +83,7 @@ export async function POST(
         showGradient: validatedData.showGradient,
         dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
         progress: validatedData.progress,
-        checklist: validatedData.checklist,
+        subtasks: validatedData.subtasks,
         boardId: id,
         order: nextOrder,
       },

@@ -13,7 +13,7 @@ const updateTaskSchema = z.object({
   dueDate: z.string().nullable().optional(),
   progress: z.number().min(0).max(100).optional(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).nullable().optional(),
-  checklist: z.array(z.object({
+  subtasks: z.array(z.object({
     id: z.string(),
     text: z.string(),
     completed: z.boolean(),
@@ -89,7 +89,7 @@ export async function PATCH(
         }),
         ...(validatedData.progress !== undefined && { progress: validatedData.progress }),
         ...(validatedData.priority !== undefined && { priority: validatedData.priority }),
-        ...(validatedData.checklist !== undefined && { checklist: validatedData.checklist }),
+        ...(validatedData.subtasks !== undefined && { subtasks: validatedData.subtasks }),
         ...(validatedData.boardId !== undefined && { boardId: validatedData.boardId }),
         ...(validatedData.order !== undefined && { order: validatedData.order }),
         ...(validatedData.dependencies !== undefined && { dependencies: validatedData.dependencies }),

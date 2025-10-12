@@ -71,11 +71,11 @@ export function filterTasks(tasks: BoardTask[], filters: TaskFilters): BoardTask
       const query = filters.searchQuery.toLowerCase();
       const textMatch = task.text.toLowerCase().includes(query);
       const descMatch = task.description?.toLowerCase().includes(query);
-      const checklistMatch = task.checklist?.some(item =>
+      const subtaskMatch = task.subtasks?.some(item =>
         item.text.toLowerCase().includes(query)
       );
 
-      if (!textMatch && !descMatch && !checklistMatch) {
+      if (!textMatch && !descMatch && !subtaskMatch) {
         return false;
       }
     }
