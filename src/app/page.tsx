@@ -493,9 +493,12 @@ export default function HomePage() {
           </div>
 
           {/* Copyright */}
-          <div className="mt-8 pt-8 border-t border-gray-800 text-center">
+          <div className="mt-8 pt-8 border-t border-gray-800 text-center space-y-2">
             <p className="text-gray-400 text-sm">
               © {new Date().getFullYear()} {APP_NAME}. Made with ❤️ for productivity enthusiasts.
+            </p>
+            <p className="text-gray-500 text-xs">
+              Designed & Developed by <span className="text-gray-400 font-medium">Yoss</span>
             </p>
           </div>
         </div>
