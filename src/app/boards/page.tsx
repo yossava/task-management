@@ -293,11 +293,47 @@ export default function BoardsPage() {
         const board = boards.find(b => b.id === sourceBoardId);
         if (!board) return;
 
+        console.log('[Calendar Drop] Updating task due date');
+
+        // Cancel any outgoing queries
+        await queryClient.cancelQueries({ queryKey: ['boards'] });
+
+        // Store original tasks for rollback
+        const originalTasks = board.tasks;
+
+        // Update task with new due date
         const updatedTasks = board.tasks.map((t: BoardTask) =>
           t.id === task.id ? { ...t, dueDate: newDueDate } : t
         );
 
-        updateBoard(sourceBoardId, { tasks: updatedTasks });
+        // Update the React Query cache directly (optimistic UI)
+        queryClient.setQueryData<Board[]>(['boards'], (oldBoards = []) =>
+          oldBoards.map((b) =>
+            b.id === sourceBoardId ? { ...b, tasks: updatedTasks } : b
+          )
+        );
+
+        console.log('[Calendar Drop] Optimistic update complete, calling API');
+
+        // Update via API in the background
+        try {
+          const { tasksApi } = await import('@/lib/api/client');
+          // Convert timestamp to ISO string for API
+          await tasksApi.update(task.id, { dueDate: new Date(newDueDate).toISOString() });
+          console.log('[Calendar Drop] API call successful');
+        } catch (error) {
+          // Rollback on error
+          console.error('[Calendar Drop] API call failed, rolling back:', error);
+          queryClient.setQueryData<Board[]>(['boards'], (oldBoards = []) =>
+            oldBoards.map((b) =>
+              b.id === sourceBoardId ? { ...b, tasks: originalTasks } : b
+            )
+          );
+
+          // Show error toast
+          const toast = (await import('react-hot-toast')).default;
+          toast.error('Failed to update task date. Changes have been reverted.');
+        }
         return;
       }
 

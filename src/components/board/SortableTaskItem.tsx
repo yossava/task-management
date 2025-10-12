@@ -13,6 +13,7 @@ import TagBadge from '@/components/ui/TagBadge';
 import UserAvatar from '@/components/user/UserAvatar';
 import { UserService } from '@/lib/services/userService';
 
+
 interface SortableTaskItemProps {
   task: BoardTask;
   onToggle: () => void;
@@ -110,20 +111,21 @@ export function SortableTaskItem({
     }
   }, [taskMenuOpen]);
 
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       data-task-id={task.id}
-      className="flex items-center gap-2.5 group/task bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg px-3 py-2.5 transition-all relative border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md"
+      className="flex items-center gap-2.5 group/task bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg px-3 py-2.5 transition-all relative border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md overflow-hidden"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Checkbox - positioned absolutely on the left */}
       <button
         onClick={onToggle}
-        className={`absolute left-3 flex-shrink-0 w-4 h-4 rounded-full border-2 transition-all duration-150 flex items-center justify-center z-10 focus:outline-none ${
-          task.completed ? 'opacity-100' : 'opacity-0 group-hover/task:opacity-100'
+        className={`absolute left-3 flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center z-10 focus:outline-none transition-all duration-150 ${
+          task.completed ? 'opacity-100 animate-check-bounce' : 'opacity-0 group-hover/task:opacity-100'
         }`}
         style={{
           backgroundColor: task.completed ? '#10b981' : '#ffffff',
@@ -131,7 +133,7 @@ export function SortableTaskItem({
         }}
       >
         {task.completed && (
-          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-2.5 h-2.5 text-white animate-check-draw" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
           </svg>
         )}
@@ -181,8 +183,8 @@ export function SortableTaskItem({
         ) : (
           <>
             <span
-              onClick={onEdit}
-              className={`text-sm cursor-text select-none ${
+              onClick={onToggle}
+              className={`text-sm cursor-pointer select-none ${
                 task.completed
                   ? 'text-gray-500 dark:text-gray-400'
                   : 'text-gray-700 dark:text-gray-300'
@@ -337,6 +339,18 @@ export function SortableTaskItem({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>
               <span>Open card</span>
+            </button>
+            <button
+              onClick={() => {
+                onEdit();
+                onTaskMenuToggle();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span>Edit label</span>
             </button>
             <button
               onClick={() => {

@@ -146,4 +146,40 @@
   .animate-float {
     animation: float 3s ease-in-out infinite;
   }
+
+  /* Animated checkbox */
+  @keyframes check-bounce {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes check-draw {
+    0% {
+      stroke-dashoffset: 24;
+      stroke-dasharray: 24;
+      opacity: 0;
+    }
+    100% {
+      stroke-dashoffset: 0;
+      stroke-dasharray: 24;
+      opacity: 1;
+    }
+  }
+
+  .animate-check-bounce {
+    animation: check-bounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .animate-check-draw {
+    animation: check-draw 0.4s cubic-bezier(0.65, 0, 0.35, 1) backwards;
+  }
 }
