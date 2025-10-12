@@ -561,7 +561,7 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
             </div>
 
             {/* Subtasks Section */}
-            <div key={subtasksKey} className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <div key={`subtasks-${subtasksKey}`} className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <SubtasksSection
                 boardId={boardId}
                 taskId={task.id}
@@ -571,7 +571,7 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
             </div>
 
             {/* Assignees Section */}
-            <div key={assigneeKey} className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <div key={`assignee-${assigneeKey}`} className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <AssigneeSection
                 boardId={boardId}
                 task={task}
@@ -580,7 +580,7 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
             </div>
 
             {/* Time Tracking Section */}
-            <div key={timeTrackingKey} className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <div key={`timetracking-${timeTrackingKey}`} className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <TimeTrackingSection
                 boardId={boardId}
                 task={task}
@@ -589,7 +589,7 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
             </div>
 
             {/* Dependencies Section */}
-            <div key={dependenciesKey} className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <div key={`dependencies-${dependenciesKey}`} className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <TaskDependencies
                 boardId={boardId}
                 taskId={task.id}
@@ -599,7 +599,7 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
             </div>
 
             {/* Comments Section */}
-            <div key={commentsKey} className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <div key={`comments-${commentsKey}`} className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <TaskComments
                 boardId={boardId}
                 taskId={task.id}
