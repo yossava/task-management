@@ -96,6 +96,8 @@ type SubtaskItem {
   id        String
   text      String
   completed Boolean
+  createdAt DateTime?
+  dueDate   DateTime?
 }
 
 type TimeLog {
