@@ -493,9 +493,20 @@ export default function HomePage() {
           </div>
 
           {/* Copyright */}
-          <div className="mt-8 pt-8 border-t border-gray-800 text-center">
+          <div className="mt-8 pt-8 border-t border-gray-800 text-center space-y-2">
             <p className="text-gray-400 text-sm">
               © {new Date().getFullYear()} {APP_NAME}. Made with ❤️ for productivity enthusiasts.
+            </p>
+            <p className="text-gray-500 text-xs">
+              Designed & Developed by{' '}
+              <a
+                href="https://github.com/yossava"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 transition-colors font-medium"
+              >
+                Yoss
+              </a>
             </p>
           </div>
         </div>
