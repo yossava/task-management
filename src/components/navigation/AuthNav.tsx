@@ -3,16 +3,20 @@
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import LoginModal from '@/components/auth/LoginModal';
+import SignupModal from '@/components/auth/SignupModal';
 
 export function AuthNav() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
 
   const handleSignOut = async () => {
     await signOut({ redirect: false });
-    router.push('/');
-    router.refresh();
+    // Reload the page to clear session and re-fetch data
+    window.location.href = '/';
   };
 
   if (status === 'loading') {
@@ -82,19 +86,39 @@ export function AuthNav() {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => router.push('/login')}
-        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors"
-      >
-        Sign in
-      </button>
-      <button
-        onClick={() => router.push('/register')}
-        className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-lg transition-colors shadow-lg shadow-blue-500/30"
-      >
-        Sign up
-      </button>
-    </div>
+    <>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setShowLoginModal(true)}
+          className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors"
+        >
+          Sign in
+        </button>
+        <button
+          onClick={() => setShowSignupModal(true)}
+          className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-lg transition-colors shadow-lg shadow-blue-500/30"
+        >
+          Sign up
+        </button>
+      </div>
+
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSwitchToSignup={() => {
+          setShowLoginModal(false);
+          setShowSignupModal(true);
+        }}
+      />
+
+      <SignupModal
+        isOpen={showSignupModal}
+        onClose={() => setShowSignupModal(false)}
+        onSwitchToLogin={() => {
+          setShowSignupModal(false);
+          setShowLoginModal(true);
+        }}
+      />
+    </>
   );
 }

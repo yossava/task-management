@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { Board } from '@/lib/types';
 import { AnalyticsService, AnalyticsSummary } from '@/lib/services/analyticsService';
@@ -13,19 +13,16 @@ import ProductivityStreak from '@/components/dashboard/ProductivityStreak';
 
 export default function DashboardPage() {
   const { boards, isLoading: boardsLoading } = useBoardsOptimized();
-  const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
 
-  useEffect(() => {
-    if (boards.length > 0) {
-      try {
-        const analyticsSummary = AnalyticsService.getAnalyticsSummary(boards);
-        setAnalytics(analyticsSummary);
-      } catch (error) {
-        console.error('Error calculating analytics:', error);
-      }
-    } else if (!boardsLoading) {
-      // No boards, set empty analytics
-      setAnalytics(AnalyticsService.getAnalyticsSummary([]));
+  // Use useMemo to avoid recalculating analytics on every render
+  const analytics = useMemo(() => {
+    if (boardsLoading) return null;
+
+    try {
+      return AnalyticsService.getAnalyticsSummary(boards);
+    } catch (error) {
+      console.error('Error calculating analytics:', error);
+      return null;
     }
   }, [boards, boardsLoading]);
 

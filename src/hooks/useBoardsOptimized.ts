@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { boardsApi, ApiError } from '@/lib/api/client';
 import { Board } from '@/lib/types';
@@ -7,6 +9,14 @@ import { Board } from '@/lib/types';
 export function useBoardsOptimized() {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { data: session, status } = useSession();
+
+  // Invalidate cache when session changes
+  useEffect(() => {
+    if (status !== 'loading') {
+      queryClient.invalidateQueries({ queryKey: ['boards'] });
+    }
+  }, [session?.user?.email, status, queryClient]);
 
   // Fetch boards with React Query
   const {

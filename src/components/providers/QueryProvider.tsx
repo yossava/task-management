@@ -13,8 +13,9 @@ export function QueryProvider({ children }: QueryProviderProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // Data stays fresh for 1 minute
-            refetchOnWindowFocus: false,
+            staleTime: 0, // Always consider data stale to refetch on mount
+            refetchOnMount: true,
+            refetchOnWindowFocus: true,
             retry: 1,
           },
           mutations: {
