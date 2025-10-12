@@ -304,7 +304,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-3">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleDarkMode}
@@ -328,27 +328,6 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               </span>
             )}
           </button>
-
-          {/* User Profile */}
-          <div
-            className={`flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 ${
-              !isOpen ? 'justify-center' : ''
-            }`}
-          >
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-sm">U</span>
-            </div>
-            {isOpen && (
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  User
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  user@example.com
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </aside>
     </>
