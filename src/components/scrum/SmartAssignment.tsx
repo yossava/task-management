@@ -32,7 +32,7 @@ export default function SmartAssignment({
   const memberWorkloads = useMemo(() => {
     return teamMembers.map((member) => {
       const assignedStories = stories.filter((s) =>
-        s.assignees.includes(member.name) && s.sprintId === sprint.id
+        s.assignee?.name === member.name && s.sprintId === sprint.id
       );
       const totalPoints = assignedStories.reduce(
         (sum, s) => sum + (s.storyPoints || 0),
@@ -57,7 +57,7 @@ export default function SmartAssignment({
   // Get unassigned stories in this sprint
   const unassignedStories = useMemo(() => {
     return stories.filter(
-      (s) => s.sprintId === sprint.id && s.assignees.length === 0
+      (s) => s.sprintId === sprint.id && !s.assignee
     );
   }, [stories, sprint.id]);
 

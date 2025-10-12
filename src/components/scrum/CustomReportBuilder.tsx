@@ -187,7 +187,7 @@ export default function CustomReportBuilder({
 
     if (enabledMetrics.some((m) => m.id === 'member-performance')) {
       metrics.memberPerformance = teamMembers.map((member) => {
-        const memberStories = filteredStories.filter((s) => s.assignees.includes(member.name));
+        const memberStories = filteredStories.filter((s) => s.assignee?.name === member.name);
         const completed = memberStories.filter((s) => s.status === 'done');
         const points = completed.reduce((sum, s) => sum + (s.storyPoints || 0), 0);
         const completionRate = memberStories.length > 0 ? (completed.length / memberStories.length) * 100 : 0;
@@ -219,7 +219,7 @@ export default function CustomReportBuilder({
     if (enabledMetrics.some((m) => m.id === 'workload-distribution')) {
       const totalStories = filteredStories.length;
       metrics.workloadDistribution = teamMembers.map((member) => {
-        const memberStories = filteredStories.filter((s) => s.assignees.includes(member.name));
+        const memberStories = filteredStories.filter((s) => s.assignee?.name === member.name);
         const percentage = totalStories > 0 ? (memberStories.length / totalStories) * 100 : 0;
         return {
           member: member.name,

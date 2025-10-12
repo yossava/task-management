@@ -137,12 +137,16 @@ export default function TeamMemberCard({ member, onEdit, onRemove }: TeamMemberC
       {/* Avatar */}
       <div className="flex items-start gap-4 mb-4">
         <div className="relative">
-          {member.avatar ? (
+          {member.avatar && (member.avatar.startsWith('http://') || member.avatar.startsWith('https://')) ? (
             <img
               src={member.avatar}
               alt={member.name}
               className="w-16 h-16 rounded-full object-cover"
             />
+          ) : member.avatar ? (
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-4xl shadow-lg">
+              {member.avatar}
+            </div>
           ) : (
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
               {getInitials(member.name)}

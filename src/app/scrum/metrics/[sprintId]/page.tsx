@@ -1,7 +1,7 @@
 'use client';
 import ScrumLayout from '@/components/scrum/ScrumLayout';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useScrum } from '@/lib/hooks/useScrum';
 import VelocityChart from '@/components/scrum/VelocityChart';
 import BurndownChart from '@/components/scrum/BurndownChart';
@@ -11,9 +11,10 @@ import TeamPerformanceAnalytics from '@/components/scrum/TeamPerformanceAnalytic
 import CustomReportBuilder from '@/components/scrum/CustomReportBuilder';
 import Link from 'next/link';
 
-export default function MetricsPage({ params }: { params: { sprintId: string } }) {
+export default function MetricsPage({ params }: { params: Promise<{ sprintId: string }> }) {
+  const { sprintId } = use(params);
   const { sprints, stories, team, loading } = useScrum();
-  const [selectedSprintId, setSelectedSprintId] = useState<string>(params.sprintId || '');
+  const [selectedSprintId, setSelectedSprintId] = useState<string>(sprintId || '');
 
   if (loading) {
     return (

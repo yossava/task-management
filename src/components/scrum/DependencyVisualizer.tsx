@@ -107,13 +107,13 @@ export default function DependencyVisualizer({
   // Get stories with dependencies
   const storiesWithDeps = useMemo(() => {
     return filteredStories.filter(
-      (s) => s.dependencies.length > 0 || dependencyGraph[s.id]?.dependents.length > 0
+      (s) => (s.dependencies && s.dependencies.length > 0) || dependencyGraph[s.id]?.dependents.length > 0
     );
   }, [filteredStories, dependencyGraph]);
 
   // Get root stories (no dependencies)
   const rootStories = useMemo(() => {
-    return filteredStories.filter((s) => s.dependencies.length === 0);
+    return filteredStories.filter((s) => !s.dependencies || s.dependencies.length === 0);
   }, [filteredStories]);
 
   // Get blocked stories

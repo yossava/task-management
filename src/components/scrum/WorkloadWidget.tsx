@@ -21,7 +21,8 @@ export default function WorkloadWidget({ members, stories, sprints, epics }: Wor
     return stories.filter(story => {
       // Filter by assignee
       if (filterAssignee !== 'all') {
-        if (!story.assignees.includes(filterAssignee)) return false;
+        const assigneeName = story.assignee?.name;
+        if (assigneeName !== filterAssignee) return false;
       }
 
       // Filter by sprint
@@ -43,7 +44,7 @@ export default function WorkloadWidget({ members, stories, sprints, epics }: Wor
     return members.map(member => {
       // Get all stories assigned to this member
       const memberStories = filteredStories.filter(story =>
-        story.assignees.includes(member.name)
+        story.assignee?.name === member.name
       );
 
       // Calculate total points

@@ -51,7 +51,7 @@ export default function TeamPerformanceAnalytics({
     return teamMembers.map((member) => {
       // Get member's stories in filtered sprints
       const memberStories = stories.filter(
-        s => s.assignees.includes(member.name) &&
+        s => s.assignee?.name === member.name &&
         s.sprintId &&
         filteredSprintIds.includes(s.sprintId)
       );
@@ -79,13 +79,13 @@ export default function TeamPerformanceAnalytics({
 
       if (recentSprints.length === 2) {
         const lastSprintPoints = stories.filter(
-          s => s.assignees.includes(member.name) &&
+          s => s.assignee?.name === member.name &&
           s.sprintId === recentSprints[0].id &&
           s.status === 'done'
         ).reduce((sum, s) => sum + (s.storyPoints || 0), 0);
 
         const prevSprintPoints = stories.filter(
-          s => s.assignees.includes(member.name) &&
+          s => s.assignee?.name === member.name &&
           s.sprintId === recentSprints[1].id &&
           s.status === 'done'
         ).reduce((sum, s) => sum + (s.storyPoints || 0), 0);

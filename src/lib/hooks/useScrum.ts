@@ -28,11 +28,18 @@ export function useSprints() {
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadSprints = useCallback(() => {
+  const loadSprints = useCallback(async () => {
     setLoading(true);
-    const data = ScrumService.Sprint.getAll();
-    setSprints(data);
-    setLoading(false);
+    try {
+      const response = await fetch('/api/scrum/sprints');
+      const data = await response.json();
+      setSprints(data.sprints || []);
+    } catch (error) {
+      console.error('Error loading sprints:', error);
+      setSprints([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -107,11 +114,18 @@ export function useEpics() {
   const [epics, setEpics] = useState<Epic[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadEpics = useCallback(() => {
+  const loadEpics = useCallback(async () => {
     setLoading(true);
-    const data = ScrumService.Epic.getAll();
-    setEpics(data);
-    setLoading(false);
+    try {
+      const response = await fetch('/api/scrum/epics');
+      const data = await response.json();
+      setEpics(data.epics || []);
+    } catch (error) {
+      console.error('Error loading epics:', error);
+      setEpics([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -163,16 +177,19 @@ export function useStories(sprintId?: string) {
   const [stories, setStories] = useState<UserStory[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadStories = useCallback(() => {
+  const loadStories = useCallback(async () => {
     setLoading(true);
-    let data: UserStory[];
-    if (sprintId) {
-      data = ScrumService.Story.getBySprintId(sprintId);
-    } else {
-      data = ScrumService.Story.getAll();
+    try {
+      const url = sprintId ? `/api/scrum/stories?sprintId=${sprintId}` : '/api/scrum/stories';
+      const response = await fetch(url);
+      const data = await response.json();
+      setStories(data.stories || []);
+    } catch (error) {
+      console.error('Error loading stories:', error);
+      setStories([]);
+    } finally {
+      setLoading(false);
     }
-    setStories(data);
-    setLoading(false);
   }, [sprintId]);
 
   useEffect(() => {
@@ -332,13 +349,20 @@ export function useTeam() {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadTeam = useCallback(() => {
+  const loadTeam = useCallback(async () => {
     setLoading(true);
-    const teamData = ScrumService.Team.getTeam();
-    const membersData = ScrumService.Team.getMembers();
-    setTeam(teamData);
-    setMembers(membersData);
-    setLoading(false);
+    try {
+      const response = await fetch('/api/scrum/team');
+      const data = await response.json();
+      setTeam(data.team || null);
+      setMembers(data.members || []);
+    } catch (error) {
+      console.error('Error loading team:', error);
+      setTeam(null);
+      setMembers([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -364,33 +388,63 @@ export function useTeam() {
   );
 
   const addMember = useCallback(
-    (data: Omit<TeamMember, 'id' | 'joinedAt'>) => {
-      const member = ScrumService.Team.addMember(data);
-      loadTeam();
-      return member;
+    async (data: Omit<TeamMember, 'id' | 'joinedAt'>) => {
+      try {
+        const response = await fetch('/api/scrum/team', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        await loadTeam();
+        return result.member;
+      } catch (error) {
+        console.error('Error adding member:', error);
+        return null;
+      }
     },
     [loadTeam]
   );
 
   const updateMember = useCallback(
-    (id: string, data: Partial<TeamMember>) => {
-      const member = ScrumService.Team.updateMember(id, data);
-      loadTeam();
-      return member;
+    async (id: string, data: Partial<TeamMember>) => {
+      try {
+        const response = await fetch(`/api/scrum/team/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        await loadTeam();
+        return result.member;
+      } catch (error) {
+        console.error('Error updating member:', error);
+        return null;
+      }
     },
     [loadTeam]
   );
 
   const removeMember = useCallback(
-    (id: string) => {
-      const success = ScrumService.Team.removeMember(id);
-      if (success) loadTeam();
-      return success;
+    async (id: string) => {
+      try {
+        const response = await fetch(`/api/scrum/team/${id}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) {
+          await loadTeam();
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Error removing member:', error);
+        return false;
+      }
     },
     [loadTeam]
   );
 
-  const totalCapacity = ScrumService.Team.getTotalCapacity();
+  const totalCapacity = members.reduce((sum, m) => sum + (m.capacity * m.availability) / 100, 0);
 
   return {
     team,
@@ -460,11 +514,18 @@ export function useSettings() {
   const [settings, setSettings] = useState<ScrumSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadSettings = useCallback(() => {
+  const loadSettings = useCallback(async () => {
     setLoading(true);
-    const data = ScrumService.Settings.get();
-    setSettings(data);
-    setLoading(false);
+    try {
+      const response = await fetch('/api/scrum/settings');
+      const data = await response.json();
+      setSettings(data.settings || null);
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      setSettings(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {

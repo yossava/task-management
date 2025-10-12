@@ -42,21 +42,23 @@ export default function TeamManager({
   return (
     <div className="space-y-6">
       {/* Team Header */}
-      {team ? (
+      {members.length > 0 ? (
         <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h2 className="text-3xl font-bold mb-2">{team.name}</h2>
-              {team.description && (
+              <h2 className="text-3xl font-bold mb-2">{team?.name || 'Your Team'}</h2>
+              {team?.description && (
                 <p className="text-blue-100">{team.description}</p>
               )}
             </div>
-            <button
-              onClick={() => setShowTeamModal(true)}
-              className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
-            >
-              Edit Team
-            </button>
+            {team && (
+              <button
+                onClick={() => setShowTeamModal(true)}
+                className="px-4 py-2 bg-white/10 backdrop-blur text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-colors"
+              >
+                Edit Team
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-6">
             <div>
@@ -64,32 +66,34 @@ export default function TeamManager({
               <div className="text-2xl font-bold">{members.length}</div>
             </div>
             <div>
-              <div className="text-blue-100 text-sm mb-1">Average Velocity</div>
-              <div className="text-2xl font-bold">{team.averageVelocity} pts</div>
+              <div className="text-blue-100 text-sm mb-1">Total Capacity</div>
+              <div className="text-2xl font-bold">
+                {Math.round(members.reduce((sum, m) => sum + (m.capacity * m.availability) / 100, 0))} pts
+              </div>
             </div>
           </div>
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-8 text-center">
           <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-4xl">🚀</span>
+            <span className="text-4xl">👥</span>
           </div>
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            Create Your Scrum Team
+            Add Team Members
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Start by creating a team to manage your agile sprints
+            Start by adding team members to collaborate on your sprints
           </p>
           <button
-            onClick={() => setShowTeamModal(true)}
+            onClick={() => setShowMemberModal(true)}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >
-            Create Team
+            Add First Member
           </button>
         </div>
       )}
 
-      {team && (
+      {members.length > 0 && (
         <>
           {/* View Tabs */}
           <div className="flex items-center justify-between">

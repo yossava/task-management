@@ -179,9 +179,9 @@ export default function SprintPlanningTool({
           <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
             {story.type}
           </span>
-          {story.assignees.length > 0 && (
+          {story.assignee && (
             <span className="text-xs text-gray-600 dark:text-gray-400">
-              {story.assignees.length} assigned
+              {story.assignee.name}
             </span>
           )}
         </div>
