@@ -6,19 +6,22 @@ export default withAuth(
     // Clone the request headers
     const requestHeaders = new Headers(req.headers);
 
-    // Ensure guest fingerprint header is preserved
-    const guestFingerprint = req.headers.get('x-guest-fingerprint');
-    if (guestFingerprint) {
-      console.log('[Middleware] Forwarding guest fingerprint:', guestFingerprint);
-      requestHeaders.set('x-guest-fingerprint', guestFingerprint);
-    }
-
-    // Create response with modified request headers
-    return NextResponse.next({
+    // Create response
+    const response = NextResponse.next({
       request: {
         headers: requestHeaders,
       },
     });
+
+    // Add cache-control headers to prevent caching for guest user data
+    if (req.nextUrl.pathname.startsWith('/boards') ||
+        req.nextUrl.pathname.startsWith('/api/boards')) {
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+    }
+
+    return response;
   },
   {
     callbacks: {

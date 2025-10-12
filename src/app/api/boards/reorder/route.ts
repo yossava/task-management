@@ -12,6 +12,10 @@ const reorderBoardsSchema = z.object({
   })),
 });
 
+// Disable caching for this route
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // POST /api/boards/reorder - Reorder boards
 export async function POST(request: Request) {
   try {
@@ -20,19 +24,23 @@ export async function POST(request: Request) {
 
     console.log('=== REORDER START ===');
 
-    // Check fingerprint header FIRST
-    const headersList = await headers();
-    const fingerprintHeader = headersList.get('x-guest-fingerprint');
-    console.log('[REORDER] Fingerprint header FROM HEADERS():', fingerprintHeader);
-
     const userId = await getCurrentUserId();
     console.log('[REORDER] User ID:', userId);
 
-    // Always get guestId for guest users
+    // Always get guestId for guest users - MUST await properly
     let guestId: string | undefined = undefined;
     if (!userId) {
       guestId = await getOrCreateGuestId();
       console.log('[REORDER] Guest ID retrieved from getOrCreateGuestId():', guestId);
+
+      // Verify guestId is not undefined
+      if (!guestId) {
+        console.error('[REORDER] ERROR: guestId is undefined after getOrCreateGuestId()!');
+        return NextResponse.json(
+          { error: 'Failed to get guest ID' },
+          { status: 500 }
+        );
+      }
     }
 
     console.log('Reordering boards:', validatedData.boards);
@@ -57,7 +65,12 @@ export async function POST(request: Request) {
       console.log(`Updated board ${board.id} to order ${board.order}, matched ${result.count} records`);
     }
 
-    return NextResponse.json({ message: 'Boards reordered successfully' });
+    const response = NextResponse.json({ message: 'Boards reordered successfully' });
+    // Add cache control headers to prevent any caching
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    return response;
   } catch (error) {
     console.error('Error reordering boards:', error);
 

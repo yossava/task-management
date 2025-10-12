@@ -20,9 +20,9 @@ export function useBoardsOptimized() {
       const response = await boardsApi.getAll();
       return response.boards;
     },
-    staleTime: 1000, // Data becomes stale after 1 second
-    gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
-    refetchOnWindowFocus: false, // Don't refetch on window focus
+    staleTime: 0, // Data is immediately stale - always fetch fresh
+    gcTime: 0, // Don't keep in cache at all
+    refetchOnWindowFocus: true, // Refetch on window focus to get fresh data
     refetchOnMount: true, // Always refetch on mount to get fresh data
   });
 

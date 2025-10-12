@@ -11,6 +11,10 @@ const createBoardSchema = z.object({
   color: z.string().default('#3b82f6'),
 });
 
+// Disable caching for this route
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET /api/boards - List all boards for current user/guest
 export async function GET() {
   try {
@@ -30,12 +34,7 @@ export async function GET() {
         orderBy: { order: 'asc' },
       });
     } else {
-      // Check fingerprint header first
-      const headersList = await headers();
-      const fingerprintHeader = headersList.get('x-guest-fingerprint');
-      console.log('[GET /api/boards] Fingerprint header:', fingerprintHeader);
-
-      // Fetch guest's boards
+      // Fetch guest's boards using server-side cookie
       const guestId = await getOrCreateGuestId();
       console.log('[GET /api/boards] Guest ID used for query:', guestId);
 
@@ -50,10 +49,14 @@ export async function GET() {
       });
 
       console.log('[GET /api/boards] Found', boards.length, 'boards for guest', guestId);
-      console.log('[GET /api/boards] Board guest IDs:', boards.map(b => ({ id: b.id, guestId: b.guestId, title: b.title })));
     }
 
-    return NextResponse.json({ boards });
+    const response = NextResponse.json({ boards });
+    // Add cache control headers to prevent any caching
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    return response;
   } catch (error) {
     console.error('Error fetching boards:', error);
     return NextResponse.json(

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUserId } from '@/lib/utils/session';
-import { getGuestId } from '@/lib/utils/guest';
+import { getOrCreateGuestId } from '@/lib/utils/guest';
 import { z } from 'zod';
 
 const updateTaskSchema = z.object({
@@ -33,7 +33,7 @@ export async function PATCH(
     const validatedData = updateTaskSchema.parse(body);
 
     const userId = await getCurrentUserId();
-    const guestId = await getGuestId();
+    const guestId = userId ? undefined : await getOrCreateGuestId();
 
     // Get task with board to verify ownership
     const task = await prisma.task.findUnique({
@@ -119,7 +119,7 @@ export async function DELETE(
   try {
     const { id } = await context.params;
     const userId = await getCurrentUserId();
-    const guestId = await getGuestId();
+    const guestId = userId ? undefined : await getOrCreateGuestId();
 
     // Get task with board to verify ownership
     const task = await prisma.task.findUnique({

@@ -2,8 +2,6 @@
  * API Client utilities for frontend
  */
 
-import { getGuestIdFromFingerprint } from '@/lib/utils/fingerprint';
-
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -15,38 +13,15 @@ export class ApiError extends Error {
   }
 }
 
-// Flag to track if we've initialized the cookie
-let cookieInitialized = false;
-
 /**
- * Initialize guest ID cookie if not already done
- */
-function ensureGuestCookie() {
-  if (typeof window === 'undefined' || cookieInitialized) {
-    return;
-  }
-
-  try {
-    const guestId = getGuestIdFromFingerprint();
-    if (guestId) {
-      // Set cookie so it's available for all requests
-      document.cookie = `guestId=${guestId}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-      console.log('[API Client] Initialized guestId cookie:', guestId);
-      cookieInitialized = true;
-    }
-  } catch (e) {
-    console.error('[API Client] Failed to initialize guest ID:', e);
-  }
-}
-
-/**
- * Get headers with guest fingerprint included
+ * Get headers with cache-busting
+ * No client-side guest ID management - rely on server-side HttpOnly cookies
  */
 function getHeaders(additionalHeaders?: HeadersInit): HeadersInit {
-  // Ensure guest cookie is set before making any API calls
-  ensureGuestCookie();
-
   const headers: HeadersInit = {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
     ...additionalHeaders,
   };
 
@@ -70,6 +45,7 @@ export const boardsApi = {
   async getAll() {
     const response = await fetch('/api/boards', {
       headers: getHeaders(),
+      cache: 'no-store', // Force no caching
     });
     return handleResponse<{ boards: any[] }>(response);
   },

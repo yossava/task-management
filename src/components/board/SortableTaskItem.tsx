@@ -160,8 +160,20 @@ export function SortableTaskItem({
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 onSaveEdit();
+                if (editTaskRef.current) {
+                  editTaskRef.current.blur();
+                  // Focus on body to ensure no element has focus/hover
+                  document.body.focus();
+                  document.body.blur();
+                }
               } else if (e.key === 'Escape') {
                 onSaveEdit();
+                if (editTaskRef.current) {
+                  editTaskRef.current.blur();
+                  // Focus on body to ensure no element has focus/hover
+                  document.body.focus();
+                  document.body.blur();
+                }
               }
             }}
             className="w-full text-sm bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 focus:shadow-md text-gray-900 dark:text-white transition-all"

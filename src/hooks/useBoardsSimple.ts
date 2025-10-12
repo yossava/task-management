@@ -27,6 +27,11 @@ export function useBoardsSimple() {
 
       const response = await fetch('/api/boards', {
         credentials: 'include', // Important: send cookies
+        cache: 'no-store', // Force fresh data, no caching
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
       });
 
       if (!response.ok) {

@@ -18,8 +18,8 @@ export async function getOrCreateGuestId(): Promise<string> {
     return existingCookie;
   }
 
-  // Generate new UUID
-  const newGuestId = 'guest_' + uuidv4().replace(/-/g, '').substring(0, 16);
+  // Generate new UUID (use full UUID format for better uniqueness)
+  const newGuestId = uuidv4();
   console.log('[getOrCreateGuestId] Generated new guest ID:', newGuestId);
 
   // Set HttpOnly cookie (server-managed, more secure)
@@ -31,6 +31,7 @@ export async function getOrCreateGuestId(): Promise<string> {
     sameSite: 'lax',
   });
 
+  console.log('[getOrCreateGuestId] Cookie set, returning:', newGuestId);
   return newGuestId;
 }
 

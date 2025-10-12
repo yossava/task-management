@@ -70,6 +70,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
   const [boardMenuOpen, setBoardMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [colorPickerPosition, setColorPickerPosition] = useState({ top: 0, left: 0 });
+  const [disableHoverTaskId, setDisableHoverTaskId] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const newTaskRef = useRef<HTMLInputElement>(null);
@@ -78,6 +79,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
   const boardColorPickerRef = useRef<HTMLDivElement>(null);
   const boardMenuRef = useRef<HTMLDivElement>(null);
   const boardMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const isSubmittingTaskRef = useRef(false);
 
   const {
     attributes,
@@ -555,39 +557,43 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
               strategy={verticalListSortingStrategy}
             >
                 {board.tasks?.map((task) => (
-                  <SortableTaskItem
+                  <div
                     key={task.id}
-                    task={task}
-                    onToggle={() => handleToggleTask(task)}
-                    onEdit={() => handleEditTask(task)}
-                    onSaveEdit={() => handleSaveTaskEdit(task)}
-                    onDelete={() => handleDeleteTask(task.id)}
-                    isEditing={editingTaskId === task.id}
-                    editingText={editingTaskText}
-                    onEditingTextChange={setEditingTaskText}
-                    taskMenuOpen={taskMenuOpen === task.id}
-                    onTaskMenuToggle={() => setTaskMenuOpen(taskMenuOpen === task.id ? null : task.id)}
-                    datePickerOpen={datePickerOpen === task.id}
-                    onDatePickerToggle={() => setDatePickerOpen(datePickerOpen === task.id ? null : task.id)}
-                    colorPickerOpen={colorPickerOpen === task.id}
-                    onColorPickerToggle={() => setColorPickerOpen(colorPickerOpen === task.id ? null : task.id)}
-                    priorityPickerOpen={priorityPickerOpen === task.id}
-                    onPriorityPickerToggle={() => setPriorityPickerOpen(priorityPickerOpen === task.id ? null : task.id)}
-                    onSetDueDate={(timestamp) => handleSetDueDate(task, timestamp)}
-                    onSetColor={(color) => handleSetTaskColor(task, color)}
-                    onToggleGradient={() => handleToggleGradient(task)}
-                    onSetPriority={(priority) => handleSetTaskPriority(task, priority)}
-                    onOpenDetail={() => {
-                      setTaskDetailOpen(task.id);
-                      setTaskMenuOpen(null);
-                    }}
-                    isOverdue={isOverdue}
-                    formatDueDate={formatDueDate}
-                    menuRef={menuRef}
-                    editTaskRef={editTaskRef}
-                    presetColors={PRESET_COLORS}
-                    availableTags={board.tags || []}
-                  />
+                    style={{ pointerEvents: disableHoverTaskId === task.id ? 'none' : 'auto' }}
+                  >
+                    <SortableTaskItem
+                      task={task}
+                      onToggle={() => handleToggleTask(task)}
+                      onEdit={() => handleEditTask(task)}
+                      onSaveEdit={() => handleSaveTaskEdit(task)}
+                      onDelete={() => handleDeleteTask(task.id)}
+                      isEditing={editingTaskId === task.id}
+                      editingText={editingTaskText}
+                      onEditingTextChange={setEditingTaskText}
+                      taskMenuOpen={taskMenuOpen === task.id}
+                      onTaskMenuToggle={() => setTaskMenuOpen(taskMenuOpen === task.id ? null : task.id)}
+                      datePickerOpen={datePickerOpen === task.id}
+                      onDatePickerToggle={() => setDatePickerOpen(datePickerOpen === task.id ? null : task.id)}
+                      colorPickerOpen={colorPickerOpen === task.id}
+                      onColorPickerToggle={() => setColorPickerOpen(colorPickerOpen === task.id ? null : task.id)}
+                      priorityPickerOpen={priorityPickerOpen === task.id}
+                      onPriorityPickerToggle={() => setPriorityPickerOpen(priorityPickerOpen === task.id ? null : task.id)}
+                      onSetDueDate={(timestamp) => handleSetDueDate(task, timestamp)}
+                      onSetColor={(color) => handleSetTaskColor(task, color)}
+                      onToggleGradient={() => handleToggleGradient(task)}
+                      onSetPriority={(priority) => handleSetTaskPriority(task, priority)}
+                      onOpenDetail={() => {
+                        setTaskDetailOpen(task.id);
+                        setTaskMenuOpen(null);
+                      }}
+                      isOverdue={isOverdue}
+                      formatDueDate={formatDueDate}
+                      menuRef={menuRef}
+                      editTaskRef={editTaskRef}
+                      presetColors={PRESET_COLORS}
+                      availableTags={board.tags || []}
+                    />
+                  </div>
                 ))}
             </SortableContext>
 
@@ -599,6 +605,11 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
                   value={newTaskText}
                   onChange={(e) => setNewTaskText(e.target.value)}
                   onBlur={() => {
+                    // Prevent double submission when Enter key triggers blur
+                    if (isSubmittingTaskRef.current) {
+                      isSubmittingTaskRef.current = false;
+                      return;
+                    }
                     if (newTaskText.trim()) {
                       handleAddTask();
                     } else {
@@ -608,10 +619,39 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      handleAddTask();
-                    } else if (e.key === 'Escape') {
+                      isSubmittingTaskRef.current = true;
+                      const text = newTaskText.trim();
                       setNewTaskText('');
                       setIsAddingTask(false);
+                      // Blur and remove focus completely, focus body to prevent hover
+                      if (newTaskRef.current) {
+                        newTaskRef.current.blur();
+                        // Focus on body to ensure no element has focus/hover
+                        document.body.focus();
+                        document.body.blur();
+                      }
+                      if (text) {
+                        createTask(text).then(() => {
+                          // Get the newly created task ID and disable hover for 500ms
+                          setTimeout(() => {
+                            const newTask = board.tasks?.[board.tasks.length - 1];
+                            if (newTask) {
+                              setDisableHoverTaskId(newTask.id);
+                              setTimeout(() => setDisableHoverTaskId(null), 500);
+                            }
+                          }, 50);
+                        });
+                      }
+                    } else if (e.key === 'Escape') {
+                      isSubmittingTaskRef.current = true;
+                      setNewTaskText('');
+                      setIsAddingTask(false);
+                      if (newTaskRef.current) {
+                        newTaskRef.current.blur();
+                        // Focus on body to ensure no element has focus/hover
+                        document.body.focus();
+                        document.body.blur();
+                      }
                     }
                   }}
                   placeholder="Add an item"
