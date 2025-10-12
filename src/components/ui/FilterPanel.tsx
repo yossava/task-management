@@ -1,15 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { TaskFilters, TaskSort, Priority, Tag, SortOption, DateFilterOption } from '@/lib/types';
+import { TaskFilters, Priority, Tag, DateFilterOption } from '@/lib/types';
 import PriorityBadge from './PriorityBadge';
 
 interface FilterPanelProps {
   filters: TaskFilters;
-  sort: TaskSort;
   availableTags: Tag[];
   onFiltersChange: (filters: TaskFilters) => void;
-  onSortChange: (sort: TaskSort) => void;
   taskCount: number;
   filteredCount: number;
   onClose?: () => void;
@@ -26,20 +24,10 @@ const DATE_FILTER_OPTIONS: { value: DateFilterOption; label: string }[] = [
   { value: 'noDate', label: 'No date' },
 ];
 
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: 'priority', label: 'Priority' },
-  { value: 'dueDate', label: 'Due date' },
-  { value: 'createdAt', label: 'Created date' },
-  { value: 'progress', label: 'Progress' },
-  { value: 'alphabetical', label: 'Alphabetical' },
-];
-
 export default function FilterPanel({
   filters,
-  sort,
   availableTags,
   onFiltersChange,
-  onSortChange,
   taskCount,
   filteredCount,
   onClose,
@@ -223,51 +211,6 @@ export default function FilterPanel({
                   Show completed
                 </span>
               </label>
-            </div>
-          </div>
-
-          {/* Sort Options */}
-          <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-              Sort By
-            </label>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
-                </svg>
-                <select
-                  value={sort.option}
-                  onChange={(e) => onSortChange({ ...sort, option: e.target.value as SortOption })}
-                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all hover:border-gray-400 dark:hover:border-gray-500"
-                >
-                  {SORT_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                onClick={() => onSortChange({ ...sort, direction: sort.direction === 'asc' ? 'desc' : 'asc' })}
-                className={`px-3.5 py-2.5 rounded-lg transition-all ${
-                  sort.direction === 'asc'
-                    ? 'bg-blue-500 text-white hover:bg-blue-600'
-                    : 'border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600'
-                }`}
-                title={sort.direction === 'asc' ? 'Ascending' : 'Descending'}
-              >
-                <svg
-                  className={`w-4 h-4 transition-transform ${
-                    sort.direction === 'desc' ? 'rotate-180' : ''
-                  } ${sort.direction === 'asc' ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
-                </svg>
-              </button>
             </div>
           </div>
 

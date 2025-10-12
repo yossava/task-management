@@ -1,21 +1,24 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Board, BoardTask, Priority } from '@/lib/types';
+import { Board, BoardTask, Priority, TaskFilters } from '@/lib/types';
 import Card from '@/components/ui/Card';
 import { useTasksOptimized } from '@/hooks/useTasksOptimized';
+import { filterTasks } from '@/lib/utils/taskFilters';
 import { SortableTaskItem } from './SortableTaskItem';
 import TaskDetailModal from '@/components/task/TaskDetailModal';
 import TagManager from '@/components/ui/TagManager';
 
 interface BoardCardProps {
   board: Board;
+  filters?: TaskFilters;
   onUpdate: (id: string, data: Partial<Board>) => void;
   onDelete: (id: string) => void;
+  disableHover?: boolean;
 }
 
 const PRESET_COLORS = [
@@ -37,7 +40,7 @@ const PRESET_COLORS = [
   '#0ea5e9', // sky
 ];
 
-export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
+export function BoardCard({ board, filters, onUpdate, onDelete, disableHover = false }: BoardCardProps) {
   // Use optimized task hook
   const {
     createTask,
@@ -51,6 +54,12 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
     isCreating,
     isDeleting,
   } = useTasksOptimized(board.id);
+
+  // Filter tasks for display only - keep all tasks for drag and drop
+  const displayTasks = useMemo(() => {
+    if (!filters) return board.tasks || [];
+    return filterTasks(board.tasks || [], filters);
+  }, [board.tasks, filters]);
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
@@ -307,6 +316,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
   };
 
   const calculateBoardProgress = () => {
+    // Use ALL tasks for progress calculation, not just filtered ones
     if (!board.tasks || board.tasks.length === 0) return 0;
     const completedTasks = board.tasks.filter(t => t.completed).length;
     return Math.round((completedTasks / board.tasks.length) * 100);
@@ -325,10 +335,10 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
       data-board-id={board.id}
       data-testid="board-card"
     >
-      <Card className="group hover:shadow-lg transition-shadow relative overflow-hidden">
+      <Card className={`${disableHover ? '' : 'group'} transition-shadow relative overflow-hidden ${disableHover ? '' : 'hover:shadow-lg'}`}>
         {/* Board color indicator - top-left quarter circle */}
         <div
-          className="absolute left-0 top-0 w-12 h-12 group-hover:w-16 group-hover:h-16 rounded-br-full transition-all duration-500 ease-in-out"
+          className={`absolute left-0 top-0 w-12 h-12 ${disableHover ? '' : 'group-hover:w-16 group-hover:h-16'} rounded-br-full transition-all duration-500 ease-in-out`}
           style={{ backgroundColor: board.color || '#3b82f6', opacity: 0.15 }}
         />
         <div className="p-6">
@@ -354,8 +364,8 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
               />
             ) : (
               <h3
-                onClick={() => setIsEditingTitle(true)}
-                className="text-xl font-bold text-gray-900 dark:text-white cursor-text hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-1 -mx-1"
+                onClick={() => !disableHover && setIsEditingTitle(true)}
+                className={`text-xl font-bold text-gray-900 dark:text-white ${disableHover ? '' : 'cursor-text hover:bg-gray-100 dark:hover:bg-gray-700'} rounded px-1 -mx-1`}
               >
                 {board.title}
               </h3>
@@ -380,15 +390,16 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
             ) : (
               board.description || isEditingDescription ? (
                 <p
-                  onClick={() => setIsEditingDescription(true)}
-                  className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 cursor-text hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-1 -mx-1"
+                  onClick={() => !disableHover && setIsEditingDescription(true)}
+                  className={`text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 ${disableHover ? '' : 'cursor-text hover:bg-gray-100 dark:hover:bg-gray-700'} rounded px-1 -mx-1`}
                 >
                   {board.description || 'Add a description...'}
                 </p>
               ) : (
                 <button
-                  onClick={() => setIsEditingDescription(true)}
-                  className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mt-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-1 -mx-1 focus:outline-none"
+                  onClick={() => !disableHover && setIsEditingDescription(true)}
+                  className={`text-xs text-gray-400 ${disableHover ? '' : 'hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'} mt-1 rounded px-1 -mx-1 focus:outline-none`}
+                  disabled={disableHover}
                 >
                   Add a description...
                 </button>
@@ -397,29 +408,33 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
           </div>
           <div className="relative ml-4 flex-shrink-0 flex items-center">
             {/* Drag Handle Icon - only visible on hover */}
-            <div
-              className="flex-shrink-0 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-all w-0 group-hover:w-4 group-hover:mr-2 overflow-hidden"
-              {...listeners}
-            >
-              <svg className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-              </svg>
-            </div>
+            {!disableHover && (
+              <div
+                className="flex-shrink-0 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-all w-0 group-hover:w-4 group-hover:mr-2 overflow-hidden"
+                {...listeners}
+              >
+                <svg className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                </svg>
+              </div>
+            )}
 
             {/* Board Menu Button - only visible on hover */}
-            <button
-              ref={boardMenuButtonRef}
-              onClick={(e) => {
-                e.stopPropagation();
-                setBoardMenuOpen(!boardMenuOpen);
-              }}
-              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all focus:outline-none opacity-0 group-hover:opacity-100 w-0 group-hover:w-6 group-hover:mr-2 overflow-hidden"
-              aria-label="Board menu"
-            >
-              <svg className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
-              </svg>
-            </button>
+            {!disableHover && (
+              <button
+                ref={boardMenuButtonRef}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setBoardMenuOpen(!boardMenuOpen);
+                }}
+                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all focus:outline-none opacity-0 group-hover:opacity-100 w-0 group-hover:w-6 group-hover:mr-2 overflow-hidden"
+                aria-label="Board menu"
+              >
+                <svg className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1 1 0 0 1 3 0z"/>
+                </svg>
+              </button>
+            )}
 
             {/* Circular Progress Indicator */}
             {board.tasks && board.tasks.length > 0 && (
@@ -550,16 +565,22 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
         </div>
 
         {/* Task List */}
-        {(board.tasks && board.tasks.length > 0) || isAddingTask ? (
+        {(displayTasks && displayTasks.length > 0) || isAddingTask ? (
           <div className="mt-4 space-y-2">
             <SortableContext
               items={board.tasks?.map((task) => task.id) || []}
               strategy={verticalListSortingStrategy}
             >
-                {board.tasks?.map((task) => (
+                {displayTasks?.map((task, taskIndex) => (
                   <div
                     key={task.id}
-                    style={{ pointerEvents: disableHoverTaskId === task.id ? 'none' : 'auto' }}
+                    style={{
+                      pointerEvents: (
+                        disableHoverTaskId === task.id ||
+                        (disableHoverTaskId === '__creating__' && task.id.startsWith('temp-')) ||
+                        (disableHoverTaskId === '__creating__' && taskIndex === displayTasks.length - 1)
+                      ) ? 'none' : 'auto'
+                    }}
                   >
                     <SortableTaskItem
                       task={task}
@@ -631,15 +652,20 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
                         document.body.blur();
                       }
                       if (text) {
+                        // Disable hover immediately before creating the task
+                        setDisableHoverTaskId('__creating__');
+
                         createTask(text).then(() => {
-                          // Get the newly created task ID and disable hover for 500ms
+                          // Get the newly created task ID and update
                           setTimeout(() => {
                             const newTask = board.tasks?.[board.tasks.length - 1];
                             if (newTask) {
                               setDisableHoverTaskId(newTask.id);
-                              setTimeout(() => setDisableHoverTaskId(null), 500);
                             }
                           }, 50);
+
+                          // Enable hover after 1 second
+                          setTimeout(() => setDisableHoverTaskId(null), 1000);
                         });
                       }
                     } else if (e.key === 'Escape') {
@@ -667,9 +693,12 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setIsAddingTask(true);
+              if (!disableHover) {
+                setIsAddingTask(true);
+              }
             }}
-            className="mt-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100/60 dark:hover:bg-gray-700/30 transition-colors flex items-center gap-1.5 px-2 py-1.5 rounded w-full focus:outline-none"
+            disabled={disableHover}
+            className={`mt-2 text-sm text-gray-500 dark:text-gray-400 ${disableHover ? '' : 'hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100/60 dark:hover:bg-gray-700/30'} transition-colors flex items-center gap-1.5 px-2 py-1.5 rounded w-full focus:outline-none`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

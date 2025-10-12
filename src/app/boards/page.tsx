@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   DndContext,
   DragEndEvent,
@@ -19,8 +20,8 @@ import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortab
 import { BoardCard } from '@/components/board/BoardCard';
 import { InlineBoardForm } from '@/components/board/InlineBoardForm';
 import { useBoardsOptimized } from '@/hooks/useBoardsOptimized';
-import { Board, BoardTask, TaskFilters, TaskSort, Tag, BoardTemplate } from '@/lib/types';
-import { filterAndSortTasks } from '@/lib/utils/taskFilters';
+import { Board, BoardTask, TaskFilters, Tag, BoardTemplate } from '@/lib/types';
+import { filterTasks } from '@/lib/utils/taskFilters';
 import Card from '@/components/ui/Card';
 import FilterPanel from '@/components/ui/FilterPanel';
 import GlobalSearch from '@/components/search/GlobalSearch';
@@ -41,6 +42,7 @@ import type { ViewMode } from '@/lib/types';
 
 export default function BoardsPage() {
   const { boards, loading, createBoard, updateBoard, deleteBoard, reorderBoards, isCreating, isUpdating, isDeleting } = useBoardsOptimized();
+  const queryClient = useQueryClient();
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const [showExportImport, setShowExportImport] = useState(false);
@@ -56,20 +58,17 @@ export default function BoardsPage() {
   const [pageSubtitle, setPageSubtitle] = useState('Organize and manage all your projects in one place');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isEditingSubtitle, setIsEditingSubtitle] = useState(false);
+  const [disabledHoverBoardId, setDisabledHoverBoardId] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const subtitleRef = useRef<HTMLInputElement>(null);
 
-  // Filter and sort state
+  // Filter state
   const [filters, setFilters] = useState<TaskFilters>({
     priorities: [],
     tags: [],
     dateFilter: 'all',
     showCompleted: true,
     searchQuery: '',
-  });
-  const [sort, setSort] = useState<TaskSort>({
-    option: 'priority',
-    direction: 'desc',
   });
 
   // Load header from API
@@ -183,9 +182,22 @@ export default function BoardsPage() {
     })
   );
 
-  const handleCreate = (data: Omit<Board, 'id' | 'createdAt' | 'updatedAt' | 'columns' | 'tasks'>) => {
-    createBoard(data);
+  const handleCreate = async (data: Omit<Board, 'id' | 'createdAt' | 'updatedAt' | 'columns' | 'tasks'>) => {
+    // Set a flag to disable the newest board (will match temp ID)
+    setDisabledHoverBoardId('__creating__');
+
+    const newBoard = await createBoard(data);
     setIsCreatingBoard(false);
+
+    // Update to use the real board ID after creation
+    if (newBoard && newBoard.id) {
+      setDisabledHoverBoardId(newBoard.id);
+    }
+
+    // Enable hover after 1 second
+    setTimeout(() => {
+      setDisabledHoverBoardId(null);
+    }, 1000);
   };
 
   const handleTemplateSelect = async (template: BoardTemplate) => {
@@ -247,7 +259,7 @@ export default function BoardsPage() {
     // This prevents multiple reorder requests while dragging
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     setActiveTask(null);
     setActiveBoard(null);
     const { active, over } = event;
@@ -295,16 +307,57 @@ export default function BoardsPage() {
 
         if (sourceBoardId === targetBoardId) {
           // Reorder within the same board
+          // Use the UNFILTERED board to get all tasks
           const sourceBoard = boards.find(b => b.id === sourceBoardId);
           if (!sourceBoard) return;
 
-          const tasks = sourceBoard.tasks || [];
-          const oldIndex = tasks.findIndex((t: BoardTask) => t.id === active.id);
-          const newIndex = tasks.findIndex((t: BoardTask) => t.id === over.id);
+          const allTasks = sourceBoard.tasks || [];
+          const oldIndex = allTasks.findIndex((t: BoardTask) => t.id === active.id);
+          const newIndex = allTasks.findIndex((t: BoardTask) => t.id === over.id);
 
-          if (oldIndex !== newIndex) {
-            const reorderedTasks = arrayMove<BoardTask>(tasks, oldIndex, newIndex);
-            updateBoard(sourceBoardId, { tasks: reorderedTasks });
+          if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+            const reorderedTasks = arrayMove<BoardTask>(allTasks, oldIndex, newIndex);
+
+            console.log('[Task Reorder] Starting optimistic update');
+            console.log('[Task Reorder] Old order:', allTasks.map(t => ({ id: t.id, text: t.text })));
+            console.log('[Task Reorder] New order:', reorderedTasks.map(t => ({ id: t.id, text: t.text })));
+
+            // Cancel any outgoing queries to prevent race conditions
+            await queryClient.cancelQueries({ queryKey: ['boards'] });
+
+            // Update the React Query cache directly (optimistic UI)
+            queryClient.setQueryData<Board[]>(['boards'], (oldBoards = []) =>
+              oldBoards.map((board) =>
+                board.id === sourceBoardId ? { ...board, tasks: reorderedTasks } : board
+              )
+            );
+
+            console.log('[Task Reorder] Optimistic update complete, calling API');
+
+            // Call the task reorder API in the background
+            try {
+              const { tasksApi } = await import('@/lib/api/client');
+              await tasksApi.reorder(
+                reorderedTasks.map((task, index) => ({
+                  id: task.id,
+                  order: index,
+                  boardId: sourceBoardId
+                }))
+              );
+              console.log('[Task Reorder] API call successful');
+            } catch (error) {
+              // On error, rollback to the original order
+              console.error('[Task Reorder] API call failed, rolling back:', error);
+              queryClient.setQueryData<Board[]>(['boards'], (oldBoards = []) =>
+                oldBoards.map((board) =>
+                  board.id === sourceBoardId ? { ...board, tasks: allTasks } : board
+                )
+              );
+
+              // Show error toast
+              const toast = (await import('react-hot-toast')).default;
+              toast.error('Failed to reorder tasks. Changes have been reverted.');
+            }
           }
         } else {
           // Move to a different board (insert at the position of the target task)
@@ -381,19 +434,19 @@ export default function BoardsPage() {
   const filteredTaskCount = useMemo(() => {
     let count = 0;
     boards.forEach(board => {
-      const filteredTasks = filterAndSortTasks(board.tasks || [], filters, sort);
-      count += filteredTasks.length;
+      const filteredTasksResult = filterTasks(board.tasks || [], filters);
+      count += filteredTasksResult.length;
     });
     return count;
-  }, [boards, filters, sort]);
+  }, [boards, filters]);
 
   // Create boards with filtered tasks
   const boardsWithFilteredTasks = useMemo(() => {
     return boards.map(board => ({
       ...board,
-      tasks: filterAndSortTasks(board.tasks || [], filters, sort),
+      tasks: filterTasks(board.tasks || [], filters),
     }));
-  }, [boards, filters, sort]);
+  }, [boards, filters]);
 
   // Count active filters
   const activeFiltersCount = useMemo(() => {
@@ -634,12 +687,18 @@ export default function BoardsPage() {
               items={boards.map(b => b.id)}
               strategy={rectSortingStrategy}
             >
-              {boardsWithFilteredTasks.map((board) => (
+              {boards.map((board, index) => (
                 <BoardCard
                   key={board.id}
                   board={board}
+                  filters={filters}
                   onUpdate={handleUpdate}
                   onDelete={handleDelete}
+                  disableHover={
+                    disabledHoverBoardId === board.id ||
+                    (disabledHoverBoardId === '__creating__' && board.id.startsWith('temp-')) ||
+                    (disabledHoverBoardId === '__creating__' && index === boards.length - 1)
+                  }
                 />
               ))}
             </SortableContext>
@@ -760,10 +819,8 @@ export default function BoardsPage() {
               <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
                 <FilterPanel
                   filters={filters}
-                  sort={sort}
                   availableTags={allTags}
                   onFiltersChange={setFilters}
-                  onSortChange={setSort}
                   taskCount={totalTaskCount}
                   filteredCount={filteredTaskCount}
                   onClose={() => setShowFilters(false)}
