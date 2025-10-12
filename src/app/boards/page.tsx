@@ -386,11 +386,15 @@ export default function BoardsPage() {
     return null;
   };
 
-  const moveTaskBetweenBoards = (sourceBoardId: string, targetBoardId: string, task: BoardTask, targetTaskId?: string) => {
+  const moveTaskBetweenBoards = async (sourceBoardId: string, targetBoardId: string, task: BoardTask, targetTaskId?: string) => {
     const sourceBoard = boards.find(b => b.id === sourceBoardId);
     const targetBoard = boards.find(b => b.id === targetBoardId);
 
     if (!sourceBoard || !targetBoard) return;
+
+    console.log('[Move Task] Moving task between boards');
+    console.log('[Move Task] From:', sourceBoardId, 'To:', targetBoardId);
+    console.log('[Move Task] Task:', task.text);
 
     // Remove task from source board
     const updatedSourceTasks = sourceBoard.tasks.filter((t: BoardTask) => t.id !== task.id);
@@ -407,9 +411,73 @@ export default function BoardsPage() {
       updatedTargetTasks = [...(targetBoard.tasks || []), task];
     }
 
-    // Update via API
-    updateBoard(sourceBoardId, { tasks: updatedSourceTasks });
-    updateBoard(targetBoardId, { tasks: updatedTargetTasks });
+    // Cancel any outgoing queries
+    await queryClient.cancelQueries({ queryKey: ['boards'] });
+
+    // Store original state for rollback
+    const previousSourceTasks = sourceBoard.tasks;
+    const previousTargetTasks = targetBoard.tasks;
+
+    // Update the React Query cache directly (optimistic UI)
+    queryClient.setQueryData<Board[]>(['boards'], (oldBoards = []) =>
+      oldBoards.map((board) => {
+        if (board.id === sourceBoardId) {
+          return { ...board, tasks: updatedSourceTasks };
+        }
+        if (board.id === targetBoardId) {
+          return { ...board, tasks: updatedTargetTasks };
+        }
+        return board;
+      })
+    );
+
+    console.log('[Move Task] Optimistic update complete, calling API');
+
+    // Update via API in the background
+    try {
+      const { tasksApi } = await import('@/lib/api/client');
+
+      // Update the task's boardId and reorder tasks in target board
+      await tasksApi.update(task.id, { boardId: targetBoardId });
+
+      // Reorder tasks in target board
+      await tasksApi.reorder(
+        updatedTargetTasks.map((t, index) => ({
+          id: t.id,
+          order: index,
+          boardId: targetBoardId
+        }))
+      );
+
+      // Reorder tasks in source board
+      await tasksApi.reorder(
+        updatedSourceTasks.map((t, index) => ({
+          id: t.id,
+          order: index,
+          boardId: sourceBoardId
+        }))
+      );
+
+      console.log('[Move Task] API calls successful');
+    } catch (error) {
+      // Rollback on error
+      console.error('[Move Task] API call failed, rolling back:', error);
+      queryClient.setQueryData<Board[]>(['boards'], (oldBoards = []) =>
+        oldBoards.map((board) => {
+          if (board.id === sourceBoardId) {
+            return { ...board, tasks: previousSourceTasks };
+          }
+          if (board.id === targetBoardId) {
+            return { ...board, tasks: previousTargetTasks };
+          }
+          return board;
+        })
+      );
+
+      // Show error toast
+      const toast = (await import('react-hot-toast')).default;
+      toast.error('Failed to move task. Changes have been reverted.');
+    }
   };
 
   // Collect all unique tags from all boards
