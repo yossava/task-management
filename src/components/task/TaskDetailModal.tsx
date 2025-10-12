@@ -11,7 +11,6 @@ import TagBadge from '@/components/ui/TagBadge';
 import TaskComments from '@/components/task/TaskComments';
 import TaskDependencies from '@/components/task/TaskDependencies';
 import RecurringTaskModal from '@/components/task/RecurringTaskModal';
-import AssigneeSection from '@/components/user/AssigneeSection';
 import TimeTrackingSection from '@/components/time/TimeTrackingSection';
 
 interface TaskDetailModalProps {
@@ -31,7 +30,6 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [commentsKey, setCommentsKey] = useState(0);
   const [dependenciesKey, setDependenciesKey] = useState(0);
-  const [assigneeKey, setAssigneeKey] = useState(0);
   const [timeTrackingKey, setTimeTrackingKey] = useState(0);
   const [recurringModalOpen, setRecurringModalOpen] = useState(false);
   const priorityButtonRef = useRef<HTMLButtonElement>(null);
@@ -43,10 +41,6 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
 
   const handleDependenciesUpdate = () => {
     setDependenciesKey(prev => prev + 1);
-  };
-
-  const handleAssigneeUpdate = () => {
-    setAssigneeKey(prev => prev + 1);
   };
 
   const handleTimeTrackingUpdate = () => {
@@ -553,15 +547,6 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
                   Add
                 </button>
               </div>
-            </div>
-
-            {/* Assignees Section */}
-            <div key={`assignee-${assigneeKey}`} className="border-t border-gray-200 dark:border-gray-700 pt-6">
-              <AssigneeSection
-                boardId={boardId}
-                task={task}
-                onUpdate={handleAssigneeUpdate}
-              />
             </div>
 
             {/* Time Tracking Section */}

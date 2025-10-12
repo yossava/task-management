@@ -68,9 +68,6 @@ model Task {
   // Subtasks (embedded)
   subtasks    SubtaskItem[]
 
-  // Assignees
-  assigneeIds String[]  @default([])
-
   // Time Tracking
   estimatedTime Int?      // Estimated minutes
   actualTime    Int?      // Tracked minutes

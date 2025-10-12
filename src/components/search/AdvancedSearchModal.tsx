@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import { SearchQuery, Priority, SavedSearch } from '@/lib/types';
 import { AdvancedSearchService } from '@/lib/services/advancedSearchService';
-import UserPicker from '@/components/user/UserPicker';
 import PriorityBadge from '@/components/ui/PriorityBadge';
 
 interface AdvancedSearchModalProps {
@@ -23,7 +22,6 @@ export default function AdvancedSearchModal({
     text: '',
     priorities: [],
     tags: [],
-    assignees: [],
     dateRange: {},
     hasSubtasks: undefined,
     hasDependencies: undefined,
@@ -39,7 +37,7 @@ export default function AdvancedSearchModal({
   const savedSearches = AdvancedSearchService.getSavedSearches();
   const searchHistory = AdvancedSearchService.getSearchHistory();
   const results = useMemo(() => {
-    if (!query.text && !query.priorities?.length && !query.tags?.length && !query.assignees?.length) {
+    if (!query.text && !query.priorities?.length && !query.tags?.length) {
       return [];
     }
     return AdvancedSearchService.search(query);
@@ -234,19 +232,6 @@ export default function AdvancedSearchModal({
                     </div>
                   </div>
                 )}
-
-                {/* Assignees */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Assignees
-                  </label>
-                  <UserPicker
-                    selectedUserIds={query.assignees || []}
-                    onSelectionChange={(userIds) => setQuery({ ...query, assignees: userIds })}
-                    multiple={true}
-                    placeholder="Filter by assignees..."
-                  />
-                </div>
 
                 {/* Boards */}
                 {availableBoards.length > 0 && (
@@ -540,7 +525,6 @@ export default function AdvancedSearchModal({
                           text: '',
                           priorities: [],
                           tags: [],
-                          assignees: [],
                           dateRange: {},
                           boardIds: [],
                         });

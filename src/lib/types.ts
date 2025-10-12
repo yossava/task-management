@@ -67,9 +67,6 @@ export interface BoardTask {
   recurringTaskId?: string; // Link to recurring task template
   completedAt?: number; // When task was completed
 
-  // Feature 2: Team Collaboration
-  assigneeIds?: string[]; // Assigned user IDs
-
   // Feature 4: Time Tracking
   estimatedTime?: number; // Estimated minutes
   actualTime?: number; // Tracked minutes
@@ -250,7 +247,6 @@ export interface SearchQuery {
   text?: string;
   priorities?: Priority[];
   tags?: string[];
-  assignees?: string[];
   dateRange?: { start?: number; end?: number };
   hasSubtasks?: boolean;
   hasDependencies?: boolean;
