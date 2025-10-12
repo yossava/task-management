@@ -22,6 +22,7 @@ export default function ScrumLayout({ children }: ScrumLayoutProps) {
     { href: '/scrum/retrospective', label: 'Retrospective', icon: '🔄' },
     { href: '/scrum/metrics', label: 'Metrics & Analytics', icon: '📈' },
     { href: '/scrum/releases', label: 'Releases', icon: '🚀' },
+    { href: '/scrum/docs', label: 'Documentation', icon: '📚' },
   ];
 
   const isActive = (href: string) => {
