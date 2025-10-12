@@ -1,65 +1,163 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { BoardTask, Board } from '@/lib/types';
-import { DependencyService } from '@/lib/services/dependencyService';
+import toast from 'react-hot-toast';
 
 interface TaskDependenciesProps {
-  board: Board;
+  boardId: string;
   taskId: string;
   currentTask: BoardTask;
-  onUpdate: (boardId: string, updates: Partial<Board>) => Promise<void>;
+  onUpdate: () => void;
 }
 
-export default function TaskDependencies({ board, taskId, currentTask, onUpdate }: TaskDependenciesProps) {
+export default function TaskDependencies({ boardId, taskId, currentTask, onUpdate }: TaskDependenciesProps) {
   const [isAddingDependency, setIsAddingDependency] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState('');
   const [circularWarning, setCircularWarning] = useState('');
+  const [allTasks, setAllTasks] = useState<BoardTask[]>([]);
+  const [loading, setLoading] = useState(true);
+  // Local optimistic state for dependencies
+  const [optimisticDependencies, setOptimisticDependencies] = useState<string[]>(currentTask.dependencies || []);
 
-  // Get dependencies and blocking tasks
-  const dependencies = useMemo(
-    () => DependencyService.getTaskDependencies(board, taskId) || [],
-    [board, taskId]
-  );
+  // Sync optimistic dependencies with prop changes
+  useEffect(() => {
+    setOptimisticDependencies(currentTask.dependencies || []);
+  }, [currentTask.dependencies]);
 
-  const blockingTasks = useMemo(
-    () => DependencyService.getBlockingTasks(board, taskId) || [],
-    [board, taskId]
-  );
+  // Fetch all tasks from the board
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch(`/api/boards/${boardId}`);
+        if (!response.ok) throw new Error('Failed to fetch board');
+        const data = await response.json();
+        setAllTasks(data.board?.tasks || []);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        toast.error('Failed to load tasks');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTasks();
+  }, [boardId]); // Remove currentTask.dependencies to avoid unnecessary refetches
 
-  const canStart = useMemo(
-    () => DependencyService.canStartTask(board, taskId),
-    [board, taskId]
-  );
+  // Get dependency tasks (use optimistic state)
+  const dependencies = useMemo(() => {
+    return allTasks.filter(t => optimisticDependencies.includes(t.id));
+  }, [optimisticDependencies, allTasks]);
 
-  // Get all tasks from board for selection
+  // Get tasks that are blocked by this task
+  const blockingTasks = useMemo(() => {
+    return allTasks.filter(t =>
+      t.dependencies && t.dependencies.includes(taskId)
+    );
+  }, [allTasks, taskId]);
+
+  // Check if task can start (all dependencies completed)
+  const canStart = useMemo(() => {
+    if (!optimisticDependencies || optimisticDependencies.length === 0) return true;
+    return dependencies.every(dep => dep.completed);
+  }, [optimisticDependencies, dependencies]);
+
+  // Get all tasks available for selection
   const availableTasks = useMemo(() => {
-    if (!board?.tasks) return [];
-    return board.tasks.filter(
+    return allTasks.filter(
       (t) =>
         t.id !== taskId &&
         !dependencies.some((dep) => dep.id === t.id) &&
         !t.completed
     );
-  }, [board, taskId, dependencies]);
+  }, [allTasks, taskId, dependencies]);
+
+  // Check for circular dependencies
+  const wouldCreateCircularDependency = (newDepId: string): boolean => {
+    const visited = new Set<string>();
+    const checking = (id: string): boolean => {
+      if (id === taskId) return true;
+      if (visited.has(id)) return false;
+      visited.add(id);
+
+      const task = allTasks.find(t => t.id === id);
+      if (!task || !task.dependencies) return false;
+
+      return task.dependencies.some(depId => checking(depId));
+    };
+    return checking(newDepId);
+  };
 
   const handleAddDependency = async () => {
     if (!selectedTaskId) return;
 
     // Check for circular dependency
-    if (DependencyService.wouldCreateCircularDependency(board, taskId, selectedTaskId)) {
+    if (wouldCreateCircularDependency(selectedTaskId)) {
       setCircularWarning('Adding this dependency would create a circular dependency!');
       return;
     }
 
-    await DependencyService.addDependency(board, taskId, selectedTaskId, onUpdate);
+    // Store original dependencies for rollback
+    const originalDependencies = optimisticDependencies;
+    const updatedDependencies = [...originalDependencies, selectedTaskId];
+
+    // Optimistically update the local state immediately
+    setOptimisticDependencies(updatedDependencies);
     setSelectedTaskId('');
     setCircularWarning('');
     setIsAddingDependency(false);
+
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dependencies: updatedDependencies }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to add dependency');
+      }
+
+      // Trigger parent update to sync with backend
+      onUpdate();
+      toast.success('Dependency added');
+    } catch (error) {
+      console.error('Error adding dependency:', error);
+      // Rollback optimistic update on error
+      setOptimisticDependencies(originalDependencies);
+      toast.error(error instanceof Error ? error.message : 'Failed to add dependency');
+    }
   };
 
   const handleRemoveDependency = async (dependencyTaskId: string) => {
-    await DependencyService.removeDependency(board, taskId, dependencyTaskId, onUpdate);
+    // Store original dependencies for rollback
+    const originalDependencies = optimisticDependencies;
+    const updatedDependencies = originalDependencies.filter(id => id !== dependencyTaskId);
+
+    // Optimistically update the local state immediately
+    setOptimisticDependencies(updatedDependencies);
+
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dependencies: updatedDependencies }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to remove dependency');
+      }
+
+      // Trigger parent update to sync with backend
+      onUpdate();
+      toast.success('Dependency removed');
+    } catch (error) {
+      console.error('Error removing dependency:', error);
+      // Rollback optimistic update on error
+      setOptimisticDependencies(originalDependencies);
+      toast.error(error instanceof Error ? error.message : 'Failed to remove dependency');
+    }
   };
 
   return (

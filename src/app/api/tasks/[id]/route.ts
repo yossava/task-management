@@ -20,6 +20,8 @@ const updateTaskSchema = z.object({
   })).optional(),
   boardId: z.string().optional(), // For moving tasks between boards
   order: z.number().optional(),
+  dependencies: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 // PATCH /api/tasks/[id] - Update a task
@@ -90,6 +92,8 @@ export async function PATCH(
         ...(validatedData.checklist !== undefined && { checklist: validatedData.checklist }),
         ...(validatedData.boardId !== undefined && { boardId: validatedData.boardId }),
         ...(validatedData.order !== undefined && { order: validatedData.order }),
+        ...(validatedData.dependencies !== undefined && { dependencies: validatedData.dependencies }),
+        ...(validatedData.tags !== undefined && { tags: validatedData.tags }),
       },
     });
 

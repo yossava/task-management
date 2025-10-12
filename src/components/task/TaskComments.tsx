@@ -1,31 +1,60 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { TaskComment } from '@/lib/types';
 import toast from 'react-hot-toast';
 
 interface TaskCommentsProps {
   taskId: string;
   comments: TaskComment[];
-  currentUserName: string;
   onUpdate: () => void;
 }
 
-export default function TaskComments({ taskId, comments, currentUserName, onUpdate }: TaskCommentsProps) {
+export default function TaskComments({ taskId, comments, onUpdate }: TaskCommentsProps) {
+  const { data: session } = useSession();
   const [newComment, setNewComment] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Optimistic state for comments
+  const [optimisticComments, setOptimisticComments] = useState<TaskComment[]>(comments);
+
+  // Sync optimistic comments with prop changes
+  useEffect(() => {
+    setOptimisticComments(comments);
+  }, [comments]);
 
   const handleAddComment = async () => {
     if (!newComment.trim() || isSubmitting) return;
 
+    const author = session?.user?.email || session?.user?.name || 'Guest User';
+    const tempId = `temp-comment-${Date.now()}`;
+    const now = new Date();
+
+    // Create optimistic comment
+    const optimisticComment: TaskComment = {
+      id: tempId,
+      content: newComment.trim(),
+      author,
+      authorId: 'temp',
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // Store original state for rollback
+    const originalComments = optimisticComments;
+
+    // Optimistically add comment to UI
+    setOptimisticComments([optimisticComment, ...originalComments]);
+    setNewComment('');
     setIsSubmitting(true);
+
     try {
       const response = await fetch(`/api/tasks/${taskId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newComment.trim(), author: currentUserName }),
+        body: JSON.stringify({ content: optimisticComment.content, author }),
       });
 
       if (!response.ok) {
@@ -33,11 +62,14 @@ export default function TaskComments({ taskId, comments, currentUserName, onUpda
         throw new Error(data.error || 'Failed to add comment');
       }
 
-      setNewComment('');
+      // Trigger parent update to sync with backend
       onUpdate();
       toast.success('Comment added');
     } catch (error) {
       console.error('Error adding comment:', error);
+      // Rollback optimistic update on error
+      setOptimisticComments(originalComments);
+      setNewComment(optimisticComment.content); // Restore the text
       toast.error(error instanceof Error ? error.message : 'Failed to add comment');
     } finally {
       setIsSubmitting(false);
@@ -55,12 +87,26 @@ export default function TaskComments({ taskId, comments, currentUserName, onUpda
   const handleSaveEdit = async () => {
     if (!editingId || !editContent.trim() || isSubmitting) return;
 
+    // Store original state for rollback
+    const originalComments = optimisticComments;
+    const originalEditContent = editContent;
+
+    // Optimistically update comment in UI
+    const updatedComments = optimisticComments.map(c =>
+      c.id === editingId
+        ? { ...c, content: editContent.trim(), updatedAt: new Date() }
+        : c
+    );
+    setOptimisticComments(updatedComments);
+    setEditingId(null);
+    setEditContent('');
     setIsSubmitting(true);
+
     try {
       const response = await fetch(`/api/tasks/${taskId}/comments?commentId=${editingId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: editContent.trim() }),
+        body: JSON.stringify({ content: originalEditContent.trim() }),
       });
 
       if (!response.ok) {
@@ -68,12 +114,15 @@ export default function TaskComments({ taskId, comments, currentUserName, onUpda
         throw new Error(data.error || 'Failed to update comment');
       }
 
-      setEditingId(null);
-      setEditContent('');
+      // Trigger parent update to sync with backend
       onUpdate();
       toast.success('Comment updated');
     } catch (error) {
       console.error('Error updating comment:', error);
+      // Rollback optimistic update on error
+      setOptimisticComments(originalComments);
+      setEditingId(editingId);
+      setEditContent(originalEditContent);
       toast.error(error instanceof Error ? error.message : 'Failed to update comment');
     } finally {
       setIsSubmitting(false);
@@ -83,7 +132,14 @@ export default function TaskComments({ taskId, comments, currentUserName, onUpda
   const handleDeleteComment = async (commentId: string) => {
     if (!confirm('Delete this comment?')) return;
 
+    // Store original state for rollback
+    const originalComments = optimisticComments;
+
+    // Optimistically remove comment from UI
+    const updatedComments = optimisticComments.filter(c => c.id !== commentId);
+    setOptimisticComments(updatedComments);
     setIsSubmitting(true);
+
     try {
       const response = await fetch(`/api/tasks/${taskId}/comments?commentId=${commentId}`, {
         method: 'DELETE',
@@ -94,10 +150,13 @@ export default function TaskComments({ taskId, comments, currentUserName, onUpda
         throw new Error(data.error || 'Failed to delete comment');
       }
 
+      // Trigger parent update to sync with backend
       onUpdate();
       toast.success('Comment deleted');
     } catch (error) {
       console.error('Error deleting comment:', error);
+      // Rollback optimistic update on error
+      setOptimisticComments(originalComments);
       toast.error(error instanceof Error ? error.message : 'Failed to delete comment');
     } finally {
       setIsSubmitting(false);
@@ -124,7 +183,7 @@ export default function TaskComments({ taskId, comments, currentUserName, onUpda
     });
   };
 
-  const sortedComments = [...comments].sort((a, b) => {
+  const sortedComments = [...optimisticComments].sort((a, b) => {
     const aTime = typeof a.createdAt === 'number' ? a.createdAt : new Date(a.createdAt).getTime();
     const bTime = typeof b.createdAt === 'number' ? b.createdAt : new Date(b.createdAt).getTime();
     return bTime - aTime;
@@ -138,7 +197,7 @@ export default function TaskComments({ taskId, comments, currentUserName, onUpda
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-          Comments ({comments.length})
+          Comments ({optimisticComments.length})
         </h3>
       </div>
 
