@@ -42,8 +42,9 @@ model Board {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tasks       Task[]
-  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks           Task[]
+  recurringTasks  RecurringTask[]
+  user            User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([guestId])
@@ -83,7 +84,8 @@ model Task {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  board       Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  board           Board           @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  recurringTasks  RecurringTask[]
 
   @@index([boardId])
   @@map("tasks")
@@ -129,6 +131,39 @@ model PageHeader {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@map("page_headers")
+}
+
+model RecurringTask {
+  id             String            @id @default(auto()) @map("_id") @db.ObjectId
+  boardId        String            @db.ObjectId
+  taskId         String            @db.ObjectId
+  pattern        RecurringPattern
+  nextDueDate    DateTime
+  lastGenerated  DateTime?
+  isActive       Boolean           @default(true)
+  userId         String?           @db.ObjectId
+  guestId        String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  board          Board             @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  task           Task              @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([boardId])
+  @@index([taskId])
+  @@index([userId])
+  @@index([guestId])
+  @@index([isActive])
+  @@index([nextDueDate])
+  @@map("recurring_tasks")
+}
+
+type RecurringPattern {
+  frequency   String   // daily, weekly, monthly, yearly, custom
+  interval    Int
+  daysOfWeek  Int[]    @default([])
+  dayOfMonth  Int?
+  endDate     DateTime?
 }
 
 // ============================================================================

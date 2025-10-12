@@ -44,6 +44,8 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
   };
 
   const handleTimeTrackingUpdate = () => {
+    // Increment key to trigger re-render of time tracking section
+    // Now using optimistic UI in TimeTrackingSection, so we don't need to close the modal
     setTimeTrackingKey(prev => prev + 1);
   };
 
@@ -54,7 +56,7 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
 
   const editor = useEditor({
     extensions: [StarterKit],
-    content: task.description || '<p>Write your description here...</p>',
+    content: task.description === '<p>Write your description here...</p>' ? '' : (task.description || ''),
     editorProps: {
       attributes: {
         class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-4 py-3 text-gray-900 dark:text-white',
@@ -65,7 +67,8 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
 
   useEffect(() => {
     if (editor && task.description !== editor.getHTML()) {
-      editor.commands.setContent(task.description || '<p>Write your description here...</p>');
+      const content = task.description === '<p>Write your description here...</p>' ? '' : (task.description || '');
+      editor.commands.setContent(content);
     }
     setSubtasks(task.subtasks || []);
   }, [task, editor]);
@@ -552,7 +555,7 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
             {/* Time Tracking Section */}
             <div key={`timetracking-${timeTrackingKey}`} className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <TimeTrackingSection
-                boardId={boardId}
+                taskId={task.id}
                 task={task}
                 onUpdate={handleTimeTrackingUpdate}
               />

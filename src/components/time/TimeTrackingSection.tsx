@@ -21,10 +21,15 @@ export default function TimeTrackingSection({
   const [showTimeLogs, setShowTimeLogs] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const activeTimer = task.activeTimer;
+  // Optimistic UI state
+  const [optimisticTimer, setOptimisticTimer] = useState<{ startTime: Date } | null>(null);
+  const [optimisticEstimate, setOptimisticEstimate] = useState<number | null>(null);
+  const [optimisticActualTime, setOptimisticActualTime] = useState<number | null>(null);
+
+  const activeTimer = optimisticTimer || task.activeTimer;
   const timeLogs = task.timeLogs || [];
-  const estimatedTime = task.estimatedTime || 0;
-  const actualTime = task.actualTime || 0;
+  const estimatedTime = optimisticEstimate ?? task.estimatedTime ?? 0;
+  const actualTime = optimisticActualTime ?? task.actualTime ?? 0;
 
   // Update elapsed time every second when timer is active
   useEffect(() => {
@@ -40,7 +45,11 @@ export default function TimeTrackingSection({
   }, [activeTimer]);
 
   const handleStartTimer = async () => {
+    // Optimistic UI: immediately show timer as started
+    const optimisticStart = { startTime: new Date() };
+    setOptimisticTimer(optimisticStart);
     setLoading(true);
+
     try {
       const response = await fetch(`/api/tasks/${taskId}/time`, {
         method: 'POST',
@@ -53,9 +62,13 @@ export default function TimeTrackingSection({
         throw new Error(data.error || 'Failed to start timer');
       }
 
+      // Clear optimistic state - the parent will have updated task data
+      setOptimisticTimer(null);
       onUpdate();
       toast.success('Timer started');
     } catch (error) {
+      // Rollback optimistic update on error
+      setOptimisticTimer(null);
       console.error('Error starting timer:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to start timer');
     } finally {
@@ -66,7 +79,17 @@ export default function TimeTrackingSection({
   const handleStopTimer = async () => {
     const note = prompt('Add a note about this time entry (optional):');
 
+    if (!activeTimer) return;
+
+    // Calculate duration for optimistic update
+    const startTime = new Date(activeTimer.startTime).getTime();
+    const duration = Math.floor((Date.now() - startTime) / 60000); // minutes
+
+    // Optimistic UI: immediately show timer as stopped and update actual time
+    setOptimisticTimer(null);
+    setOptimisticActualTime((actualTime || 0) + duration);
     setLoading(true);
+
     try {
       const response = await fetch(`/api/tasks/${taskId}/time`, {
         method: 'POST',
@@ -80,9 +103,14 @@ export default function TimeTrackingSection({
       }
 
       const result = await response.json();
+      // Clear optimistic state - the parent will have updated task data
+      setOptimisticActualTime(null);
       onUpdate();
       toast.success(`Timer stopped - ${formatTime(result.duration)} logged`);
     } catch (error) {
+      // Rollback optimistic update on error
+      setOptimisticTimer(activeTimer);
+      setOptimisticActualTime(null);
       console.error('Error stopping timer:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to stop timer');
     } finally {
@@ -118,7 +146,12 @@ export default function TimeTrackingSection({
       return;
     }
 
+    // Optimistic UI: immediately show the new estimate
+    setOptimisticEstimate(minutes);
+    setIsEditingEstimate(false);
+    setEstimateInput('');
     setLoading(true);
+
     try {
       const response = await fetch(`/api/tasks/${taskId}/time`, {
         method: 'POST',
@@ -131,11 +164,15 @@ export default function TimeTrackingSection({
         throw new Error(data.error || 'Failed to set estimate');
       }
 
+      // Clear optimistic state - the parent will have updated task data
+      setOptimisticEstimate(null);
       onUpdate();
-      setIsEditingEstimate(false);
-      setEstimateInput('');
       toast.success('Estimate updated');
     } catch (error) {
+      // Rollback optimistic update on error
+      setOptimisticEstimate(null);
+      setIsEditingEstimate(true);
+      setEstimateInput(value);
       console.error('Error setting estimate:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to set estimate');
     } finally {

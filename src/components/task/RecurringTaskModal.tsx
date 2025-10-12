@@ -38,12 +38,34 @@ export default function RecurringTaskModal({
   const [hasEndDate, setHasEndDate] = useState(false);
   const [endDate, setEndDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [existingRecurring, setExistingRecurring] = useState<any>(null);
+  const [isLoadingRecurring, setIsLoadingRecurring] = useState(false);
 
-  // Get existing recurring task if any
-  const existingRecurring = currentTask.recurringTaskId
-    ? RecurringTaskService.getAll().find((r) => r.id === currentTask.recurringTaskId)
-    : null;
+  // Fetch existing recurring task if any
+  useEffect(() => {
+    if (currentTask.recurringTaskId && isOpen) {
+      setIsLoadingRecurring(true);
+      fetch(`/api/recurring-tasks/${currentTask.recurringTaskId}`)
+        .then((res) => {
+          if (!res.ok) throw new Error('Failed to fetch recurring task');
+          return res.json();
+        })
+        .then((data) => {
+          setExistingRecurring(data.recurringTask);
+        })
+        .catch((error) => {
+          console.error('Error fetching recurring task:', error);
+        })
+        .finally(() => {
+          setIsLoadingRecurring(false);
+        });
+    } else if (!isOpen) {
+      // Reset when modal closes
+      setExistingRecurring(null);
+    }
+  }, [currentTask.recurringTaskId, isOpen]);
 
+  // Populate form fields when existing recurring task is loaded
   useEffect(() => {
     if (existingRecurring) {
       setFrequency(existingRecurring.pattern.frequency);
@@ -104,36 +126,103 @@ export default function RecurringTaskModal({
     setIsSaving(true);
     try {
       const pattern = buildPattern();
+      const nextDueDate = RecurringTaskService.calculateNextDueDate(Date.now(), pattern);
 
       if (existingRecurring) {
         // Update existing recurring task
-        RecurringTaskService.update(existingRecurring.id, { pattern });
+        const response = await fetch(`/api/recurring-tasks/${existingRecurring.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pattern: {
+              frequency: pattern.frequency,
+              interval: pattern.interval,
+              daysOfWeek: pattern.daysOfWeek,
+              dayOfMonth: pattern.dayOfMonth,
+              endDate: pattern.endDate ? new Date(pattern.endDate).toISOString() : undefined,
+            },
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update recurring task');
+        }
       } else {
         // Create new recurring task
-        const { id, createdAt, recurringTaskId, completedAt, ...taskTemplate } = currentTask;
-        RecurringTaskService.create(boardId, taskTemplate, pattern);
+        const response = await fetch('/api/recurring-tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            boardId,
+            taskId,
+            pattern: {
+              frequency: pattern.frequency,
+              interval: pattern.interval,
+              daysOfWeek: pattern.daysOfWeek,
+              dayOfMonth: pattern.dayOfMonth,
+              endDate: pattern.endDate ? new Date(pattern.endDate).toISOString() : undefined,
+            },
+            nextDueDate: new Date(nextDueDate).toISOString(),
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create recurring task');
+        }
       }
 
       onUpdate();
       onClose();
+    } catch (error) {
+      console.error('Error saving recurring task:', error);
+      alert('Failed to save recurring task. Please try again.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!existingRecurring) return;
     if (!confirm('Delete this recurring task? Future instances will not be created.')) return;
 
-    RecurringTaskService.delete(existingRecurring.id);
-    onUpdate();
-    onClose();
+    try {
+      const response = await fetch(`/api/recurring-tasks/${existingRecurring.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete recurring task');
+      }
+
+      onUpdate();
+      onClose();
+    } catch (error) {
+      console.error('Error deleting recurring task:', error);
+      alert('Failed to delete recurring task. Please try again.');
+    }
   };
 
-  const handleToggleActive = () => {
+  const handleToggleActive = async () => {
     if (!existingRecurring) return;
-    RecurringTaskService.toggleActive(existingRecurring.id);
-    onUpdate();
+
+    try {
+      const response = await fetch(`/api/recurring-tasks/${existingRecurring.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isActive: !existingRecurring.isActive,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle recurring task');
+      }
+
+      onUpdate();
+    } catch (error) {
+      console.error('Error toggling recurring task:', error);
+      alert('Failed to toggle recurring task. Please try again.');
+    }
   };
 
   if (!isOpen) return null;

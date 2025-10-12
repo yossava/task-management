@@ -33,7 +33,6 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import NotificationsPanel from '@/components/notifications/NotificationsPanel';
 import { NotificationService } from '@/lib/services/notificationService';
-import { RecurringTaskService } from '@/lib/services/recurringTaskService';
 import CalendarView from '@/components/calendar/CalendarView';
 import ListView from '@/components/list/ListView';
 import CommandPalette from '@/components/command/CommandPalette';
@@ -118,12 +117,24 @@ export default function BoardsPage() {
 
   // Generate recurring tasks periodically
   useEffect(() => {
-    const generateRecurringTasks = () => {
-      const generatedCount = RecurringTaskService.generateDueTasks();
-      if (generatedCount > 0) {
-        console.log(`Generated ${generatedCount} recurring task${generatedCount > 1 ? 's' : ''}`);
-        // Force reload to show new tasks
-        window.location.reload();
+    const generateRecurringTasks = async () => {
+      try {
+        const response = await fetch('/api/recurring-tasks/generate', {
+          method: 'POST',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to generate recurring tasks');
+        }
+
+        const data = await response.json();
+        if (data.generatedCount > 0) {
+          console.log(`Generated ${data.generatedCount} recurring task${data.generatedCount > 1 ? 's' : ''}`);
+          // Force reload to show new tasks
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error('Error generating recurring tasks:', error);
       }
     };
 
