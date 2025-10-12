@@ -45,12 +45,26 @@ export default function SignInPage() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const { signIn } = await import('next-auth/react');
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setErrors({ password: 'Invalid email or password' });
+        setIsLoading(false);
+      } else if (result?.ok) {
+        router.push('/boards');
+        router.refresh();
+      }
+    } catch (error) {
+      console.error('Sign in error:', error);
+      setErrors({ password: 'An error occurred. Please try again.' });
       setIsLoading(false);
-      // For now, just redirect to boards page
-      router.push('/boards');
-    }, 1000);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

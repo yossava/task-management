@@ -77,12 +77,46 @@ export default function SignUpPage() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Register the user
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({ email: data.error || 'Registration failed' });
+        setIsLoading(false);
+        return;
+      }
+
+      // Auto sign in after successful registration
+      const { signIn } = await import('next-auth/react');
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (result?.ok) {
+        router.push('/boards');
+        router.refresh();
+      } else {
+        // Registration successful but auto-login failed, redirect to signin
+        router.push('/signin?registered=true');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      setErrors({ email: 'An error occurred. Please try again.' });
       setIsLoading(false);
-      // For now, just redirect to boards page
-      router.push('/boards');
-    }, 1500);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

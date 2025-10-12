@@ -22,6 +22,11 @@ const PRIORITY_LABELS = {
 };
 
 export default function PriorityBadge({ priority, size = 'sm', showIcon = true }: PriorityBadgeProps) {
+  // Safety check: if priority is undefined or invalid, return null
+  if (!priority || !PRIORITY_STYLES[priority]) {
+    return null;
+  }
+
   const styles = PRIORITY_STYLES[priority];
   const icon = PRIORITY_ICONS[priority];
   const label = PRIORITY_LABELS[priority];
