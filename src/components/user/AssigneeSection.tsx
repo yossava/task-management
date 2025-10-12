@@ -1,34 +1,73 @@
 'use client';
 
 import React, { useState } from 'react';
-import { BoardTask, Board } from '@/lib/types';
+import { BoardTask } from '@/lib/types';
 import { UserService } from '@/lib/services/userService';
 import UserPicker from './UserPicker';
 import UserAvatar from './UserAvatar';
+import toast from 'react-hot-toast';
 
 interface AssigneeSectionProps {
-  board: Board;
+  taskId: string;
   task: BoardTask;
-  onUpdate: (boardId: string, updates: Partial<Board>) => Promise<void>;
+  onUpdate: () => void;
 }
 
 export default function AssigneeSection({
-  board,
+  taskId,
   task,
   onUpdate,
 }: AssigneeSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const assignedUsers = task.assigneeIds
     ? UserService.getByIds(task.assigneeIds)
     : [];
 
   const handleAssigneeChange = async (userIds: string[]) => {
-    const updatedTasks = board.tasks.map(t =>
-      t.id === task.id ? { ...t, assigneeIds: userIds } : t
-    );
-    await onUpdate(board.id, { tasks: updatedTasks });
-    setIsEditing(false);
+    setLoading(true);
+    try {
+      // Add new assignees
+      const currentIds = task.assigneeIds || [];
+      const toAdd = userIds.filter(id => !currentIds.includes(id));
+      const toRemove = currentIds.filter(id => !userIds.includes(id));
+
+      // Add assignees
+      for (const assigneeId of toAdd) {
+        const response = await fetch(`/api/tasks/${taskId}/assignees`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ assigneeId }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to add assignee');
+        }
+      }
+
+      // Remove assignees
+      for (const assigneeId of toRemove) {
+        const response = await fetch(`/api/tasks/${taskId}/assignees?assigneeId=${assigneeId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to remove assignee');
+        }
+      }
+
+      onUpdate();
+      setIsEditing(false);
+      toast.success('Assignees updated');
+    } catch (error) {
+      console.error('Error updating assignees:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update assignees');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -76,15 +115,28 @@ export default function AssigneeSection({
               <UserAvatar user={user} size="md" showName />
               <button
                 onClick={async () => {
-                  const newAssignees = task.assigneeIds?.filter(
-                    (id) => id !== user.id
-                  );
-                  const updatedTasks = board.tasks.map(t =>
-                    t.id === task.id ? { ...t, assigneeIds: newAssignees || [] } : t
-                  );
-                  await onUpdate(board.id, { tasks: updatedTasks });
+                  setLoading(true);
+                  try {
+                    const response = await fetch(`/api/tasks/${taskId}/assignees?assigneeId=${user.id}`, {
+                      method: 'DELETE',
+                    });
+
+                    if (!response.ok) {
+                      const data = await response.json();
+                      throw new Error(data.error || 'Failed to remove assignee');
+                    }
+
+                    onUpdate();
+                    toast.success('Assignee removed');
+                  } catch (error) {
+                    console.error('Error removing assignee:', error);
+                    toast.error(error instanceof Error ? error.message : 'Failed to remove assignee');
+                  } finally {
+                    setLoading(false);
+                  }
                 }}
-                className="text-gray-400 hover:text-red-500 transition-colors"
+                disabled={loading}
+                className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
                 title="Remove assignee"
               >
                 <svg

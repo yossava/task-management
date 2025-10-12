@@ -68,6 +68,24 @@ model Task {
   // Checklist items (embedded)
   checklist   ChecklistItem[]
 
+  // Subtasks (embedded)
+  subtasks    SubtaskItem[]
+
+  // Assignees
+  assigneeIds String[]  @default([])
+
+  // Time Tracking
+  estimatedTime Int?      // Estimated minutes
+  actualTime    Int?      // Tracked minutes
+  timeLogs      TimeLog[]
+  activeTimer   ActiveTimerData?
+
+  // Dependencies
+  dependencies  String[]  @default([])  // Array of task IDs this task depends on
+
+  // Comments
+  comments      TaskComment[]
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -81,6 +99,37 @@ type ChecklistItem {
   id        String
   text      String
   completed Boolean
+}
+
+type SubtaskItem {
+  id          String
+  text        String
+  completed   Boolean
+  createdAt   DateTime
+  dueDate     DateTime?
+}
+
+type TimeLog {
+  id        String
+  startTime DateTime
+  endTime   DateTime
+  duration  Int       // Minutes
+  note      String?
+  userId    String?
+}
+
+type ActiveTimerData {
+  startTime DateTime
+  userId    String?
+}
+
+type TaskComment {
+  id        String
+  content   String
+  author    String
+  authorId  String?
+  createdAt DateTime
+  updatedAt DateTime
 }
 
 model PageHeader {

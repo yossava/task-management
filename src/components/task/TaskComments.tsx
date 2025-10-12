@@ -1,34 +1,44 @@
 'use client';
 
 import { useState } from 'react';
-import { TaskComment, Board } from '@/lib/types';
-import { CommentService } from '@/lib/services/commentService';
-import { useBoardsOptimized } from '@/hooks/useBoardsOptimized';
+import { TaskComment } from '@/lib/types';
+import toast from 'react-hot-toast';
 
 interface TaskCommentsProps {
-  boardId: string;
   taskId: string;
   comments: TaskComment[];
+  currentUserName: string;
   onUpdate: () => void;
 }
 
-export default function TaskComments({ boardId, taskId, comments, onUpdate }: TaskCommentsProps) {
+export default function TaskComments({ taskId, comments, currentUserName, onUpdate }: TaskCommentsProps) {
   const [newComment, setNewComment] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { boards, updateBoard } = useBoardsOptimized();
-  const board = boards.find(b => b.id === boardId);
-
   const handleAddComment = async () => {
-    if (!newComment.trim() || isSubmitting || !board) return;
+    if (!newComment.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
-      await CommentService.addComment(board, taskId, newComment.trim(), 'User', updateBoard);
+      const response = await fetch(`/api/tasks/${taskId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: newComment.trim(), author: currentUserName }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to add comment');
+      }
+
       setNewComment('');
       onUpdate();
+      toast.success('Comment added');
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to add comment');
     } finally {
       setIsSubmitting(false);
     }
@@ -43,29 +53,61 @@ export default function TaskComments({ boardId, taskId, comments, onUpdate }: Ta
   };
 
   const handleSaveEdit = async () => {
-    if (!editingId || !editContent.trim() || isSubmitting || !board) return;
+    if (!editingId || !editContent.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
-      await CommentService.updateComment(board, taskId, editingId, editContent.trim(), updateBoard);
+      const response = await fetch(`/api/tasks/${taskId}/comments?commentId=${editingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: editContent.trim() }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update comment');
+      }
+
       setEditingId(null);
       setEditContent('');
       onUpdate();
+      toast.success('Comment updated');
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update comment');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('Delete this comment?') || !board) return;
+    if (!confirm('Delete this comment?')) return;
 
-    await CommentService.deleteComment(board, taskId, commentId, updateBoard);
-    onUpdate();
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/comments?commentId=${commentId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete comment');
+      }
+
+      onUpdate();
+      toast.success('Comment deleted');
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete comment');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const formatTimestamp = (timestamp: number) => {
+  const formatTimestamp = (timestamp: number | Date) => {
+    const date = typeof timestamp === 'number' ? timestamp : new Date(timestamp).getTime();
     const now = Date.now();
-    const diff = now - timestamp;
+    const diff = now - date;
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -75,14 +117,18 @@ export default function TaskComments({ boardId, taskId, comments, onUpdate }: Ta
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
 
-    return new Date(timestamp).toLocaleDateString('default', {
+    return new Date(date).toLocaleDateString('default', {
       month: 'short',
       day: 'numeric',
-      year: now - timestamp > 31536000000 ? 'numeric' : undefined,
+      year: now - date > 31536000000 ? 'numeric' : undefined,
     });
   };
 
-  const sortedComments = [...comments].sort((a, b) => b.createdAt - a.createdAt);
+  const sortedComments = [...comments].sort((a, b) => {
+    const aTime = typeof a.createdAt === 'number' ? a.createdAt : new Date(a.createdAt).getTime();
+    const bTime = typeof b.createdAt === 'number' ? b.createdAt : new Date(b.createdAt).getTime();
+    return bTime - aTime;
+  });
 
   return (
     <div className="space-y-4">
@@ -174,7 +220,11 @@ export default function TaskComments({ boardId, taskId, comments, onUpdate }: Ta
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                           {formatTimestamp(comment.createdAt)}
-                          {comment.updatedAt !== comment.createdAt && ' (edited)'}
+                          {comment.updatedAt &&
+                            (typeof comment.updatedAt === 'number'
+                              ? comment.updatedAt !== comment.createdAt
+                              : new Date(comment.updatedAt).getTime() !== (typeof comment.createdAt === 'number' ? comment.createdAt : new Date(comment.createdAt).getTime())
+                            ) && ' (edited)'}
                         </div>
                       </div>
                     </div>
@@ -182,7 +232,8 @@ export default function TaskComments({ boardId, taskId, comments, onUpdate }: Ta
                     <div className="flex gap-1">
                       <button
                         onClick={() => handleEditComment(comment.id)}
-                        className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                        disabled={isSubmitting}
+                        className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors disabled:opacity-50"
                         title="Edit comment"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,7 +242,8 @@ export default function TaskComments({ boardId, taskId, comments, onUpdate }: Ta
                       </button>
                       <button
                         onClick={() => handleDeleteComment(comment.id)}
-                        className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                        disabled={isSubmitting}
+                        className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
                         title="Delete comment"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

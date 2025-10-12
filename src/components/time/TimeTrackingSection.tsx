@@ -2,16 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { BoardTask } from '@/lib/types';
-import { TimeTrackingService } from '@/lib/services/timeTrackingService';
+import toast from 'react-hot-toast';
 
 interface TimeTrackingSectionProps {
-  boardId: string;
+  taskId: string;
   task: BoardTask;
   onUpdate: () => void;
 }
 
 export default function TimeTrackingSection({
-  boardId,
+  taskId,
   task,
   onUpdate,
 }: TimeTrackingSectionProps) {
@@ -19,6 +19,7 @@ export default function TimeTrackingSection({
   const [estimateInput, setEstimateInput] = useState('');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showTimeLogs, setShowTimeLogs] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const activeTimer = task.activeTimer;
   const timeLogs = task.timeLogs || [];
@@ -29,25 +30,67 @@ export default function TimeTrackingSection({
   useEffect(() => {
     if (!activeTimer) return;
 
+    const startTime = new Date(activeTimer.startTime).getTime();
     const interval = setInterval(() => {
-      setElapsedTime(TimeTrackingService.getElapsedTime(activeTimer));
+      const elapsed = Math.floor((Date.now() - startTime) / 60000); // minutes
+      setElapsedTime(elapsed);
     }, 1000);
 
     return () => clearInterval(interval);
   }, [activeTimer]);
 
-  const handleStartTimer = () => {
-    TimeTrackingService.startTimer(boardId, task.id);
-    onUpdate();
+  const handleStartTimer = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/time`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'start' }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to start timer');
+      }
+
+      onUpdate();
+      toast.success('Timer started');
+    } catch (error) {
+      console.error('Error starting timer:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to start timer');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleStopTimer = () => {
+  const handleStopTimer = async () => {
     const note = prompt('Add a note about this time entry (optional):');
-    TimeTrackingService.stopTimer(boardId, task.id, note || undefined);
-    onUpdate();
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/time`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'stop', note: note || undefined }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to stop timer');
+      }
+
+      const result = await response.json();
+      onUpdate();
+      toast.success(`Timer stopped - ${formatTime(result.duration)} logged`);
+    } catch (error) {
+      console.error('Error stopping timer:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to stop timer');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSetEstimate = () => {
+  const handleSetEstimate = async () => {
     const value = estimateInput.trim();
     if (!value) {
       setIsEditingEstimate(false);
@@ -70,24 +113,66 @@ export default function TimeTrackingSection({
       minutes = parseInt(plainNumber[1]);
     }
 
-    if (minutes > 0) {
-      TimeTrackingService.setEstimatedTime(boardId, task.id, minutes);
-      onUpdate();
+    if (minutes <= 0) {
+      toast.error('Please enter a valid time estimate');
+      return;
     }
 
-    setIsEditingEstimate(false);
-    setEstimateInput('');
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/time`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'set_estimate', estimatedTime: minutes }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to set estimate');
+      }
+
+      onUpdate();
+      setIsEditingEstimate(false);
+      setEstimateInput('');
+      toast.success('Estimate updated');
+    } catch (error) {
+      console.error('Error setting estimate:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to set estimate');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteTimeLog = (logId: string) => {
-    if (confirm('Delete this time log?')) {
-      TimeTrackingService.deleteTimeLog(boardId, task.id, logId);
+  const handleDeleteTimeLog = async (logId: string) => {
+    if (!confirm('Delete this time log?')) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/time?logId=${logId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete time log');
+      }
+
       onUpdate();
+      toast.success('Time log deleted');
+    } catch (error) {
+      console.error('Error deleting time log:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete time log');
+    } finally {
+      setLoading(false);
     }
   };
 
   const formatTime = (minutes: number): string => {
-    return TimeTrackingService.formatDuration(minutes);
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours === 0) return `${mins}m`;
+    if (mins === 0) return `${hours}h`;
+    return `${hours}h ${mins}m`;
   };
 
   const getProgressColor = () => {
@@ -112,7 +197,8 @@ export default function TimeTrackingSection({
           <>
             <button
               onClick={handleStopTimer}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+              disabled={loading}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <rect x="6" y="6" width="8" height="8" />
@@ -131,7 +217,8 @@ export default function TimeTrackingSection({
         ) : (
           <button
             onClick={handleStartTimer}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+            disabled={loading}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path d="M6.3 4.3a1 1 0 011.4 0l6 6a1 1 0 010 1.4l-6 6a1 1 0 01-1.4-1.4L11.58 11 6.3 5.7a1 1 0 010-1.4z" />
@@ -180,7 +267,8 @@ export default function TimeTrackingSection({
             />
             <button
               onClick={handleSetEstimate}
-              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+              disabled={loading}
+              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
             >
               Save
             </button>
@@ -290,7 +378,8 @@ export default function TimeTrackingSection({
                     </div>
                     <button
                       onClick={() => handleDeleteTimeLog(log.id)}
-                      className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                      disabled={loading}
+                      className="p-1 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
                     >
                       <svg
                         className="w-4 h-4"
