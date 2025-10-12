@@ -5,17 +5,15 @@ import { createPortal } from 'react-dom';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Board, BoardTask, Priority, TaskFilters } from '@/lib/types';
+import { Board, BoardTask, Priority } from '@/lib/types';
 import Card from '@/components/ui/Card';
 import { useTasksOptimized } from '@/hooks/useTasksOptimized';
-import { filterTasks } from '@/lib/utils/taskFilters';
 import { SortableTaskItem } from './SortableTaskItem';
 import TaskDetailModal from '@/components/task/TaskDetailModal';
 import TagManager from '@/components/ui/TagManager';
 
 interface BoardCardProps {
   board: Board;
-  filters?: TaskFilters;
   onUpdate: (id: string, data: Partial<Board>) => void;
   onDelete: (id: string) => void;
   disableHover?: boolean;
@@ -40,7 +38,7 @@ const PRESET_COLORS = [
   '#0ea5e9', // sky
 ];
 
-export function BoardCard({ board, filters, onUpdate, onDelete, disableHover = false }: BoardCardProps) {
+export function BoardCard({ board, onUpdate, onDelete, disableHover = false }: BoardCardProps) {
   // Use optimized task hook
   const {
     createTask,
@@ -55,11 +53,8 @@ export function BoardCard({ board, filters, onUpdate, onDelete, disableHover = f
     isDeleting,
   } = useTasksOptimized(board.id);
 
-  // Filter tasks for display only - keep all tasks for drag and drop
-  const displayTasks = useMemo(() => {
-    if (!filters) return board.tasks || [];
-    return filterTasks(board.tasks || [], filters);
-  }, [board.tasks, filters]);
+  // Use the tasks from the board prop directly - filtering is done in the parent component
+  const displayTasks = board.tasks || [];
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);

@@ -169,7 +169,8 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
         completed: shouldBeCompleted,
       });
     }
-  }, [checklist, isOpen, task.progress, task.completed, task.checklist, onUpdate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checklist, isOpen]);
 
   if (!isOpen) return null;
 
@@ -601,7 +602,6 @@ export default function TaskDetailModal({ task, boardId, isOpen, onClose, onUpda
             {/* Comments Section */}
             <div key={`comments-${commentsKey}`} className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <TaskComments
-                boardId={boardId}
                 taskId={task.id}
                 comments={task.comments || []}
                 onUpdate={handleCommentsUpdate}

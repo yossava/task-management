@@ -791,17 +791,16 @@ export default function BoardsPage() {
               items={boards.map(b => b.id)}
               strategy={rectSortingStrategy}
             >
-              {boards.map((board, index) => (
+              {boardsWithFilteredTasks.map((board, index) => (
                 <BoardCard
                   key={board.id}
                   board={board}
-                  filters={filters}
                   onUpdate={handleUpdate}
                   onDelete={handleDelete}
                   disableHover={
                     disabledHoverBoardId === board.id ||
                     (disabledHoverBoardId === '__creating__' && board.id.startsWith('temp-')) ||
-                    (disabledHoverBoardId === '__creating__' && index === boards.length - 1)
+                    (disabledHoverBoardId === '__creating__' && index === boardsWithFilteredTasks.length - 1)
                   }
                 />
               ))}
