@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { fetchWithFingerprint } from '@/lib/utils/fetchWithFingerprint';
 
 interface UserStory {
   id: string;
@@ -69,7 +70,7 @@ export function useStoriesOptimized(filters?: StoriesFilters) {
   const { data: stories = [], isLoading, error } = useQuery({
     queryKey: ['stories', filters],
     queryFn: async () => {
-      const response = await fetch(`/api/scrum/stories${queryString}`);
+      const response = await fetchWithFingerprint(`/api/scrum/stories${queryString}`);
       if (!response.ok) throw new Error('Failed to fetch stories');
       const data = await response.json();
       return data.stories as UserStory[];
@@ -81,7 +82,7 @@ export function useStoriesOptimized(filters?: StoriesFilters) {
     return useQuery({
       queryKey: ['stories', id],
       queryFn: async () => {
-        const response = await fetch(`/api/scrum/stories/${id}`);
+        const response = await fetchWithFingerprint(`/api/scrum/stories/${id}`);
         if (!response.ok) throw new Error('Failed to fetch story');
         const data = await response.json();
         return data.story as UserStory;
@@ -93,7 +94,7 @@ export function useStoriesOptimized(filters?: StoriesFilters) {
   // Create story
   const createMutation = useMutation({
     mutationFn: async (newStory: CreateStoryData) => {
-      const response = await fetch('/api/scrum/stories', {
+      const response = await fetchWithFingerprint('/api/scrum/stories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newStory),
@@ -140,7 +141,7 @@ export function useStoriesOptimized(filters?: StoriesFilters) {
   // Update story
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateStoryData }) => {
-      const response = await fetch(`/api/scrum/stories/${id}`, {
+      const response = await fetchWithFingerprint(`/api/scrum/stories/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -192,7 +193,7 @@ export function useStoriesOptimized(filters?: StoriesFilters) {
   // Delete story
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/scrum/stories/${id}`, {
+      const response = await fetchWithFingerprint(`/api/scrum/stories/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete story');

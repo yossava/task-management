@@ -20,10 +20,10 @@ export function useBoardsOptimized() {
       const response = await boardsApi.getAll();
       return response.boards;
     },
-    staleTime: 30 * 1000, // Keep data fresh for 30 seconds
+    staleTime: 1000, // Data becomes stale after 1 second
     gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
     refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchOnMount: false, // Use cached data if available
+    refetchOnMount: true, // Always refetch on mount to get fresh data
   });
 
   // Create board mutation
@@ -187,9 +187,11 @@ export function useBoardsOptimized() {
 
       return { previousBoards };
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       console.log('Reorder successful');
-      // Keep the optimistic update - it should match the server now
+      // Wait 1 second for visual feedback, then refetch to ensure consistency
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await queryClient.refetchQueries({ queryKey: ['boards'] });
     },
     onError: (err, _, context) => {
       console.error('Reorder failed:', err);

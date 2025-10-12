@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { fetchWithFingerprint } from '@/lib/utils/fetchWithFingerprint';
 
 interface Epic {
   id: string;
@@ -41,7 +42,7 @@ export function useEpicsOptimized() {
   const { data: epics = [], isLoading, error } = useQuery({
     queryKey: ['epics'],
     queryFn: async () => {
-      const response = await fetch('/api/scrum/epics');
+      const response = await fetchWithFingerprint('/api/scrum/epics');
       if (!response.ok) throw new Error('Failed to fetch epics');
       const data = await response.json();
       return data.epics as Epic[];
@@ -53,7 +54,7 @@ export function useEpicsOptimized() {
     return useQuery({
       queryKey: ['epics', id],
       queryFn: async () => {
-        const response = await fetch(`/api/scrum/epics/${id}`);
+        const response = await fetchWithFingerprint(`/api/scrum/epics/${id}`);
         if (!response.ok) throw new Error('Failed to fetch epic');
         const data = await response.json();
         return data.epic as Epic;
@@ -65,7 +66,7 @@ export function useEpicsOptimized() {
   // Create epic
   const createMutation = useMutation({
     mutationFn: async (newEpic: CreateEpicData) => {
-      const response = await fetch('/api/scrum/epics', {
+      const response = await fetchWithFingerprint('/api/scrum/epics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newEpic),
@@ -112,7 +113,7 @@ export function useEpicsOptimized() {
   // Update epic
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateEpicData }) => {
-      const response = await fetch(`/api/scrum/epics/${id}`, {
+      const response = await fetchWithFingerprint(`/api/scrum/epics/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -164,7 +165,7 @@ export function useEpicsOptimized() {
   // Delete epic
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/scrum/epics/${id}`, {
+      const response = await fetchWithFingerprint(`/api/scrum/epics/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete epic');

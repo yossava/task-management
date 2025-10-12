@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { fetchWithFingerprint } from '@/lib/utils/fetchWithFingerprint';
 
 interface ScrumTask {
   id: string;
@@ -60,7 +61,7 @@ export function useScrumTasksOptimized(filters?: TasksFilters) {
   const { data: tasks = [], isLoading, error } = useQuery({
     queryKey: ['scrumTasks', filters],
     queryFn: async () => {
-      const response = await fetch(`/api/scrum/tasks${queryString}`);
+      const response = await fetchWithFingerprint(`/api/scrum/tasks${queryString}`);
       if (!response.ok) throw new Error('Failed to fetch tasks');
       const data = await response.json();
       return data.tasks as ScrumTask[];
@@ -72,7 +73,7 @@ export function useScrumTasksOptimized(filters?: TasksFilters) {
     return useQuery({
       queryKey: ['scrumTasks', id],
       queryFn: async () => {
-        const response = await fetch(`/api/scrum/tasks/${id}`);
+        const response = await fetchWithFingerprint(`/api/scrum/tasks/${id}`);
         if (!response.ok) throw new Error('Failed to fetch task');
         const data = await response.json();
         return data.task as ScrumTask;
@@ -84,7 +85,7 @@ export function useScrumTasksOptimized(filters?: TasksFilters) {
   // Create task
   const createMutation = useMutation({
     mutationFn: async (newTask: CreateTaskData) => {
-      const response = await fetch('/api/scrum/tasks', {
+      const response = await fetchWithFingerprint('/api/scrum/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTask),
@@ -131,7 +132,7 @@ export function useScrumTasksOptimized(filters?: TasksFilters) {
   // Update task
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateTaskData }) => {
-      const response = await fetch(`/api/scrum/tasks/${id}`, {
+      const response = await fetchWithFingerprint(`/api/scrum/tasks/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -184,7 +185,7 @@ export function useScrumTasksOptimized(filters?: TasksFilters) {
   // Delete task
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/scrum/tasks/${id}`, {
+      const response = await fetchWithFingerprint(`/api/scrum/tasks/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete task');

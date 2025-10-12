@@ -3,8 +3,22 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    // Allow the request to proceed if authenticated
-    return NextResponse.next();
+    // Clone the request headers
+    const requestHeaders = new Headers(req.headers);
+
+    // Ensure guest fingerprint header is preserved
+    const guestFingerprint = req.headers.get('x-guest-fingerprint');
+    if (guestFingerprint) {
+      console.log('[Middleware] Forwarding guest fingerprint:', guestFingerprint);
+      requestHeaders.set('x-guest-fingerprint', guestFingerprint);
+    }
+
+    // Create response with modified request headers
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   },
   {
     callbacks: {

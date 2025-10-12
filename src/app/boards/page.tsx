@@ -243,23 +243,8 @@ export default function BoardsPage() {
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-
-    if (!over) return;
-
-    // Only handle board reordering in onDragOver for smoother visual feedback
-    const activeTaskInfo = findTaskInBoards(active.id as string);
-
-    if (!activeTaskInfo && active.id !== over.id) {
-      // It's a board being dragged over another board
-      const oldIndex = boards.findIndex(b => b.id === active.id);
-      const newIndex = boards.findIndex(b => b.id === over.id);
-
-      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        const newBoards = arrayMove(boards, oldIndex, newIndex);
-        reorderBoards(newBoards);
-      }
-    }
+    // Don't do anything on drag over - wait for drag end
+    // This prevents multiple reorder requests while dragging
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -272,6 +257,19 @@ export default function BoardsPage() {
     // Check if we're dragging a task
     const activeTaskInfo = findTaskInBoards(active.id as string);
     const overTaskInfo = findTaskInBoards(over.id as string);
+
+    // Handle board reordering
+    if (!activeTaskInfo && active.id !== over.id) {
+      // It's a board being dragged to a new position
+      const oldIndex = boards.findIndex(b => b.id === active.id);
+      const newIndex = boards.findIndex(b => b.id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        const newBoards = arrayMove(boards, oldIndex, newIndex);
+        reorderBoards(newBoards);
+        return;
+      }
+    }
 
     if (activeTaskInfo) {
       // Dragging a task

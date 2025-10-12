@@ -321,6 +321,7 @@ export function BoardCard({ board, onUpdate, onDelete }: BoardCardProps) {
       }}
       {...attributes}
       data-board-id={board.id}
+      data-testid="board-card"
     >
       <Card className="group hover:shadow-lg transition-shadow relative overflow-hidden">
         {/* Board color indicator - top-left quarter circle */}

@@ -1,23 +1,37 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { v4 as uuidv4 } from 'uuid';
 import { getCurrentUserId } from './session';
 
+/**
+ * SIMPLIFIED: Get or create a guest ID
+ * Just check cookie, if not exist generate UUID and set HttpOnly cookie
+ * Server manages everything - no client-side complexity
+ */
 export async function getOrCreateGuestId(): Promise<string> {
   const cookieStore = await cookies();
-  let guestId = cookieStore.get('guestId')?.value;
 
-  if (!guestId) {
-    guestId = uuidv4();
-    cookieStore.set('guestId', guestId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 365, // 1 year
-      path: '/',
-      sameSite: 'lax',
-    });
+  // Check existing cookie
+  const existingCookie = cookieStore.get('guestId')?.value;
+
+  if (existingCookie) {
+    console.log('[getOrCreateGuestId] Using existing cookie:', existingCookie);
+    return existingCookie;
   }
 
-  return guestId;
+  // Generate new UUID
+  const newGuestId = 'guest_' + uuidv4().replace(/-/g, '').substring(0, 16);
+  console.log('[getOrCreateGuestId] Generated new guest ID:', newGuestId);
+
+  // Set HttpOnly cookie (server-managed, more secure)
+  cookieStore.set('guestId', newGuestId, {
+    httpOnly: true, // Server-only, can't be accessed by JavaScript
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 60 * 60 * 24 * 365, // 1 year
+    path: '/',
+    sameSite: 'lax',
+  });
+
+  return newGuestId;
 }
 
 export async function getGuestId(): Promise<string | undefined> {

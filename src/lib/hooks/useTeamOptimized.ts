@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { fetchWithFingerprint } from '@/lib/utils/fetchWithFingerprint';
 
 interface TeamMember {
   id: string;
@@ -40,7 +41,7 @@ export function useTeamOptimized() {
   const { data: members = [], isLoading, error } = useQuery({
     queryKey: ['team'],
     queryFn: async () => {
-      const response = await fetch('/api/scrum/team');
+      const response = await fetchWithFingerprint('/api/scrum/team');
       if (!response.ok) throw new Error('Failed to fetch team members');
       const data = await response.json();
       return data.members as TeamMember[];
@@ -52,7 +53,7 @@ export function useTeamOptimized() {
     return useQuery({
       queryKey: ['team', id],
       queryFn: async () => {
-        const response = await fetch(`/api/scrum/team/${id}`);
+        const response = await fetchWithFingerprint(`/api/scrum/team/${id}`);
         if (!response.ok) throw new Error('Failed to fetch team member');
         const data = await response.json();
         return data.member as TeamMember;
@@ -64,7 +65,7 @@ export function useTeamOptimized() {
   // Create team member
   const createMutation = useMutation({
     mutationFn: async (newMember: CreateMemberData) => {
-      const response = await fetch('/api/scrum/team', {
+      const response = await fetchWithFingerprint('/api/scrum/team', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMember),
@@ -110,7 +111,7 @@ export function useTeamOptimized() {
   // Update team member
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateMemberData }) => {
-      const response = await fetch(`/api/scrum/team/${id}`, {
+      const response = await fetchWithFingerprint(`/api/scrum/team/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -162,7 +163,7 @@ export function useTeamOptimized() {
   // Delete team member
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/scrum/team/${id}`, {
+      const response = await fetchWithFingerprint(`/api/scrum/team/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete team member');

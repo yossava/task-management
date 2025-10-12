@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { AuthNav } from '@/components/navigation/AuthNav';
+import { fetchWithFingerprint } from '@/lib/utils/fetchWithFingerprint';
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -34,7 +35,7 @@ export default function SettingsPage() {
     try {
       toast.loading('Changing password...', { id: toastId });
 
-      const response = await fetch('/api/auth/change-password', {
+      const response = await fetchWithFingerprint('/api/auth/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword, newPassword }),

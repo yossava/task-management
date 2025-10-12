@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { fetchWithFingerprint } from '@/lib/utils/fetchWithFingerprint';
 
 interface Sprint {
   id: string;
@@ -44,7 +45,7 @@ export function useSprintsOptimized() {
   const { data: sprints = [], isLoading, error } = useQuery({
     queryKey: ['sprints'],
     queryFn: async () => {
-      const response = await fetch('/api/scrum/sprints');
+      const response = await fetchWithFingerprint('/api/scrum/sprints');
       if (!response.ok) throw new Error('Failed to fetch sprints');
       const data = await response.json();
       return data.sprints as Sprint[];
@@ -56,7 +57,7 @@ export function useSprintsOptimized() {
     return useQuery({
       queryKey: ['sprints', id],
       queryFn: async () => {
-        const response = await fetch(`/api/scrum/sprints/${id}`);
+        const response = await fetchWithFingerprint(`/api/scrum/sprints/${id}`);
         if (!response.ok) throw new Error('Failed to fetch sprint');
         const data = await response.json();
         return data.sprint as Sprint;
@@ -68,7 +69,7 @@ export function useSprintsOptimized() {
   // Create sprint
   const createMutation = useMutation({
     mutationFn: async (newSprint: CreateSprintData) => {
-      const response = await fetch('/api/scrum/sprints', {
+      const response = await fetchWithFingerprint('/api/scrum/sprints', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newSprint),
@@ -115,7 +116,7 @@ export function useSprintsOptimized() {
   // Update sprint
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateSprintData }) => {
-      const response = await fetch(`/api/scrum/sprints/${id}`, {
+      const response = await fetchWithFingerprint(`/api/scrum/sprints/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -167,7 +168,7 @@ export function useSprintsOptimized() {
   // Delete sprint
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/scrum/sprints/${id}`, {
+      const response = await fetchWithFingerprint(`/api/scrum/sprints/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete sprint');

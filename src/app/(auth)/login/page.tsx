@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { fetchWithFingerprint } from '@/lib/utils/fetchWithFingerprint';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function LoginPage() {
 
       // Migrate guest data to user account
       try {
-        const migrateRes = await fetch('/api/auth/migrate-guest', {
+        const migrateRes = await fetchWithFingerprint('/api/auth/migrate-guest', {
           method: 'POST',
         });
         const migrateData = await migrateRes.json();

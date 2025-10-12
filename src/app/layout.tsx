@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { APP_NAME, APP_DESCRIPTION } from '@/lib/constants';
 import { SessionProvider } from '@/components/providers/SessionProvider';
@@ -37,11 +38,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.variable}>
-      <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#3b82f6" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
-      </head>
       <body className="min-h-screen">
         <QueryProvider>
           <SessionProvider>
@@ -50,22 +46,26 @@ export default function RootLayout({
             <NetworkStatus />
           </SessionProvider>
         </QueryProvider>
-        <script dangerouslySetInnerHTML={{
-          __html: `
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(
-                  (registration) => {
-                    console.log('SW registered:', registration);
-                  },
-                  (err) => {
-                    console.log('SW registration failed:', err);
-                  }
-                );
-              });
-            }
-          `
-        }} />
+        <Script
+          id="service-worker"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js').then(
+                    (registration) => {
+                      console.log('SW registered:', registration);
+                    },
+                    (err) => {
+                      console.log('SW registration failed:', err);
+                    }
+                  );
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

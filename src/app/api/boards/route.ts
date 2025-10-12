@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUserId } from '@/lib/utils/session';
 import { getOrCreateGuestId } from '@/lib/utils/guest';
@@ -18,6 +19,7 @@ export async function GET() {
     let boards;
     if (userId) {
       // Fetch user's boards
+      console.log('[GET /api/boards] Authenticated user:', userId);
       boards = await prisma.board.findMany({
         where: { userId },
         include: {
@@ -28,8 +30,15 @@ export async function GET() {
         orderBy: { order: 'asc' },
       });
     } else {
+      // Check fingerprint header first
+      const headersList = await headers();
+      const fingerprintHeader = headersList.get('x-guest-fingerprint');
+      console.log('[GET /api/boards] Fingerprint header:', fingerprintHeader);
+
       // Fetch guest's boards
       const guestId = await getOrCreateGuestId();
+      console.log('[GET /api/boards] Guest ID used for query:', guestId);
+
       boards = await prisma.board.findMany({
         where: { guestId },
         include: {
@@ -39,6 +48,9 @@ export async function GET() {
         },
         orderBy: { order: 'asc' },
       });
+
+      console.log('[GET /api/boards] Found', boards.length, 'boards for guest', guestId);
+      console.log('[GET /api/boards] Board guest IDs:', boards.map(b => ({ id: b.id, guestId: b.guestId, title: b.title })));
     }
 
     return NextResponse.json({ boards });
