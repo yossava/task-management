@@ -227,10 +227,10 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800">
           {isOpen && (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">PM</span>
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/50">
+                <span className="text-white font-bold text-sm">PT</span>
               </div>
-              <span className="font-bold text-gray-900 dark:text-white">ProjectHub</span>
+              <span className="font-bold text-gray-900 dark:text-white">PodoTask</span>
             </div>
           )}
           <button
