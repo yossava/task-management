@@ -103,7 +103,8 @@ export class DependencyService {
    * Get all dependencies for a task (tasks that this task depends on)
    */
   static getTaskDependencies(board: Board, taskId: string): Board['tasks'] {
-    const task = board.tasks?.find(t => t.id === taskId);
+    if (!board?.tasks) return [];
+    const task = board.tasks.find(t => t.id === taskId);
     if (!task || !task.dependencies) return [];
 
     return board.tasks.filter(t => task.dependencies?.includes(t.id)) || [];
@@ -113,6 +114,7 @@ export class DependencyService {
    * Get all tasks that depend on this task (blockers)
    */
   static getBlockingTasks(board: Board, taskId: string): Board['tasks'] {
+    if (!board?.tasks) return [];
     return board.tasks.filter(t => t.dependencies?.includes(taskId)) || [];
   }
 
@@ -120,6 +122,7 @@ export class DependencyService {
    * Check if a task can be started (all dependencies are completed)
    */
   static canStartTask(board: Board, taskId: string): boolean {
+    if (!board?.tasks) return true;
     const dependencies = this.getTaskDependencies(board, taskId);
     return dependencies.every(dep => dep.completed);
   }

@@ -34,6 +34,7 @@ export default function TaskDependencies({ board, taskId, currentTask, onUpdate 
 
   // Get all tasks from board for selection
   const availableTasks = useMemo(() => {
+    if (!board?.tasks) return [];
     return board.tasks.filter(
       (t) =>
         t.id !== taskId &&
