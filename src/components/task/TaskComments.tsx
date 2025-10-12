@@ -62,8 +62,13 @@ export default function TaskComments({ taskId, comments, onUpdate }: TaskComment
         throw new Error(data.error || 'Failed to add comment');
       }
 
-      // Trigger parent update to sync with backend
-      onUpdate();
+      const result = await response.json();
+
+      // Replace the optimistic comment with the real one from the server
+      setOptimisticComments(prev =>
+        prev.map(c => c.id === tempId ? result.comment : c)
+      );
+
       toast.success('Comment added');
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -114,8 +119,13 @@ export default function TaskComments({ taskId, comments, onUpdate }: TaskComment
         throw new Error(data.error || 'Failed to update comment');
       }
 
-      // Trigger parent update to sync with backend
-      onUpdate();
+      const result = await response.json();
+
+      // Update with the real comment from server
+      setOptimisticComments(prev =>
+        prev.map(c => c.id === editingId ? result.comment : c)
+      );
+
       toast.success('Comment updated');
     } catch (error) {
       console.error('Error updating comment:', error);
@@ -150,8 +160,7 @@ export default function TaskComments({ taskId, comments, onUpdate }: TaskComment
         throw new Error(data.error || 'Failed to delete comment');
       }
 
-      // Trigger parent update to sync with backend
-      onUpdate();
+      // Comment already removed from optimistic state, no need to update again
       toast.success('Comment deleted');
     } catch (error) {
       console.error('Error deleting comment:', error);
