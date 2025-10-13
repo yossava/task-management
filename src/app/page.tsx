@@ -8,6 +8,7 @@ import { APP_NAME } from '@/lib/constants';
 
 export default function HomePage() {
   const [isDark, setIsDark] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const checkDarkMode = () => {
@@ -84,14 +85,55 @@ export default function HomePage() {
               <Link href="/signin" className="hidden md:block text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-4 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
                 Sign In
               </Link>
-              <Link href="/boards">
+              <Link href="/boards" className="hidden sm:block">
                 <Button className="text-sm px-6 py-2.5">
                   My Boards
                 </Button>
               </Link>
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden mt-2 mx-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="px-4 py-2 space-y-1">
+              {['Features', 'Technology', 'Showcase', 'Testimonials'].map((item) => (
+                <a
+                  key={item}
+                  href={`#${item.toLowerCase()}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-4 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+                >
+                  {item}
+                </a>
+              ))}
+              <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+              <Link
+                href="/signin"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block px-4 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all md:hidden"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/boards"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block px-4 py-3 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all sm:hidden"
+              >
+                My Boards
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero - Asymmetric split design */}
@@ -109,14 +151,14 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left content */}
             <div>
-              <h1 className="text-6xl lg:text-7xl xl:text-8xl font-black mb-8 leading-[0.95]">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black mb-6 sm:mb-8 leading-[0.95]">
                 <span className="block text-gray-900 dark:text-white mb-2">Get Organized.</span>
                 <span className="block bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Stay Focused.</span>
               </h1>
 
-              <p className="text-xl lg:text-2xl text-gray-600 dark:text-gray-300 mb-12 leading-relaxed max-w-xl">
+              <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 mb-8 sm:mb-12 leading-relaxed max-w-xl">
                 Powerful project management for solo creators and agile teams alike.
-                <span className="block mt-3 font-semibold text-gray-900 dark:text-white">Personal boards. Team sprints. One platform.</span>
+                <span className="block mt-2 sm:mt-3 font-semibold text-gray-900 dark:text-white">Personal boards. Team sprints. One platform.</span>
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
@@ -138,7 +180,7 @@ export default function HomePage() {
                 </a>
               </div>
 
-              <div className="flex flex-wrap gap-8">
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-6 sm:gap-8">
                 {[
                   { label: 'Unlimited', value: 'Everything', icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4' },
                   { label: 'Active Users', value: '1,000+', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
@@ -149,9 +191,9 @@ export default function HomePage() {
                       <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={stat.icon} />
                       </svg>
-                      <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{stat.label}</span>
+                      <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">{stat.label}</span>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</div>
+                    <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</div>
                   </div>
                 ))}
               </div>
@@ -237,10 +279,10 @@ export default function HomePage() {
             <div className="inline-block px-4 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-semibold mb-6">
               DUAL POWER MODE
             </div>
-            <h2 className="text-5xl lg:text-6xl font-black text-gray-900 dark:text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-white mb-6">
               Two Engines. One Platform.
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
               Switch seamlessly between personal productivity and enterprise agile management
             </p>
           </div>
@@ -339,14 +381,14 @@ export default function HomePage() {
         }} />
 
         <div className="max-w-7xl mx-auto relative">
-          <div className="text-center mb-20">
+          <div className="text-center mb-20 px-4">
             <div className="inline-block px-4 py-1 rounded-full bg-blue-500/20 text-blue-300 text-sm font-semibold mb-6 border border-blue-500/30">
               WHY CHOOSE US
             </div>
-            <h2 className="text-5xl lg:text-6xl font-black mb-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-6">
               Everything You Need to Succeed
             </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">
               Powerful features designed for individuals and teams who want to get more done
             </p>
           </div>
@@ -421,14 +463,14 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-50/30 to-transparent dark:from-transparent dark:via-blue-950/10 dark:to-transparent" />
 
         <div className="max-w-7xl mx-auto relative">
-          <div className="text-center mb-20">
+          <div className="text-center mb-20 px-4">
             <div className="inline-block px-4 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-sm font-semibold mb-6">
               PRODUCT SHOWCASE
             </div>
-            <h2 className="text-5xl lg:text-6xl font-black text-gray-900 dark:text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-white mb-6">
               See the Difference
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Real screenshots from a production application. No mockups, no prototypes—just a fully functional enterprise platform.
             </p>
           </div>
@@ -440,7 +482,7 @@ export default function HomePage() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs font-bold mb-4">
                   PERSONAL PRODUCTIVITY
                 </div>
-                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
                   Boards That Work Like You Think
                 </h3>
                 <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
@@ -530,7 +572,7 @@ export default function HomePage() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 text-xs font-bold mb-4">
                   QUICK START
                 </div>
-                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
                   Start in Seconds with Templates
                 </h3>
                 <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
@@ -568,7 +610,7 @@ export default function HomePage() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-4">
                   ENTERPRISE AGILE
                 </div>
-                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
                   Command Center for Agile Teams
                 </h3>
                 <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
@@ -658,7 +700,7 @@ export default function HomePage() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs font-bold mb-4">
                   BACKLOG MANAGEMENT
                 </div>
-                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
                   Prioritize What Matters Most
                 </h3>
                 <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
@@ -696,7 +738,7 @@ export default function HomePage() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400 text-xs font-bold mb-4">
                   SPRINT EXECUTION
                 </div>
-                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
                   Watch Your Sprint Come to Life
                 </h3>
                 <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
@@ -786,7 +828,7 @@ export default function HomePage() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-xs font-bold mb-4">
                   PLANNING & FORECASTING
                 </div>
-                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
                   Plan Sprints with Confidence
                 </h3>
                 <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
@@ -824,7 +866,7 @@ export default function HomePage() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 text-xs font-bold mb-4">
                   TIME VISUALIZATION
                 </div>
-                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
                   See Your Timeline at a Glance
                 </h3>
                 <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
@@ -887,7 +929,7 @@ export default function HomePage() {
           <div className="mt-32 text-center">
             <div className="inline-block p-1 rounded-3xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
               <div className="bg-white dark:bg-gray-950 rounded-[20px] px-12 py-16">
-                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-6">
+                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-6">
                   Ready to Get More Done?
                 </h3>
                 <p className="text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto">
@@ -920,11 +962,11 @@ export default function HomePage() {
       {/* Testimonials - Cards grid */}
       <div id="testimonials" className="py-32 px-6 bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-900 dark:to-blue-950/20">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
+          <div className="text-center mb-20 px-4">
             <div className="inline-block px-4 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-sm font-semibold mb-6">
               WALL OF LOVE
             </div>
-            <h2 className="text-5xl lg:text-6xl font-black text-gray-900 dark:text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-white mb-6">
               Loved by Teams Worldwide
             </h2>
           </div>
@@ -981,11 +1023,11 @@ export default function HomePage() {
       <div className="py-32 px-6 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30" />
 
-        <div className="max-w-4xl mx-auto text-center relative">
-          <h2 className="text-6xl lg:text-7xl font-black mb-8 leading-tight">
+        <div className="max-w-4xl mx-auto text-center relative px-4">
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 sm:mb-8 leading-tight">
             Ready to Ship Faster?
           </h2>
-          <p className="text-2xl text-blue-100 mb-12 leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl text-blue-100 mb-10 sm:mb-12 leading-relaxed">
             Join thousands of teams building better products with {APP_NAME}.
             <span className="block mt-2 font-bold text-white">Start free. Scale forever.</span>
           </p>

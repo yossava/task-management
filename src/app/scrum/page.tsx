@@ -20,6 +20,7 @@ export default function ScrumDashboard() {
   const { metrics } = useSprintMetrics(activeSprint?.id || '');
 
   const [view, setView] = useState<'overview' | 'team' | 'settings'>('overview');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const loading = sprintsLoading || teamLoading || epicsLoading || storiesLoading;
 
@@ -78,7 +79,55 @@ export default function ScrumDashboard() {
                   Settings
                 </button>
               </nav>
+
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                </svg>
+              </button>
             </div>
+
+            {/* Mobile menu */}
+            {isMobileMenuOpen && (
+              <div className="md:hidden mt-4 pb-4 px-4 border-t border-gray-200 dark:border-gray-800 pt-4">
+                <div className="space-y-2">
+                  <button
+                    onClick={() => { setView('overview'); setIsMobileMenuOpen(false); }}
+                    className={`w-full text-left px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      view === 'overview'
+                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    Overview
+                  </button>
+                  <button
+                    onClick={() => { setView('team'); setIsMobileMenuOpen(false); }}
+                    className={`w-full text-left px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      view === 'team'
+                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    Team
+                  </button>
+                  <button
+                    onClick={() => { setView('settings'); setIsMobileMenuOpen(false); }}
+                    className={`w-full text-left px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      view === 'settings'
+                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    Settings
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
