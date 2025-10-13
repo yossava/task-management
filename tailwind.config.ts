@@ -5,6 +5,15 @@ const config: Config = {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/lib/**/*.{js,ts,jsx,tsx}',
+  ],
+  safelist: [
+    {
+      pattern: /^(from|via|to|hover:from|hover:via|hover:to)-(blue|indigo|purple|red|rose)-(600|700|800)$/,
+    },
+    {
+      pattern: /^(shadow|hover:shadow)-(blue|indigo|purple|red)-(500|600)\/(50|60)$/,
+    },
   ],
   darkMode: 'class',
   theme: {

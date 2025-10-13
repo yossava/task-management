@@ -8,7 +8,6 @@ import { APP_NAME } from '@/lib/constants';
 
 export default function HomePage() {
   const [isDark, setIsDark] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const checkDarkMode = () => {
@@ -23,15 +22,8 @@ export default function HomePage() {
       attributeFilter: ['class']
     });
 
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-
     return () => {
       observer.disconnect();
-      window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
 
@@ -41,16 +33,6 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Custom cursor follower effect */}
-      <div
-        className="fixed pointer-events-none z-[100] w-[600px] h-[600px] rounded-full opacity-20 blur-[100px] transition-all duration-[3000ms] ease-out"
-        style={{
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%)',
-          left: mousePosition.x - 300,
-          top: mousePosition.y - 300,
-        }}
-      />
-
       {/* Floating nav */}
       <header className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl">
         <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl px-6 py-3 shadow-2xl shadow-blue-500/10">
@@ -67,7 +49,7 @@ export default function HomePage() {
                   {APP_NAME}
                 </span>
                 <div className="text-[10px] text-gray-500 dark:text-gray-400 font-medium tracking-wider">
-                  ENTERPRISE SUITE
+                  GET THINGS DONE
                 </div>
               </div>
             </Link>
@@ -102,9 +84,9 @@ export default function HomePage() {
               <Link href="/signin" className="hidden md:block text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-4 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
                 Sign In
               </Link>
-              <Link href="/signup">
-                <Button className="text-sm px-6 py-2.5 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40">
-                  Start Free
+              <Link href="/boards">
+                <Button className="text-sm px-6 py-2.5">
+                  My Boards
                 </Button>
               </Link>
             </div>
@@ -127,24 +109,19 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left content */}
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 mb-8">
-                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Live & Production Ready</span>
-              </div>
-
               <h1 className="text-6xl lg:text-7xl xl:text-8xl font-black mb-8 leading-[0.95]">
-                <span className="block text-gray-900 dark:text-white mb-2">Ship Faster.</span>
-                <span className="block bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Deliver Better.</span>
+                <span className="block text-gray-900 dark:text-white mb-2">Get Organized.</span>
+                <span className="block bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Stay Focused.</span>
               </h1>
 
               <p className="text-xl lg:text-2xl text-gray-600 dark:text-gray-300 mb-12 leading-relaxed max-w-xl">
-                Next-generation project management for teams who refuse to compromise.
-                <span className="block mt-3 font-semibold text-gray-900 dark:text-white">Kanban boards meet enterprise agile.</span>
+                Powerful project management for solo creators and agile teams alike.
+                <span className="block mt-3 font-semibold text-gray-900 dark:text-white">Personal boards. Team sprints. One platform.</span>
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
                 <Link href="/signup">
-                  <Button size="lg" className="text-lg px-10 py-6 shadow-2xl shadow-blue-500/30 group">
+                  <Button size="lg" className="text-lg px-10 py-6 group">
                     Start Building
                     <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -163,9 +140,9 @@ export default function HomePage() {
 
               <div className="flex flex-wrap gap-8">
                 {[
-                  { label: 'Zero Cost', value: '100%', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-                  { label: 'Uptime', value: '99.9%', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-                  { label: 'Response', value: '<100ms', icon: 'M13 10V3L4 14h7v7l9-11h-7z' }
+                  { label: 'Unlimited', value: 'Everything', icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4' },
+                  { label: 'Active Users', value: '1,000+', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+                  { label: 'Free Forever', value: '100%', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
                 ].map((stat) => (
                   <div key={stat.label}>
                     <div className="flex items-center gap-2 mb-1">
@@ -182,47 +159,67 @@ export default function HomePage() {
 
             {/* Right - Interactive bento grid */}
             <div className="hidden lg:grid grid-cols-2 gap-4">
-              <Card className="col-span-2 p-8 bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 relative overflow-hidden group hover:scale-[1.02] transition-transform">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32 group-hover:scale-150 transition-transform duration-700" />
+              {/* Hero feature card */}
+              <Card className="col-span-2 p-10 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white border-0 relative overflow-hidden group hover:scale-[1.02] transition-all">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-48 translate-x-48 group-hover:scale-150 transition-transform duration-1000" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/20 rounded-full blur-2xl translate-y-32 -translate-x-32" />
                 <div className="relative">
-                  <svg className="w-12 h-12 mb-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  <h3 className="text-2xl font-bold mb-2">Task Boards</h3>
-                  <p className="text-blue-100">Drag-and-drop Kanban with unlimited customization</p>
+                  <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                  </div>
+                  <h3 className="text-3xl font-black mb-3">Unified Workspace</h3>
+                  <p className="text-blue-100 text-lg leading-relaxed">Everything you need to manage projects—boards, tasks, sprints, and team collaboration in one beautiful interface.</p>
+                  <div className="mt-6 flex items-center gap-2 text-sm font-semibold">
+                    <span>Explore Features</span>
+                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </div>
                 </div>
               </Card>
 
-              <Card className="p-6 hover:shadow-2xl transition-all hover:-translate-y-1">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-4">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Time tracking card */}
+              <Card className="p-8 hover:shadow-2xl transition-all hover:-translate-y-2 group border-2 border-purple-100 dark:border-purple-900/30 hover:border-purple-300 dark:hover:border-purple-700">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-5 shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h4 className="font-bold text-gray-900 dark:text-white mb-1">Time Tracking</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Built-in timer & analytics</p>
+                <h4 className="text-xl font-black text-gray-900 dark:text-white mb-2">Time Tracking</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">Track every minute with built-in timers and detailed analytics</p>
               </Card>
 
-              <Card className="p-6 hover:shadow-2xl transition-all hover:-translate-y-1">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mb-4">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Sprint planning card */}
+              <Card className="p-8 hover:shadow-2xl transition-all hover:-translate-y-2 group border-2 border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-300 dark:hover:border-emerald-700">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center mb-5 shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h4 className="font-bold text-gray-900 dark:text-white mb-1">Sprint Planning</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Full agile scrum suite</p>
+                <h4 className="text-xl font-black text-gray-900 dark:text-white mb-2">Agile Sprints</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">Complete scrum suite with velocity tracking and burndown charts</p>
               </Card>
 
-              <Card className="col-span-2 p-6 bg-gray-900 dark:bg-gray-800 text-white border-0 hover:shadow-2xl transition-all">
-                <div className="flex items-center justify-between">
+              {/* Security badge */}
+              <Card className="col-span-2 p-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 dark:from-black dark:via-gray-950 dark:to-black text-white border-0 hover:shadow-2xl transition-all relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative flex items-center justify-between">
                   <div>
-                    <div className="text-3xl font-bold mb-1">256-bit</div>
-                    <div className="text-gray-400">AES Encryption</div>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-4xl font-black bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">256-bit</span>
+                      <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Encryption</span>
+                    </div>
+                    <div className="text-gray-400 font-medium">Bank-grade security for your data</div>
                   </div>
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl blur-xl opacity-30" />
+                    <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-800 to-gray-700 flex items-center justify-center border border-gray-600">
+                      <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -334,7 +331,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Technology Stack - Unique marquee style */}
+      {/* Why Choose Us - Feature Benefits */}
       <div id="technology" className="py-32 px-6 bg-gray-900 dark:bg-black text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-5" style={{
           backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
@@ -344,40 +341,40 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative">
           <div className="text-center mb-20">
             <div className="inline-block px-4 py-1 rounded-full bg-blue-500/20 text-blue-300 text-sm font-semibold mb-6 border border-blue-500/30">
-              TECH STACK
+              WHY CHOOSE US
             </div>
             <h2 className="text-5xl lg:text-6xl font-black mb-6">
-              Built on Modern Infrastructure
+              Everything You Need to Succeed
             </h2>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Enterprise-grade architecture for performance, security, and scale
+              Powerful features designed for individuals and teams who want to get more done
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
-                title: 'Lightning',
-                subtitle: 'Fast',
-                desc: 'Blazing performance that never slows you down',
+                title: 'Drag & Drop',
+                subtitle: 'Boards',
+                desc: 'Intuitive kanban boards that feel natural to use',
                 color: 'from-blue-500 to-cyan-500'
               },
               {
                 title: 'Real-Time',
-                subtitle: 'Updates',
-                desc: 'Changes sync instantly across all your devices',
+                subtitle: 'Collaboration',
+                desc: 'Work together seamlessly with live updates',
                 color: 'from-purple-500 to-pink-500'
               },
               {
-                title: 'Encrypted',
-                subtitle: 'Security',
-                desc: 'Your data is protected with enterprise-grade encryption',
+                title: 'Time',
+                subtitle: 'Tracking',
+                desc: 'Built-in timers and productivity analytics',
                 color: 'from-green-500 to-emerald-500'
               },
               {
-                title: 'Always',
-                subtitle: 'Available',
-                desc: 'Reliable infrastructure that works when you do',
+                title: 'Full',
+                subtitle: 'Scrum Suite',
+                desc: 'Complete agile tools for sprint management',
                 color: 'from-orange-500 to-red-500'
               }
             ].map((tech, i) => (
@@ -393,16 +390,16 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Additional capabilities in a unique layout */}
+          {/* Key Benefits */}
           <div className="mt-16 grid md:grid-cols-3 gap-6">
             {[
-              { icon: 'M13 10V3L4 14h7v7l9-11h-7z', title: 'Instant Response', desc: 'No loading spinners. No waiting. Just work.' },
-              { icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', title: 'Private & Secure', desc: 'Your projects stay yours. Period.' },
-              { icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15', title: 'Auto-Save Everything', desc: 'Never lose work. Changes save as you type.' }
+              { icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4', title: 'Unlimited Everything', desc: 'No limits on boards, tasks, or team members. Ever.' },
+              { icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z', title: 'Smart Organization', desc: 'Tags, priorities, filters, and custom workflows.' },
+              { icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z', title: 'Rich Collaboration', desc: 'Comments, mentions, attachments, and activity feeds.' }
             ].map((cap, i) => (
-              <div key={i} className="flex gap-4 p-6 rounded-xl bg-gray-800/30 border border-gray-700/50 hover:bg-gray-800/50 transition-all">
+              <div key={i} className="flex gap-4 p-6 rounded-xl bg-gray-800/30 border border-gray-700/50 hover:bg-gray-800/50 transition-all group">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={cap.icon} />
                     </svg>
@@ -418,65 +415,504 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Showcase - Full bleed with parallax */}
-      <div id="showcase" className="py-32 px-6 bg-white dark:bg-gray-950">
-        <div className="max-w-7xl mx-auto">
+      {/* Showcase - Real Product Screenshots */}
+      <div id="showcase" className="py-32 px-6 bg-white dark:bg-gray-950 relative overflow-hidden">
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-50/30 to-transparent dark:from-transparent dark:via-blue-950/10 dark:to-transparent" />
+
+        <div className="max-w-7xl mx-auto relative">
           <div className="text-center mb-20">
             <div className="inline-block px-4 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-sm font-semibold mb-6">
               PRODUCT SHOWCASE
             </div>
             <h2 className="text-5xl lg:text-6xl font-black text-gray-900 dark:text-white mb-6">
-              See It In Action
+              See the Difference
             </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              Real screenshots from a production application. No mockups, no prototypes—just a fully functional enterprise platform.
+            </p>
           </div>
 
-          <div className="space-y-32">
-            {[
-              {
-                title: 'Kanban Boards',
-                desc: 'Drag, drop, organize. Your workflow, your way.',
-                gradient: 'from-blue-500 via-indigo-500 to-purple-500',
-                align: 'left'
-              },
-              {
-                title: 'Sprint Dashboard',
-                desc: 'Real-time velocity, burndown, and team insights.',
-                gradient: 'from-purple-500 via-pink-500 to-rose-500',
-                align: 'right'
-              },
-              {
-                title: 'Task Deep Dive',
-                desc: 'Everything about a task in one beautiful view.',
-                gradient: 'from-green-500 via-emerald-500 to-cyan-500',
-                align: 'left'
-              }
-            ].map((showcase, i) => (
-              <div key={i} className={`flex ${showcase.align === 'right' ? 'flex-row-reverse' : ''} items-center gap-16`}>
-                <div className="flex-1">
-                  <h3 className="text-4xl font-black text-gray-900 dark:text-white mb-4">{showcase.title}</h3>
-                  <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">{showcase.desc}</p>
+          <div className="space-y-24">
+            {/* Boards - Personal Kanban */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs font-bold mb-4">
+                  PERSONAL PRODUCTIVITY
+                </div>
+                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                  Boards That Work Like You Think
+                </h3>
+                <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                  Create unlimited boards for any project. Drag-and-drop simplicity meets enterprise power—tasks, subtasks, priorities, time tracking, and rich collaboration tools all in one place.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Unlimited boards, lists, and tasks',
+                    'Real-time sync across all devices',
+                    'Rich task details with subtasks & comments',
+                    'Time estimates and progress tracking'
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <svg className="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/signup">
+                  <Button size="lg" className="group">
+                    Get Started Free
+                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Button>
+                </Link>
+              </div>
+              <div className="relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-3xl blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-gray-800">
+                  {/* Safari-style browser chrome */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                    </div>
+                    <div className="flex-1 flex items-center justify-center mx-4">
+                      <div className="flex items-center gap-2 px-4 py-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 max-w-md w-full">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">podotask.com/boards</span>
+                      </div>
+                    </div>
+                  </div>
+                  <img
+                    src="/showcase-boards.png"
+                    alt="Personal Boards - Kanban task management"
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Template Gallery */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="order-2 lg:order-1 relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-gray-800">
+                  {/* Safari-style browser chrome */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                    </div>
+                    <div className="flex-1 flex items-center justify-center mx-4">
+                      <div className="flex items-center gap-2 px-4 py-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 max-w-md w-full">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">podotask.com/boards</span>
+                      </div>
+                    </div>
+                  </div>
+                  <img
+                    src="/showcase-template-gallery.png"
+                    alt="Pre-built templates for instant productivity"
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+              <div className="order-1 lg:order-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 text-xs font-bold mb-4">
+                  QUICK START
+                </div>
+                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                  Start in Seconds with Templates
+                </h3>
+                <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                  Don't start from scratch. Choose from expertly designed templates for marketing campaigns, product launches, development sprints, and more.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Pre-configured workflows for common use cases',
+                    'Customizable to fit your exact needs',
+                    'Industry best practices built-in',
+                    'One-click setup, immediate productivity'
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <svg className="w-6 h-6 text-purple-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/signup">
+                  <Button size="lg" variant="secondary" className="group border-2">
+                    Explore Templates
+                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Scrum Overview */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-4">
+                  ENTERPRISE AGILE
+                </div>
+                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                  Command Center for Agile Teams
+                </h3>
+                <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                  Get complete visibility into your sprints, epics, and team performance. Real-time dashboards that show velocity trends, burndown charts, and capacity planning at a glance.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Sprint health and velocity tracking',
+                    'Epic progress with story breakdown',
+                    'Team capacity and workload distribution',
+                    'Predictive completion analytics'
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <svg className="w-6 h-6 text-indigo-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/signup">
+                  <Button size="lg" className="group">
+                    Start Sprint Planning
+                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Button>
+                </Link>
+              </div>
+              <div className="relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-3xl blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-gray-800">
+                  {/* Safari-style browser chrome */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                    </div>
+                    <div className="flex-1 flex items-center justify-center mx-4">
+                      <div className="flex items-center gap-2 px-4 py-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 max-w-md w-full">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">podotask.com/scrum</span>
+                      </div>
+                    </div>
+                  </div>
+                  <img
+                    src="/showcase-scrum-overview.png"
+                    alt="Scrum dashboard with sprint metrics and analytics"
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Scrum Backlog */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="order-2 lg:order-1 relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-3xl blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-gray-800">
+                  {/* Safari-style browser chrome */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                    </div>
+                    <div className="flex-1 flex items-center justify-center mx-4">
+                      <div className="flex items-center gap-2 px-4 py-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 max-w-md w-full">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">podotask.com/scrum/backlog</span>
+                      </div>
+                    </div>
+                  </div>
+                  <img
+                    src="/showcase-scrum-backlog.png"
+                    alt="Product backlog with story prioritization"
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+              <div className="order-1 lg:order-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs font-bold mb-4">
+                  BACKLOG MANAGEMENT
+                </div>
+                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                  Prioritize What Matters Most
+                </h3>
+                <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                  Organize user stories, epics, and tasks with drag-and-drop prioritization. Story points, acceptance criteria, and team assignments—all the context your team needs to execute.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Visual epic and story hierarchy',
+                    'Story point estimation and voting',
+                    'Acceptance criteria checklists',
+                    'Sprint assignment and planning'
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <svg className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/signup">
+                  <Button size="lg" variant="secondary" className="group border-2">
+                    Build Your Backlog
+                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Scrum Board */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400 text-xs font-bold mb-4">
+                  SPRINT EXECUTION
+                </div>
+                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                  Watch Your Sprint Come to Life
+                </h3>
+                <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                  Visualize sprint progress with a dedicated scrum board. Move stories through workflow states, track blockers, and keep your entire team aligned on what's in flight.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Real-time story movement tracking',
+                    'Visual workflow state management',
+                    'Blocker identification and resolution',
+                    'Sprint commitment vs. actual progress'
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <svg className="w-6 h-6 text-cyan-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/signup">
+                  <Button size="lg" className="group">
+                    Start Your Sprint
+                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Button>
+                </Link>
+              </div>
+              <div className="relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-3xl blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-gray-800">
+                  {/* Safari-style browser chrome */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                    </div>
+                    <div className="flex-1 flex items-center justify-center mx-4">
+                      <div className="flex items-center gap-2 px-4 py-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 max-w-md w-full">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">podotask.com/scrum/board</span>
+                      </div>
+                    </div>
+                  </div>
+                  <img
+                    src="/showcase-scrum-board.png"
+                    alt="Sprint board with story workflow visualization"
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Sprint Planning */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="order-2 lg:order-1 relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-gray-800">
+                  {/* Safari-style browser chrome */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                    </div>
+                    <div className="flex-1 flex items-center justify-center mx-4">
+                      <div className="flex items-center gap-2 px-4 py-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 max-w-md w-full">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">podotask.com/scrum/planning</span>
+                      </div>
+                    </div>
+                  </div>
+                  <img
+                    src="/showcase-scrum-planning.png"
+                    alt="Sprint planning with capacity management"
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+              <div className="order-1 lg:order-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-xs font-bold mb-4">
+                  PLANNING & FORECASTING
+                </div>
+                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                  Plan Sprints with Confidence
+                </h3>
+                <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                  Build realistic sprint plans based on team capacity and historical velocity. See future projections, manage multiple sprints, and make data-driven commitments.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Capacity-based sprint planning',
+                    'Historical velocity analysis',
+                    'Multi-sprint roadmap view',
+                    'Team workload balancing'
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <svg className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/signup">
+                  <Button size="lg" variant="secondary" className="group border-2">
+                    Plan Your Next Sprint
+                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Calendar View */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 text-xs font-bold mb-4">
+                  TIME VISUALIZATION
+                </div>
+                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                  See Your Timeline at a Glance
+                </h3>
+                <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                  Visualize all your tasks and deadlines in a beautiful calendar view. Drag and drop to reschedule, see monthly patterns, and never miss a deadline.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Monthly, weekly, and daily calendar views',
+                    'Drag-and-drop task rescheduling',
+                    'Color-coded priorities and projects',
+                    'Due date notifications and reminders'
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <svg className="w-6 h-6 text-teal-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/signup">
+                  <Button size="lg" className="group">
+                    Try Calendar View
+                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Button>
+                </Link>
+              </div>
+              <div className="relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-3xl blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-gray-800">
+                  {/* Safari-style browser chrome */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                    </div>
+                    <div className="flex-1 flex items-center justify-center mx-4">
+                      <div className="flex items-center gap-2 px-4 py-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 max-w-md w-full">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">podotask.com/boards/calendar</span>
+                      </div>
+                    </div>
+                  </div>
+                  <img
+                    src="/showcase-boards-calendar.png"
+                    alt="Calendar view with task scheduling and deadlines"
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom CTA after showcase */}
+          <div className="mt-32 text-center">
+            <div className="inline-block p-1 rounded-3xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
+              <div className="bg-white dark:bg-gray-950 rounded-[20px] px-12 py-16">
+                <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-6">
+                  Ready to Get More Done?
+                </h3>
+                <p className="text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto">
+                  Join teams who've switched from Jira, Asana, and Monday.com to get more done with less complexity.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link href="/signup">
-                    <Button className="group">
-                      Try It Now
-                      <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <Button size="lg" className="text-lg px-10 py-6 group">
+                      Start Building Free
+                      <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                       </svg>
                     </Button>
                   </Link>
+                  <Link href="/signin">
+                    <Button size="lg" variant="secondary" className="text-lg px-10 py-6 border-2">
+                      Sign In
+                    </Button>
+                  </Link>
                 </div>
-                <div className="flex-1">
-                  <div className="relative group">
-                    <div className={`absolute -inset-4 bg-gradient-to-r ${showcase.gradient} rounded-3xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity`} />
-                    <div className={`relative aspect-video rounded-2xl bg-gradient-to-br ${showcase.gradient} flex items-center justify-center text-white shadow-2xl`}>
-                      <svg className="w-32 h-32 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+                  ✓ No credit card  ✓ Full features  ✓ Unlimited everything
+                </p>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
@@ -496,24 +932,24 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                quote: "Switched our entire team from Jira. Never looking back. The speed difference alone is worth it.",
-                author: "Alex Chen",
-                role: "Engineering Lead",
-                company: "TechCorp",
+                quote: "I was using Trello and Notion together before this. Now I just use this for everything. So much simpler.",
+                author: "Jessica Martinez",
+                role: "Freelance Designer",
+                company: "Self-employed",
                 avatar: "from-blue-400 to-blue-600"
               },
               {
-                quote: "Finally, a PM tool that doesn't feel like homework. My productivity has genuinely doubled.",
-                author: "Sarah Johnson",
-                role: "Product Manager",
-                company: "StartupXYZ",
+                quote: "Best free project tool I've found. The boards are perfect for tracking my side projects and client work.",
+                author: "David Park",
+                role: "Web Developer",
+                company: "Freelancer",
                 avatar: "from-purple-400 to-pink-600"
               },
               {
-                quote: "The scrum features are ridiculously good. Sprint planning takes us 30 minutes instead of 2 hours.",
-                author: "Mike Rodriguez",
-                role: "Scrum Master",
-                company: "AgileTeam",
+                quote: "My small team switched from Monday.com to save money. Honestly surprised how good the free version is.",
+                author: "Emma Thompson",
+                role: "Marketing Manager",
+                company: "Small Business",
                 avatar: "from-green-400 to-emerald-600"
               }
             ].map((testimonial, i) => (
@@ -532,7 +968,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <div className="font-bold text-gray-900 dark:text-white">{testimonial.author}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{testimonial.role} at {testimonial.company}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{testimonial.role}</div>
                   </div>
                 </div>
               </Card>
@@ -574,7 +1010,7 @@ export default function HomePage() {
               </div>
               <div>
                 <div className="font-bold text-white">{APP_NAME}</div>
-                <div className="text-xs text-gray-500">Enterprise Project Management</div>
+                <div className="text-xs text-gray-500">Get Things Done</div>
               </div>
             </div>
 

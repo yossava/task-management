@@ -31,4 +31,4 @@ export const DEFAULT_COLUMNS = [
 ];
 
 export const APP_NAME = 'PodoTask';
-export const APP_DESCRIPTION = 'Enterprise Project Management';
+export const APP_DESCRIPTION = 'Get Things Done';

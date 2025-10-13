@@ -594,9 +594,10 @@ export default function BoardsPage() {
     >
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-10 gap-6">
-          <div className="flex-1">
-            {isEditingTitle ? (
+        <div className="mb-10">
+          <div className="flex items-center justify-between gap-6 mb-4">
+            <div className="flex-1">
+              {isEditingTitle ? (
               <input
                 ref={titleRef}
                 type="text"
@@ -646,8 +647,8 @@ export default function BoardsPage() {
                 {pageSubtitle}
               </p>
             )}
-          </div>
-          <div className="flex-shrink-0 flex items-center gap-3">
+            </div>
+            <div className="flex-shrink-0 flex items-center gap-3">
             <NotificationBell
               onClick={() => setShowNotifications(!showNotifications)}
               isOpen={showNotifications}
@@ -672,7 +673,25 @@ export default function BoardsPage() {
             </button>
             <GlobalSearch boards={boards} />
             <AuthNav />
+            </div>
           </div>
+
+          {/* Guest board limit notice */}
+          {boards.length === 0 && (
+            <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="text-sm flex-1">
+                <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                  Guest Access: Create up to 2 boards
+                </p>
+                <p className="text-blue-700 dark:text-blue-300">
+                  Sign in or create an account to unlock unlimited boards and full functionality.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* View Mode Switcher and Filters */}
