@@ -41,8 +41,8 @@ export default function HomePage() {
             <Link href="/" className="flex items-center gap-3 group">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
-                <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">PT</span>
+                <div className="relative w-10 h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                  <img src="/podo-logo.png" alt="PodoTask Logo" className="w-full h-full object-cover" />
                 </div>
               </div>
               <div>
@@ -137,7 +137,7 @@ export default function HomePage() {
       </header>
 
       {/* Hero - Asymmetric split design */}
-      <div className="min-h-screen pt-32 pb-20 px-6 relative overflow-hidden">
+      <div className="min-h-screen pt-28 sm:pt-28 lg:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 relative overflow-hidden">
         {/* Custom grid background */}
         <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02]" style={{
           backgroundImage: `
@@ -148,30 +148,30 @@ export default function HomePage() {
         }} />
 
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left content */}
             <div>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black mb-6 sm:mb-8 leading-[0.95]">
-                <span className="block text-gray-900 dark:text-white mb-2">Get Organized.</span>
+              <h1 className="text-[2.75rem] leading-[1.05] sm:text-5xl md:text-6xl lg:text-[4rem] lg:leading-[1] xl:text-7xl 2xl:text-8xl font-black mb-5 sm:mb-6 lg:mb-8">
+                <span className="block text-gray-900 dark:text-white mb-1.5 sm:mb-2">Get Organized.</span>
                 <span className="block bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Stay Focused.</span>
               </h1>
 
-              <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 mb-8 sm:mb-12 leading-relaxed max-w-xl">
+              <p className="text-[0.95rem] leading-relaxed sm:text-lg lg:text-xl xl:text-2xl text-gray-600 dark:text-gray-300 mb-5 sm:mb-6 lg:mb-12 max-w-xl">
                 Powerful project management for solo creators and agile teams alike.
                 <span className="block mt-2 sm:mt-3 font-semibold text-gray-900 dark:text-white">Personal boards. Team sprints. One platform.</span>
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                <Link href="/signup">
-                  <Button size="lg" className="text-lg px-10 py-6 group">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-10 lg:mb-12">
+                <Link href="/signup" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-6 group">
                     Start Building
                     <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
                   </Button>
                 </Link>
-                <a href="https://www.paypal.com/donate" target="_blank" rel="noopener noreferrer">
-                  <Button variant="secondary" size="lg" className="text-lg px-10 py-6 border-2 group">
+                <a href="https://www.paypal.com/donate" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                  <Button variant="secondary" size="lg" className="w-full sm:w-auto text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-6 border-2 group">
                     Support Us
                     <svg className="w-5 h-5 ml-2 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
@@ -180,15 +180,15 @@ export default function HomePage() {
                 </a>
               </div>
 
-              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-6 sm:gap-8">
+              <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6 lg:gap-8">
                 {[
                   { label: 'Unlimited', value: 'Everything', icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4' },
                   { label: 'Active Users', value: '1,000+', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
                   { label: 'Free Forever', value: '100%', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
                 ].map((stat) => (
-                  <div key={stat.label}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div key={stat.label} className="text-center sm:text-left">
+                    <div className="flex items-center justify-center sm:justify-start gap-2 mb-1.5">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={stat.icon} />
                       </svg>
                       <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">{stat.label}</span>
@@ -290,19 +290,19 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Personal Board - Detailed */}
             <div className="group">
-              <Card className="p-12 h-full border-2 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all hover:shadow-2xl hover:-translate-y-2">
-                <div className="flex items-start justify-between mb-8">
-                  <div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold mb-4">
-                      FOR EVERYONE
-                    </div>
-                    <h3 className="text-4xl font-black text-gray-900 dark:text-white mb-3">Personal Boards</h3>
-                    <p className="text-lg text-gray-600 dark:text-gray-300">Your personal command center for tasks, projects, and goals</p>
-                  </div>
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-xl shadow-blue-500/30 group-hover:scale-110 transition-transform">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <Card className="p-6 sm:p-8 lg:p-12 h-full border-2 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all hover:shadow-2xl hover:-translate-y-2">
+                <div className="flex items-start gap-4 mb-6 sm:mb-8">
+                  <div className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-xl shadow-blue-500/30 group-hover:scale-110 transition-transform">
+                    <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold mb-3 sm:mb-4">
+                      FOR EVERYONE
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 dark:text-white mb-2 sm:mb-3">Personal Boards</h3>
+                    <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">Your personal command center for tasks, projects, and goals</p>
                   </div>
                 </div>
 
@@ -331,19 +331,19 @@ export default function HomePage() {
 
             {/* Scrum - Detailed */}
             <div className="group">
-              <Card className="p-12 h-full border-2 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all hover:shadow-2xl hover:-translate-y-2">
-                <div className="flex items-start justify-between mb-8">
-                  <div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-4">
-                      FOR TEAMS
-                    </div>
-                    <h3 className="text-4xl font-black text-gray-900 dark:text-white mb-3">Agile Scrum</h3>
-                    <p className="text-lg text-gray-600 dark:text-gray-300">Enterprise-grade sprint management and team coordination</p>
-                  </div>
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/30 group-hover:scale-110 transition-transform">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <Card className="p-6 sm:p-8 lg:p-12 h-full border-2 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all hover:shadow-2xl hover:-translate-y-2">
+                <div className="flex items-start gap-4 mb-6 sm:mb-8">
+                  <div className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/30 group-hover:scale-110 transition-transform">
+                    <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-3 sm:mb-4">
+                      FOR TEAMS
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 dark:text-white mb-2 sm:mb-3">Agile Scrum</h3>
+                    <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">Enterprise-grade sprint management and team coordination</p>
                   </div>
                 </div>
 
@@ -1047,8 +1047,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
-                <span className="text-white font-bold">PT</span>
+              <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                <img src="/podo-logo.png" alt="PodoTask Logo" className="w-full h-full object-cover" />
               </div>
               <div>
                 <div className="font-bold text-white">{APP_NAME}</div>

@@ -154,8 +154,8 @@ export default function SignUpPage() {
         <div className="w-full max-w-md">
           {/* Logo */}
           <Link href="/" className="flex items-center justify-center gap-2 mb-8 group">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/50">
-              <span className="text-white font-bold text-base">PT</span>
+            <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shadow-lg shadow-blue-500/50 overflow-hidden">
+              <img src="/podo-logo.png" alt="PodoTask Logo" className="w-full h-full object-cover" />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               {APP_NAME}
