@@ -14,7 +14,7 @@ export function SessionProvider({ children, session }: SessionProviderProps) {
     <NextAuthSessionProvider
       session={session}
       refetchInterval={0}
-      refetchOnWindowFocus={false}
+      refetchOnWindowFocus={true}
     >
       {children}
     </NextAuthSessionProvider>
